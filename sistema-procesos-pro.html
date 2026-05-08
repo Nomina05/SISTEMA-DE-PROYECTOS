@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Procesos PRO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx"></script>
+
+<style>
+:root{
+  --azul:#0d47a1; --bg:#f4f6fb; --card:#fff; --borde:#e5e7eb;
+  --verde:#2ecc71; --rojo:#e74c3c; --gris:#bdc3c7;
+}
+body{margin:0;font-family:Segoe UI;background:var(--bg)}
+header{background:var(--azul);color:#fff;padding:12px;display:flex;justify-content:space-between}
+.layout{display:grid;grid-template-columns:230px 1fr}
+.nav{background:#0b3a85;color:#fff;padding:10px}
+.nav button{width:100%;padding:10px;margin:4px 0;border:none;background:transparent;color:#fff;cursor:pointer}
+.nav button:hover{background:rgba(255,255,255,.1)}
+
+.main{padding:15px}
+.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:10px}
+
+input, textarea, select{padding:10px;border:1px solid #ccc;border-radius:8px;font-family:Segoe UI}
+textarea{width:100%;min-height:80px;box-sizing:border-box;resize:vertical;margin-top:8px}
+button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:5px}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-success{background:var(--verde);color:#fff}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:center}
+.tabla{width:100%;border-collapse:collapse;margin-top:10px;background:#fff}
+.tabla th,.tabla td{border-bottom:1px solid var(--borde);padding:8px;text-align:left;font-size:14px}
+.tabla th{background:#f8fafc}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{text-align:center;background:#fff;padding:10px;border-radius:10px}
+
+.proceso{background:#fff;padding:12px;border-radius:10px;margin-top:10px}
+.timeline{display:flex;gap:8px;margin-top:10px}
+.etapa{text-align:center;flex:1}
+.circle{width:25px;height:25px;border-radius:50%;margin:auto}
+.completado{background:var(--verde)}
+.activo{background:#3498db}
+.pendiente{background:var(--gris)}
+
+.historial{margin-top:10px;font-size:13px;background:#fafafa;padding:8px;border-radius:8px}
+
+.modal{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;
+}
+.modal-box{background:#fff;padding:20px;border-radius:10px;width:330px}
+
+.nota{
+background:#eef3ff;
+padding:6px;
+border-radius:6px;
+margin:4px 0;
+}
+
+.alertas{
+position:fixed;
+left:15px;
+bottom:15px;
+width:min(360px,calc(100% - 30px));
+z-index:20;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+.alerta{
+background:#fff7e6;
+border-left:5px solid #f39c12;
+box-shadow:0 8px 24px rgba(0,0,0,.18);
+padding:10px 12px;
+border-radius:8px;
+font-size:13px;
+color:#5f3b00;
+}
+.alerta b{display:block;margin-bottom:3px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <b>Sistema de Procesos PRO</b>
+  <span id="clock"></span>
+</header>
+
+<div class="layout">
+
+<div class="nav">
+  <button onclick="vista('usuarios')">Usuarios</button>
+  <button onclick="vista('reg')">Registro</button>
+  <button onclick="vista('dash')">Dashboard</button>
+  <button onclick="vista('proc')">Procesos</button>
+</div>
+
+<div class="main">
+
+<!-- USUARIOS -->
+<div id="usuarios">
+<div class="card">
+<h3>Registro de usuarios</h3>
+<div class="form-grid">
+<input id="nombreUsuario" placeholder="Nombre completo">
+<input id="correoUsuario" placeholder="Usuario o correo">
+<select id="rolUsuario">
+  <option value="">Rol</option>
+  <option>Solicitante</option>
+  <option>Compras</option>
+  <option>Legal</option>
+  <option>Dirección</option>
+  <option>Administrador</option>
+</select>
+<input id="departamentoUsuario" placeholder="Departamento">
+</div>
+<button class="btn-primary" onclick="crearUsuario()">Registrar usuario</button>
+<table class="tabla">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Usuario/Correo</th>
+      <th>Rol</th>
+      <th>Departamento</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody id="listaUsuarios"></tbody>
+</table>
+</div>
+</div>
+
+<!-- REGISTRO -->
+<div id="reg" style="display:none">
+<div class="card">
+<select id="user">
+  <option value="">Seleccione usuario</option>
+</select>
+<input id="desc" placeholder="Descripción">
+<button class="btn-primary" onclick="crear()">Crear</button>
+</div>
+</div>
+
+<!-- DASH -->
+<div id="dash" style="display:none">
+<div class="kpis">
+<div class="kpi"><b id="t"></b><br>Total</div>
+<div class="kpi"><b id="c"></b><br>Completados</div>
+<div class="kpi"><b id="p"></b><br>Pendientes</div>
+<div class="kpi"><b id="avg"></b><br>Promedio</div>
+</div>
+<canvas id="chart"></canvas>
+</div>
+
+<!-- PROCESOS -->
+<div id="proc" style="display:none">
+<input placeholder="Buscar..." oninput="buscar(this.value)">
+<div id="lista"></div>
+</div>
+
+</div>
+</div>
+
+<div class="alertas" id="alertas"></div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h4>Confirmar avance</h4>
+<select id="actor">
+  <option value="">Seleccione usuario</option>
+</select>
+<textarea id="avanceNota" placeholder="Descripción o nota del proceso"></textarea>
+<button class="btn-primary" onclick="confirmar()">Aceptar</button>
+<button onclick="cerrarModal()">Cancelar</button>
+</div>
+</div>
+
+<script>
+
+let procesos = JSON.parse(localStorage.getItem('data')||'[]');
+let usuariosRegistrados = JSON.parse(localStorage.getItem('usuarios')||'[]');
+const ETAPAS = ['Compras','Legal','Dirección'];
+const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
+let idxGlobal = null;
+
+// ====== VISTA ======
+function vista(v){
+  usuarios.style.display='none'; reg.style.display='none'; dash.style.display='none'; proc.style.display='none';
+  document.getElementById(v).style.display='block';
+  if(v==='usuarios') renderUsuarios();
+  if(v==='dash') kpi();
+  if(v==='proc') render();
+}
+
+// ====== USUARIOS ======
+function crearUsuario(){
+  let nombre = nombreUsuario.value.trim();
+  let correo = correoUsuario.value.trim();
+  let rol = rolUsuario.value;
+  let departamento = departamentoUsuario.value.trim();
+
+  if(!nombre||!correo||!rol||!departamento){
+    alert("Complete todos los datos del usuario");
+    return;
+  }
+
+  if(usuariosRegistrados.some(u=>u.correo.toLowerCase()===correo.toLowerCase())){
+    alert("Este usuario ya existe");
+    return;
+  }
+
+  usuariosRegistrados.push({
+    id:'USR-'+Date.now(),
+    nombre,
+    correo,
+    rol,
+    departamento,
+    creado:Date.now()
+  });
+
+  nombreUsuario.value='';
+  correoUsuario.value='';
+  rolUsuario.value='';
+  departamentoUsuario.value='';
+
+  guardarUsuarios();
+  renderUsuarios();
+  llenarUsuariosProceso();
+}
+
+function eliminarUsuario(i){
+  if(!confirm("¿Eliminar usuario?")) return;
+  usuariosRegistrados.splice(i,1);
+  guardarUsuarios();
+  renderUsuarios();
+  llenarUsuariosProceso();
+}
+
+function renderUsuarios(){
+  listaUsuarios.innerHTML = usuariosRegistrados.map((u,i)=>`
+    <tr>
+      <td>${u.nombre}</td>
+      <td>${u.correo}</td>
+      <td>${u.rol}</td>
+      <td>${u.departamento}</td>
+      <td><button onclick="eliminarUsuario(${i})">Eliminar</button></td>
+    </tr>
+  `).join('');
+}
+
+function llenarUsuariosProceso(){
+  let opciones = '<option value="">Seleccione usuario</option>' +
+    usuariosRegistrados.map(u=>
+      `<option value="${u.nombre}">${u.nombre} - ${u.rol}</option>`
+    ).join('');
+
+  user.innerHTML = opciones;
+  actor.innerHTML = opciones;
+}
+
+// ====== CREAR ======
+function crear(){
+  let u=user.value;
+  let d=desc.value.trim();
+
+  if(!u||!d){ alert("Seleccione un usuario y complete la descripción"); return; }
+
+  if(procesos.some(p=>p.descripcion===d)){
+    alert("Ya existe");
+    return;
+  }
+
+  let id = 'EXP-'+new Date().getFullYear()+'-'+(procesos.length+1).toString().padStart(4,'0');
+
+  let etapas = ETAPAS.map((e,i)=>({
+    nombre:e,
+    estado:i==0?'activo':'pendiente',
+    inicio:i==0?Date.now():null,
+    fin:null
+  }));
+
+  procesos.unshift({
+    id, usuario:u, descripcion:d,
+    creado:Date.now(),
+    ultimoCambio:Date.now(),
+    etapas,
+    historial:[{txt:`${u} creó`, fecha:Date.now()}],
+    notas:[]
+  });
+
+  guardar();
+  render();
+  revisarAlertas();
+}
+
+// ====== AVANZAR ======
+function avanzar(i){
+  idxGlobal=i;
+  document.getElementById('actor').value='';
+  document.getElementById('avanceNota').value='';
+  modal.style.display='flex';
+}
+
+function cerrarModal(){
+  modal.style.display='none';
+  idxGlobal=null;
+}
+
+function confirmar(){
+  let actor = document.getElementById('actor').value.trim();
+  let nota = document.getElementById('avanceNota').value.trim();
+  let p = procesos[idxGlobal];
+
+  if(!actor){
+    alert("Seleccione el usuario que realiza el avance");
+    return;
+  }
+
+  if(!nota){
+    alert("Escriba una descripción o nota del proceso");
+    return;
+  }
+
+  for(let i=0;i<p.etapas.length;i++){
+    let e = p.etapas[i];
+
+    if(e.estado==='activo'){
+      e.estado='completado';
+      e.fin=Date.now();
+
+      p.historial.push({
+        txt:`${actor} completó ${e.nombre}. Nota: ${nota}`,
+        fecha:Date.now()
+      });
+
+      p.notas.push({
+        texto:nota,
+        autor:actor,
+        etapa:e.nombre,
+        fecha:Date.now()
+      });
+
+      p.ultimoCambio=Date.now();
+
+      if(p.etapas[i+1]){
+        p.etapas[i+1].estado='activo';
+        p.etapas[i+1].inicio=Date.now();
+      }
+      break;
+    }
+  }
+
+  cerrarModal();
+  guardar();
+  render();
+  kpi();
+  revisarAlertas();
+}
+
+// ====== NOTAS ======
+function agregarNota(idx){
+  let texto = prompt("Escriba la nota:");
+  if(!texto) return;
+
+  procesos[idx].notas.push({
+    texto,
+    autor:'Usuario',
+    etapa:'Nota general',
+    fecha: Date.now()
+  });
+  procesos[idx].ultimoCambio=Date.now();
+
+  guardar();
+  render();
+  revisarAlertas();
+}
+
+function eliminarNota(idx,nIdx){
+  if(!confirm("¿Eliminar nota?")) return;
+  procesos[idx].notas.splice(nIdx,1);
+  procesos[idx].ultimoCambio=Date.now();
+  guardar();
+  render();
+  revisarAlertas();
+}
+
+// ====== RENDER ======
+function render(){
+  lista.innerHTML='';
+
+  procesos.forEach((p,i)=>{
+
+    let fin = p.etapas.every(e=>e.estado==='completado');
+
+    let etapas = p.etapas.map(e=>`
+      <div class="etapa">
+        <div class="circle ${e.estado}"></div>
+        <small>${e.nombre}</small>
+      </div>
+    `).join('');
+
+    let hist = p.historial.map(h=>
+      `<div>&bull; ${h.txt} (${new Date(h.fecha).toLocaleString()})</div>`
+    ).join('');
+
+    let notasHTML = (p.notas||[]).map((n,ni)=>`
+      <div class="nota">
+        ${n.texto}<br>
+        <small>${n.autor||'Usuario'} - ${n.etapa||'Nota'} - ${new Date(n.fecha).toLocaleString()}</small>
+        <button onclick="eliminarNota(${i},${ni})">Eliminar</button>
+      </div>
+    `).join('');
+
+    lista.innerHTML+=`
+    <div class="proceso">
+      <b>${p.id}</b><br>${p.descripcion}<br>
+      <div class="timeline">${etapas}</div>
+
+      <button class="btn-success" ${fin?'disabled':''} onclick="avanzar(${i})">Avanzar</button>
+      <button onclick="excel(${i})">Excel</button>
+      <button onclick="pdf(${i})">PDF</button>
+
+      <div class="historial">
+        <b>Histórico</b>
+        ${hist}
+        <hr>
+        <b>Notas</b>
+        ${notasHTML}
+        <button onclick="agregarNota(${i})">Agregar nota</button>
+      </div>
+    </div>`;
+  });
+
+  revisarAlertas();
+}
+
+// ====== BUSCAR ======
+function buscar(v){
+  document.querySelectorAll('.proceso').forEach(p=>{
+    p.style.display = p.innerText.toLowerCase().includes(v.toLowerCase())?'':'none';
+  });
+}
+
+// ====== ALERTAS 48 HORAS ======
+function horasDesde(fecha){
+  return Math.floor((Date.now() - fecha) / 3600000);
+}
+
+function revisarAlertas(){
+  let contenedorAlertas = document.getElementById('alertas');
+  if(!contenedorAlertas) return;
+
+  let demorados = procesos.filter(p=>{
+    let finalizado = p.etapas.every(e=>e.estado==='completado');
+    let activa = p.etapas.find(e=>e.estado==='activo');
+    let inicioActivo = activa ? activa.inicio : null;
+    let fechaBase = inicioActivo || p.ultimoCambio || p.creado;
+
+    return !finalizado && fechaBase && (Date.now() - fechaBase) > LIMITE_SIN_AVANCE;
+  });
+
+  if(!demorados.length){
+    contenedorAlertas.innerHTML='';
+    return;
+  }
+
+  contenedorAlertas.innerHTML = demorados.map(p=>{
+    let activa = p.etapas.find(e=>e.estado==='activo');
+    let fechaBase = (activa && activa.inicio) || p.ultimoCambio || p.creado;
+    let horas = horasDesde(fechaBase);
+
+    return `
+      <div class="alerta">
+        <b>${p.id} sin cambios</b>
+        El proceso "${p.descripcion}" no ha avanzado en ${horas} horas.
+      </div>
+    `;
+  }).join('');
+}
+
+// ====== KPI ======
+let ch;
+function kpi(){
+  let total=procesos.length, comp=0, t=[];
+
+  procesos.forEach(p=>{
+    let last=p.etapas.at(-1);
+    if(last.fin){
+      comp++;
+      t.push(last.fin - p.creado);
+    }
+  });
+
+  t=t.length?(t.reduce((a,b)=>a+b)/t.length/3600000).toFixed(2):0;
+
+  document.getElementById('t').innerText=total;
+  document.getElementById('c').innerText=comp;
+  document.getElementById('p').innerText=total-comp;
+  document.getElementById('avg').innerText=t+'h';
+
+  if(ch) ch.destroy();
+  ch=new Chart(chart,{
+    type:'doughnut',
+    data:{
+      labels:['Completados','Pendientes'],
+      datasets:[{
+        data:[comp,total-comp],
+        backgroundColor:['#2ecc71','#e74c3c']
+      }]
+    }
+  });
+}
+
+// ====== EXPORT ======
+function excel(i){
+  let p=procesos[i];
+  let ws=XLSX.utils.json_to_sheet(p.historial);
+  let wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Historial");
+  XLSX.writeFile(wb,p.id+".xlsx");
+}
+
+function pdf(i){
+  let p=procesos[i];
+  let doc=new window.jspdf.jsPDF();
+  let txt=p.historial.map(h=>h.txt).join('\n');
+  doc.text(txt,10,10);
+  doc.save(p.id+".pdf");
+}
+
+// ====== SAVE ======
+function guardar(){
+  localStorage.setItem('data',JSON.stringify(procesos));
+}
+
+function guardarUsuarios(){
+  localStorage.setItem('usuarios',JSON.stringify(usuariosRegistrados));
+}
+
+// ====== CLOCK ======
+setInterval(()=>{
+  clock.innerText=new Date().toLocaleString();
+},1000);
+
+setInterval(revisarAlertas,60000);
+
+renderUsuarios();
+llenarUsuariosProceso();
+render();
+kpi();
+revisarAlertas();
+
+</script>
+
+</body>
+</html>

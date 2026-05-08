@@ -1,0 +1,2605 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Proyectos CORAAMOCA</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="app.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7f8;
+      --panel: #ffffff;
+      --ink: #172026;
+      --muted: #65727d;
+      --line: #dbe3e7;
+      --blue: #1769aa;
+      --green: #198754;
+      --teal: #0f766e;
+      --amber: #c47f00;
+      --red: #b42318;
+      --shadow: 0 10px 28px rgba(23, 32, 38, .08);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); }
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    .shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+    aside { background: #16242d; color: #fff; padding: 22px 16px; position: sticky; top: 0; height: 100vh; }
+    .brand { font-size: 18px; font-weight: 800; line-height: 1.2; margin-bottom: 22px; }
+    .brand span { display: block; color: #9fd6c8; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-top: 6px; }
+    nav { display: grid; gap: 8px; }
+    .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 6px; color: #d8e6eb; background: transparent; text-align: left; }
+    .nav-btn.active, .nav-btn:hover { background: #243844; color: #fff; }
+    main { padding: 24px; min-width: 0; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.2; }
+    h2 { margin: 0 0 14px; font-size: 18px; }
+    .sub { color: var(--muted); margin: 6px 0 0; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 12px; border-radius: 6px; background: var(--blue); color: #fff; font-weight: 700; }
+    .btn.secondary { background: #e7edf0; color: #172026; }
+    .btn.danger { background: var(--red); }
+    .grid { display: grid; gap: 14px; }
+    .metrics { grid-template-columns: repeat(6, minmax(150px, 1fr)); }
+    .metric, .panel, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+    .metric { padding: 14px; min-height: 106px; display: flex; flex-direction: column; justify-content: space-between; }
+    .metric small { color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: 11px; }
+    .metric strong { font-size: 19px; line-height: 1.25; word-break: break-word; }
+    .panel { padding: 16px; }
+    .area-panel { display: grid; grid-template-columns: repeat(5, minmax(132px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .area-card { min-height: 54px; padding: 9px 10px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; box-shadow: 0 4px 14px rgba(23, 32, 38, .06); }
+    .area-card strong { display: block; font-size: 11px; text-transform: uppercase; color: var(--ink); line-height: 1.2; }
+    .area-card span { display: block; min-height: 10px; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .area-card button { margin-top: 4px; width: 100%; min-height: 26px; padding: 4px 7px; border-radius: 5px; background: #e7edf0; color: var(--ink); font-size: 11px; font-weight: 800; }
+    .embedded-module { display: none; margin: -4px 0 16px; }
+    .embedded-module.active { display: block; }
+    .embedded-frame { width: 100%; height: 680px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: var(--shadow); }
+    .dashboard-layout { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; }
+    .chart-wrap { display: grid; place-items: center; min-height: 360px; }
+    canvas { max-width: 100%; }
+    .legend { display: grid; gap: 8px; }
+    .legend-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 14px; }
+    .tab { padding: 8px 11px; border-radius: 6px; background: #e7edf0; color: #172026; font-weight: 700; }
+    .tab.active { background: var(--blue); color: #fff; }
+    .form-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 12px; }
+    label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    input, select, textarea { width: 100%; min-height: 38px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #fff; color: var(--ink); }
+    textarea { min-height: 72px; resize: vertical; }
+    .span-2 { grid-column: span 2; }
+    .span-4 { grid-column: 1 / -1; }
+    .table-tools { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filters input, .filters select { width: auto; min-width: 180px; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 1060px; }
+    th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
+    th { position: sticky; top: 0; background: #eef3f5; z-index: 1; white-space: nowrap; }
+    tfoot td { background: #eef3f5; font-weight: 800; border-top: 2px solid #b9c8cf; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; background: #e7edf0; color: #22323c; font-weight: 700; font-size: 12px; }
+    .badge.ok { background: #dff4e8; color: #12633d; }
+    .badge.warn { background: #fff0cf; color: #845300; }
+    .badge.bad { background: #ffe3df; color: #98251a; }
+    .permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .permission-checks { display: grid; grid-template-columns: repeat(2, minmax(170px, 1fr)); gap: 8px; margin-top: 8px; }
+    .permission-check { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #f9fbfc; color: var(--ink); font-weight: 700; }
+    .permission-check input { width: 16px; min-height: 16px; accent-color: var(--blue); }
+    .hidden-by-permission { display: none !important; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .cards { grid-template-columns: repeat(3, minmax(220px, 1fr)); }
+    .card { padding: 14px; }
+    .wide { grid-column: span 2; }
+    .empty { padding: 18px; color: var(--muted); text-align: center; }
+
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { height: auto; position: static; }
+      nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metrics, .form-grid, .cards, .dashboard-layout, .area-panel { grid-template-columns: 1fr 1fr; }
+      .chart-wrap { min-height: 300px; }
+    }
+
+    @media (max-width: 720px) {
+      main { padding: 16px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      nav, .metrics, .form-grid, .cards, .dashboard-layout, .area-panel { grid-template-columns: 1fr; }
+      .span-2 { grid-column: auto; }
+      .wide { grid-column: auto; }
+      .filters input, .filters select { width: 100%; }
+      .table-tools { align-items: stretch; }
+      .actions, .filters { width: 100%; }
+      .btn { width: 100%; }
+    }
+
+    @media print {
+      aside, .topbar .actions, .tabs, form, .table-tools .actions { display: none !important; }
+      .shell { display: block; }
+      main { padding: 0; }
+      .section { display: block; break-after: page; }
+      .panel, .metric { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
+      <nav>
+        <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+        <button class="nav-btn" data-view="registro">Registro manual</button>
+        <button class="nav-btn" data-view="cubicaciones">Cubicaciones</button>
+        <button class="nav-btn" data-view="reportes">Reportes</button>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>Sistema de control presupuestario</h1>
+          <p class="sub">Base inicial: PROYECTOS 2025-2027 CORAAMOCA EJEMPLO.xlsx</p>
+        </div>
+        <div class="actions">
+          <label style="min-width:220px;">Usuario activo<select id="activeUserSelect"><option value="">Sin usuario activo</option></select></label>
+          <button class="btn secondary" id="backupBtn">Exportar respaldo</button>
+          <button class="btn secondary" id="restoreBtn">Importar respaldo</button>
+          <input type="file" id="restoreFile" accept="application/json" hidden>
+        </div>
+      </div>
+
+      <div class="area-panel" aria-label="Panel institucional">
+        <div class="area-card"><strong>Finanzas</strong><span></span></div>
+        <div class="area-card">
+          <strong>Compras y Contrataciones</strong>
+          <span></span>
+          <button type="button" id="togglePurchasingModule">Abrir procesos</button>
+        </div>
+        <div class="area-card"><strong>Presupuesto</strong><span></span></div>
+        <div class="area-card"><strong>DirecciÃ³n TÃ©cnica</strong><span></span></div>
+        <div class="area-card"><strong>DirecciÃ³n General</strong><span></span></div>
+      </div>
+
+      <div class="embedded-module" id="purchasingModule">
+        <div class="panel">
+          <h2>Compras y Contrataciones</h2>
+          <iframe class="embedded-frame" src="sistema-procesos-pro.html" title="Sistema de procesos de compras y contrataciones"></iframe>
+        </div>
+      </div>
+
+      <section class="section active" id="dashboard">
+        <div class="grid metrics" id="metrics"></div>
+        <div class="dashboard-layout">
+          <div class="panel">
+            <h2>Dashboard de pastel</h2>
+            <div class="chart-wrap"><canvas id="pieChart" width="340" height="340"></canvas></div>
+          </div>
+          <div class="panel">
+            <h2>Disponibilidad por proyecto</h2>
+            <div class="table-wrap"><table id="availabilityTable"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="registro">
+        <div class="grid cards">
+          <div class="panel" data-permission="users-admin">
+            <h2>Crear usuario</h2>
+            <form id="userForm" class="grid">
+              <label>Nombre<input name="nombre" required></label>
+              <label>Usuario<input name="usuario" required></label>
+              <label>Ãrea de trabajo<input name="area" id="workAreaInput" placeholder="Ej. DirecciÃ³n TÃ©cnica" required></label>
+              <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
+              <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>DirecciÃ³n TÃ©cnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
+              <div id="policyPreview"></div>
+              <button class="btn">Guardar usuario</button>
+            </form>
+          </div>
+          <div class="panel wide">
+            <h2>Registrar cÃ³digo y presupuesto</h2>
+            <form id="projectForm" class="form-grid">
+              <div class="span-4 actions">
+                <button class="btn secondary" type="button" id="newProjectBtn">Nuevo proyecto</button>
+                <button class="btn secondary" type="button" id="cancelNewProjectBtn" hidden>Cancelar nuevo</button>
+              </div>
+              <label class="span-2" id="existingProjectField">Proyecto<select name="projectKey" required></select></label>
+              <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. ConstrucciÃ³n de pozo tubular"></label>
+              <label class="span-2 new-project-field" hidden>Municipio<input name="municipioNuevo" placeholder="Ej. Municipio de Moca"></label>
+              <label class="span-2 new-project-field" hidden>Comunidad / proyecto<input name="comunidadNuevo" placeholder="Nombre del proyecto o comunidad"></label>
+              <label class="new-project-field" hidden>PoblaciÃ³n<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
+              <label>CÃ³digo<input name="codigo" placeholder="Ej. SNIP-0000"></label>
+              <label>Contratista<input name="contratista" placeholder="Nombre o razÃ³n social"></label>
+              <label>Presupuesto RD$<input name="presupuesto" type="number" min="0" step="0.01"></label>
+              <label>Monto adjudicado RD$<input name="adjudicado" type="number" min="0" step="0.01"></label>
+              <label>Estatus<select name="estatus"><option>En proceso</option><option>Contratado</option><option>En ejecuciÃ³n</option><option>Terminado</option><option>Paralizado</option></select></label>
+              <button class="btn" id="projectSubmitBtn">Actualizar proyecto</button>
+            </form>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="users-admin">
+          <h2>Usuarios creados</h2>
+          <div class="table-wrap"><table id="usersTable"></table></div>
+        </div>
+      </section>
+
+      <section class="section" id="cubicaciones">
+        <div class="panel">
+          <h2>Registro de cubicaciones</h2>
+          <form id="paymentForm" class="form-grid">
+            <label class="span-2">Proyecto<select name="projectKey" required></select></label>
+            <label>Fecha<input name="fecha" type="date" required></label>
+            <label>Monto RD$<input name="monto" type="number" min="0" step="0.01" required></label>
+            <label>NÃºmero de cubicaciÃ³n<input name="numero" placeholder="CUB-001"></label>
+            <label class="span-2">ObservaciÃ³n<input name="observacion" placeholder="Detalle de pago o avance"></label>
+            <button class="btn">Registrar cubicaciÃ³n</button>
+          </form>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <h2>Pagos registrados</h2>
+          <div class="table-wrap"><table id="paymentsTable"></table></div>
+        </div>
+      </section>
+
+      <section class="section" id="reportes">
+        <div class="panel">
+          <h2>Reportes</h2>
+          <div class="tabs">
+            <button class="tab active" data-report="municipio">Por municipio</button>
+            <button class="tab" data-report="contratista">Por contratista</button>
+            <button class="tab" data-report="disponibilidad">Disponibilidad de presupuesto</button>
+            <button class="tab" data-report="pagos">Pagos realizados</button>
+            <button class="tab" data-report="estatus">Estatus de obras</button>
+            <button class="tab" data-report="poblacion">Por poblaciÃ³n</button>
+          </div>
+          <div class="table-tools">
+            <div class="filters">
+              <input id="searchBox" placeholder="Buscar...">
+              <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
+              <select id="statusFilter"><option value="">Todos los estatus</option></select>
+            </div>
+            <div class="actions">
+              <button class="btn secondary" id="csvBtn">Exportar CSV</button>
+              <button class="btn secondary" id="printReportBtn">Imprimir</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table id="reportTable"></table></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const seedRows = [
+    {
+        "value":  [
+                      1,
+                      "Ampliación de Redes",
+                      "Los Polanco",
+                      "Distrito Municipal de Veragua",
+                      315,
+                      1322168.27,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1322168.27,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Ampliación de Redes",
+                      "Entrada Los Guaos",
+                      "Distrito Municipal de Veragua",
+                      200,
+                      1369499.03,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1369499.03,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      3,
+                      "Ampliación de Redes",
+                      "Entrada La Yuca",
+                      "Distrito Municipal de Veragua",
+                      225,
+                      1283296.94,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1283296.94,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      4,
+                      "Ampliación de Redes",
+                      "San Lorenzo",
+                      "Distrito Municipal de Veragua",
+                      800,
+                      3364579.14,
+                      0,
+                      0,
+                      0,
+                      0,
+                      3364579.14,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      1,
+                      "Ampliación de Redes",
+                      "Entrada La Gallera",
+                      "Distrito Municipal de Villa Magante",
+                      200,
+                      1900495.7,
+                      0,
+                      0,
+                      0,
+                      1900495.7,
+                      0,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Ampliación de Redes",
+                      "Entrada Playa Rogelio",
+                      "Distrito Municipal de Villa Magante",
+                      400,
+                      3038240.06,
+                      0,
+                      0,
+                      0,
+                      3038240.06,
+                      0,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      1,
+                      "Construcción de un pozo tubular #1",
+                      "Campo de Pozos",
+                      "Municipio Gaspar Hernández",
+                      1000,
+                      4561600.78,
+                      0,
+                      0,
+                      0,
+                      4561600.78,
+                      0,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Construcción de un pozo tubular #2",
+                      "Campo de Pozos",
+                      "Municipio Gaspar Hernández",
+                      1000,
+                      4561600.78,
+                      0,
+                      0,
+                      0,
+                      4561600.78,
+                      0,
+                      "",
+                      "",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      1,
+                      "Ampliación de Redes",
+                      "La Gallera - Guanábano",
+                      "Municipio de Cayetano Germosén",
+                      2010,
+                      225612.53,
+                      231263.29,
+                      46252.66,
+                      46252.66,
+                      179359.87,
+                      -185010.63,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Ampliación de Redes",
+                      "Villa Progreso",
+                      "Municipio de Cayetano Germosén",
+                      570,
+                      4074815.47,
+                      4023612.21,
+                      804722.44,
+                      804722.44,
+                      3270093.03,
+                      -3218889.77,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      3,
+                      "Ampliación de Redes",
+                      "Sabana De Los Jiménez",
+                      "Municipio de Cayetano Germosén",
+                      36,
+                      511793.94,
+                      523486.66,
+                      104697.33,
+                      104697.33,
+                      407096.6,
+                      -418789.33,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      4,
+                      "Ampliación de Redes",
+                      "Calle Del Rio",
+                      "Municipio de Cayetano Germosén",
+                      141,
+                      2438230.13,
+                      2292599.09,
+                      458519.82,
+                      458519.82,
+                      1979710.31,
+                      -1834079.27,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      5,
+                      "Ampliación de Redes",
+                      "La Penda",
+                      "Municipio de Cayetano Germosén",
+                      30,
+                      388955.64,
+                      404519.67,
+                      80903.93,
+                      80903.93,
+                      308051.71,
+                      -323615.74,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      6,
+                      "Ampliación de Redes",
+                      "Barrio nuevo La Guama",
+                      "Municipio de Cayetano Germosén",
+                      30,
+                      342061.57,
+                      360198.56,
+                      72039.71,
+                      72039.71,
+                      270021.86,
+                      -288158.85,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      7,
+                      "Ampliación de Redes",
+                      "Cruce de La Guama",
+                      "Municipio de Cayetano Germosén",
+                      45,
+                      443175.57,
+                      453564.99,
+                      90713,
+                      90713,
+                      352462.57,
+                      -362851.99,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      8,
+                      "Ampliación de Redes",
+                      "Urbanización La Guama  (entrada del Play)",
+                      "Municipio de Cayetano Germosén",
+                      60,
+                      699425,
+                      717370.34,
+                      143474.07,
+                      143474.07,
+                      555950.93,
+                      -573896.27,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      9,
+                      "Ampliación de Redes",
+                      "Entrada la Iglesia - Hato Viejo",
+                      "Municipio de Cayetano Germosén",
+                      45,
+                      167892.06,
+                      180968.24,
+                      36193.65,
+                      36193.65,
+                      131698.41,
+                      -144774.59,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      10,
+                      "Ampliación de Redes",
+                      "Barrio Marien - Guanábano",
+                      "Municipio de Cayetano Germosén",
+                      147,
+                      2478584.56,
+                      2414870.65,
+                      482974.13,
+                      482974.13,
+                      1995610.43,
+                      -1931896.52,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      1,
+                      "Construcción de un pozo tubular",
+                      "Sabana De Los Jiménez",
+                      "Municipio de Cayetano Germosén",
+                      36,
+                      3419652.2,
+                      3077688.25,
+                      615537.65,
+                      615537.65,
+                      2804114.55,
+                      -2462150.6,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Construcción de un pozo tubular",
+                      "Calle Del Rio",
+                      "Municipio de Cayetano Germosén",
+                      390,
+                      2977703.45,
+                      2800162.26,
+                      560032.45,
+                      560032.45,
+                      2417671,
+                      -2240129.81,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      3,
+                      "Construcción de un pozo tubular",
+                      "La Penda",
+                      "Municipio de Cayetano Germosén",
+                      600,
+                      2977703.45,
+                      2800162.26,
+                      560032.45,
+                      560032.45,
+                      2417671,
+                      -2240129.81,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      4,
+                      "Construcción de un pozo tubular",
+                      "La Gallera - Guanábano",
+                      "Municipio de Cayetano Germosén",
+                      2010,
+                      2977703.45,
+                      2800162.26,
+                      560032.45,
+                      560032.45,
+                      2417671,
+                      -2240129.81,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      5,
+                      "Construcción de un pozo tubular",
+                      "Maguey",
+                      "Municipio de Cayetano Germosén",
+                      315,
+                      3148252.2,
+                      2898102.26,
+                      579620.45,
+                      579620.45,
+                      2568631.75,
+                      -2318481.81,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      11,
+                      "Ampliación de Redes",
+                      "Ceiba de Madera (El Mango de Nena 1)",
+                      "Municipio de San Víctor",
+                      129,
+                      957992.19,
+                      924528.92,
+                      184905.78,
+                      184905.78,
+                      773086.41,
+                      -739623.14,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      12,
+                      "Ampliación de Redes",
+                      "Ceiba de Madera (El Mango de Nena 2)",
+                      "Municipio de San Víctor",
+                      105,
+                      895601.91,
+                      849850.88,
+                      169970.18,
+                      169970.18,
+                      725631.74,
+                      -679880.7,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      13,
+                      "Ampliación de Redes",
+                      "La Amapola - Entrada María Arroyo",
+                      "Municipio de San Víctor",
+                      75,
+                      668232.31,
+                      667632.81,
+                      133526.56,
+                      133526.56,
+                      534705.75,
+                      -534106.25,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      14,
+                      "Ampliación de Redes",
+                      "Entrada Arte de Jesús",
+                      "Municipio de San Víctor",
+                      45,
+                      281073.74,
+                      287159.2,
+                      57431.84,
+                      57431.84,
+                      223641.9,
+                      -229727.36,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      15,
+                      "Ampliación de Redes",
+                      "San Víctor - Entrada del  Club del los  Choferes",
+                      "Municipio de San Víctor",
+                      90,
+                      850618.86,
+                      629687.72,
+                      125937.54,
+                      125937.54,
+                      724681.32,
+                      -503750.18,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      16,
+                      "Ampliación de Redes",
+                      "Entrada los  Chivos - San Víctor",
+                      "Municipio de San Víctor",
+                      84,
+                      312637.96,
+                      319546.39,
+                      63909.28,
+                      63909.28,
+                      248728.68,
+                      -255637.11,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      6,
+                      "Construcción de un pozo tubular",
+                      "Los Rieles Arriba",
+                      "Municipio de San Víctor",
+                      144,
+                      3446792.2,
+                      3102360.26,
+                      0,
+                      0,
+                      3446792.2,
+                      -3102360.26,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      7,
+                      "Construcción de un pozo tubular",
+                      "Ceiba de Madera (El Mango de Nena 1)",
+                      "Municipio de San Víctor",
+                      129,
+                      3134894.98,
+                      2970398.26,
+                      0,
+                      0,
+                      3134894.98,
+                      -2970398.26,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      8,
+                      "Construcción de un pozo tubular",
+                      "B/La Lambada",
+                      "Municipio de San Víctor",
+                      135,
+                      3134894.98,
+                      2970398.26,
+                      0,
+                      0,
+                      3134894.98,
+                      -2970398.26,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      9,
+                      "Construcción de un pozo tubular",
+                      "Centro Tecnológico San Víctor",
+                      "Municipio de San Víctor",
+                      150,
+                      3134894.98,
+                      2970398.26,
+                      0,
+                      0,
+                      3134894.98,
+                      -2970398.26,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      17,
+                      "Ampliación de Redes",
+                      "Los Cocos Llenas",
+                      "Municipio  de Moca",
+                      54,
+                      544071.25,
+                      422400.31,
+                      84480.06,
+                      84480.06,
+                      459591.19,
+                      -337920.25,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      18,
+                      "Ampliación de Redes",
+                      "Los Hernández - La Rosario",
+                      "Municipio  de Moca",
+                      78,
+                      233463.41,
+                      269102.55,
+                      53820.51,
+                      53820.51,
+                      179642.9,
+                      -215282.04,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      19,
+                      "Ampliación de Redes",
+                      "Quebrada Honda - Lotificación Pilo Santana",
+                      "Municipio  de Moca",
+                      66,
+                      363390.87,
+                      331387.64,
+                      66277.53,
+                      66277.53,
+                      297113.34,
+                      -265110.11,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      20,
+                      "Ampliación de Redes",
+                      "Quebrada Honda- Entrada de La Chicha",
+                      "Municipio  de Moca",
+                      57,
+                      308577.72,
+                      291918.65,
+                      58383.73,
+                      58383.73,
+                      250193.99,
+                      -233534.92,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      21,
+                      "Ampliación de Redes",
+                      "Quebrada Honda -Entrada de la escuelita, C/Mora",
+                      "Municipio  de Moca",
+                      48,
+                      263915.16,
+                      258195.18,
+                      51639.04,
+                      51639.04,
+                      212276.12,
+                      -206556.14,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      22,
+                      "Ampliación de Redes",
+                      "Villa Delia",
+                      "Municipio  de Moca",
+                      6,
+                      162409.33,
+                      161338.49,
+                      32267.7,
+                      32267.7,
+                      130141.63,
+                      -129070.79,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      23,
+                      "Ampliación de Redes",
+                      "Entrada  Sixto García - La Soledad",
+                      "Municipio  de Moca",
+                      36,
+                      535950.78,
+                      400917.65,
+                      80183.53,
+                      80183.53,
+                      455767.25,
+                      -320734.12,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      24,
+                      "Ampliación de Redes",
+                      "Cacique  Abajo- La Antena",
+                      "Municipio  de Moca",
+                      48,
+                      540011.02,
+                      414473.32,
+                      82894.66,
+                      82894.66,
+                      457116.36,
+                      -331578.66,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      25,
+                      "Ampliación de Redes",
+                      "La Ermita B/Eduardo Brito",
+                      "Municipio  de Moca",
+                      123,
+                      578583.23,
+                      497311.45,
+                      99462.29,
+                      99462.29,
+                      479120.94,
+                      -397849.16,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      26,
+                      "Ampliación de Redes",
+                      "El Corozo - Entrada Raulito",
+                      "Municipio  de Moca",
+                      120,
+                      304517.49,
+                      348722.69,
+                      69744.54,
+                      69744.54,
+                      234772.95,
+                      -278978.15,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      27,
+                      "Ampliación de Redes",
+                      "El Jazmín - Cruce del Algarrobo",
+                      "Municipio  de Moca",
+                      45,
+                      812046.64,
+                      565638.86,
+                      113127.77,
+                      113127.77,
+                      698918.87,
+                      -452511.09,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      28,
+                      "Ampliación de Redes",
+                      "Quebrada La Yagua - El Algarrobo",
+                      "Municipio  de Moca",
+                      30,
+                      710540.81,
+                      494111.7,
+                      98822.34,
+                      98822.34,
+                      611718.47,
+                      -395289.36,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      29,
+                      "Ampliación de Redes",
+                      "Entrada de la Iglesia y los Cacos, B/Pulu- La Rosario",
+                      "Municipio  de Moca",
+                      51,
+                      531890.55,
+                      417265.42,
+                      83453.08,
+                      83453.08,
+                      448437.47,
+                      -333812.34,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      30,
+                      "Ampliación de Redes",
+                      "Estancia Nueva - Los Reinoso",
+                      "Municipio  de Moca",
+                      147,
+                      507529.15,
+                      488962.61,
+                      97792.52,
+                      97792.52,
+                      409736.63,
+                      -391170.09,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      31,
+                      "Ampliación de Redes",
+                      "El Fundo San Francisco abajo",
+                      "Municipio  de Moca",
+                      42,
+                      172559.91,
+                      200850.72,
+                      40170.14,
+                      40170.14,
+                      132389.77,
+                      -160680.58,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      32,
+                      "Ampliación de Redes",
+                      "Quebrada Honda - Entrada de Willy",
+                      "Municipio  de Moca",
+                      72,
+                      324818.66,
+                      315184.11,
+                      63036.82,
+                      63036.82,
+                      261781.84,
+                      -252147.29,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      33,
+                      "Ampliación de Redes",
+                      "La Ermita - Entrada Surtidora Santana",
+                      "Municipio  de Moca",
+                      105,
+                      629336.15,
+                      518507.36,
+                      103701.47,
+                      103701.47,
+                      525634.68,
+                      -414805.89,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      34,
+                      "Ampliación de Redes",
+                      "Boca Férrea",
+                      "Distrito Municipal de Las Lagunas",
+                      45,
+                      1627351.35,
+                      1497413.99,
+                      299482.8,
+                      299482.8,
+                      1327868.55,
+                      -1197931.19,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      35,
+                      "Ampliación de Redes",
+                      "La Finca",
+                      "Distrito Municipal de Las Lagunas",
+                      102,
+                      1072948.36,
+                      1022677.26,
+                      204535.45,
+                      204535.45,
+                      868412.91,
+                      -818141.81,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      36,
+                      "Ampliación de Redes",
+                      "La Lomita",
+                      "Distrito Municipal de Las Lagunas",
+                      156,
+                      1076598.13,
+                      1055057.5,
+                      211011.5,
+                      211011.5,
+                      865586.63,
+                      -844046,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      37,
+                      "Ampliación de Redes",
+                      "Canta Rana",
+                      "Distrito Municipal de Las Lagunas",
+                      72,
+                      834714.98,
+                      855470.4,
+                      171094.08,
+                      171094.08,
+                      663620.9,
+                      -684376.32,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      10,
+                      "Construcción de un pozo tubular",
+                      "Boca Férrea - Entrada La Escuela",
+                      "Distrito Municipal de Las Lagunas",
+                      45,
+                      2977703.45,
+                      2820458.25,
+                      564091.65,
+                      564091.65,
+                      2413611.8,
+                      -2256366.6,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      11,
+                      "Construcción de un pozo tubular",
+                      "Cruce La Lomita del Higüero (La Finca)",
+                      "Distrito Municipal de Las Lagunas",
+                      102,
+                      2977703.45,
+                      2860148.26,
+                      572029.65,
+                      572029.65,
+                      2405673.8,
+                      -2288118.61,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      12,
+                      "Construcción de un pozo tubular",
+                      "Canta Rana",
+                      "Distrito Municipal de Las Lagunas",
+                      72,
+                      3256812.2,
+                      2980230.26,
+                      596046.05,
+                      596046.05,
+                      2660766.15,
+                      -2384184.21,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      13,
+                      "Construcción de un pozo tubular",
+                      "La Finca - Entrada de la Escuela",
+                      "Distrito Municipal de Las Lagunas",
+                      180,
+                      3446792.2,
+                      3102360.26,
+                      620472.05,
+                      620472.05,
+                      2826320.15,
+                      -2481888.21,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      14,
+                      "Construcción de un pozo tubular",
+                      "Boca Férrea",
+                      "Distrito Municipal de Las Lagunas",
+                      150,
+                      2977703.45,
+                      2820458.26,
+                      564091.65,
+                      564091.65,
+                      2413611.8,
+                      -2256366.61,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      38,
+                      "Ampliación de Redes",
+                      "El aguacate - Canca La Reina",
+                      "Distrito Municipal de Canca la Reina",
+                      78,
+                      477077.4,
+                      406995.03,
+                      81399.01,
+                      81399.01,
+                      395678.39,
+                      -325596.02,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      15,
+                      "Construcción de un pozo tubular",
+                      "C/Josefa Rosario",
+                      "Distrito Municipal de Canca la Reina",
+                      450,
+                      3066832.2,
+                      2826004.25,
+                      565200.85,
+                      565200.85,
+                      2501631.35,
+                      -2260803.4,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      16,
+                      "Construcción de un pozo tubular",
+                      "La Chicharra",
+                      "Distrito Municipal de Canca la Reina",
+                      450,
+                      2977703.45,
+                      2756148.26,
+                      551229.65,
+                      551229.65,
+                      2426473.8,
+                      -2204918.61,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      39,
+                      "Ampliación de Redes",
+                      "Juan López - Entrada Los Julines",
+                      "Distrito Municipal de Juan López",
+                      75,
+                      203011.66,
+                      249051.6,
+                      49810.32,
+                      49810.32,
+                      153201.34,
+                      -199241.28,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      40,
+                      "Ampliación de Redes",
+                      "Juan López - Entrada Centro Tecnológico",
+                      "Distrito Municipal de Juan López",
+                      48,
+                      152258.75,
+                      194994.46,
+                      38998.89,
+                      38998.89,
+                      113259.86,
+                      -155995.57,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      41,
+                      "Ampliación de Redes",
+                      "Juan López - Entrada  Los Pérez",
+                      "Distrito Municipal de Juan López",
+                      57,
+                      314668.07,
+                      295365.96,
+                      59073.19,
+                      59073.19,
+                      255594.88,
+                      -236292.77,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      "16340"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      17,
+                      "Construcción de un pozo tubular",
+                      "Los Camacho",
+                      "Distrito Municipal de Juan López",
+                      600,
+                      3446792.2,
+                      3102360.26,
+                      620472.05,
+                      620472.05,
+                      2826320.15,
+                      -2481888.21,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      42,
+                      "Ampliación de Redes",
+                      "Entrada Don Juan Monte de La Jagua",
+                      "Distrito Municipal de Monte de la Jagua",
+                      108,
+                      507529.15,
+                      452375.51,
+                      90475.1,
+                      90475.1,
+                      417054.05,
+                      -361900.41,
+                      "CORAAMOCA-CCC-CP-2025-0005",
+                      "CONSTRUCTORA CAMINO PANTALEON (CCP), S.R.L",
+                      ""
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      18,
+                      "Construcción de un pozo tubular",
+                      "El Higuerito Arriba",
+                      "Distrito Municipal de Higuerito",
+                      600,
+                      3446792.2,
+                      3102360.26,
+                      620472.05,
+                      620472.05,
+                      2826320.15,
+                      -2481888.21,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      19,
+                      "Construcción de un pozo tubular",
+                      "Los Brazos",
+                      "Municipio de Jamao al Norte",
+                      600,
+                      3419652.2,
+                      3077688.26,
+                      615537.65,
+                      615537.65,
+                      2804114.55,
+                      -2462150.61,
+                      "CORAAMOCA-CCC-CP-2025-0006",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      1,
+                      "Ampliación de Redes",
+                      "Los Cocos",
+                      "Distrito Municipal de Veragua",
+                      330,
+                      2810700.02,
+                      2850122.36,
+                      570024.47,
+                      570024.47,
+                      2240675.55,
+                      2201253.21,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Ampliación de Redes",
+                      "Caño Dulce",
+                      "Distrito Municipal de Veragua",
+                      200,
+                      572688.89,
+                      591558.27,
+                      118311.65,
+                      118311.65,
+                      454377.23,
+                      435507.85,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      3,
+                      "Ampliación de Redes",
+                      "Entrada La Escuela",
+                      "Distrito Municipal de Veragua",
+                      125,
+                      994989.31,
+                      1174581.71,
+                      234916.34,
+                      234916.34,
+                      760072.97,
+                      580480.57,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      4,
+                      "Ampliación de Redes",
+                      "Callejón de Sara",
+                      "Distrito Municipal de Veragua",
+                      225,
+                      1086179.3,
+                      1176197.75,
+                      235239.55,
+                      235239.55,
+                      850939.75,
+                      760921.3,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      5,
+                      "Ampliación de Redes",
+                      "La Españolita",
+                      "Distrito Municipal de Veragua",
+                      225,
+                      1075691.02,
+                      1091934.29,
+                      218386.86,
+                      218386.86,
+                      857304.16,
+                      841060.89,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      6,
+                      "Ampliación de Redes",
+                      "La Mina",
+                      "Distrito Municipal de Veragua",
+                      505,
+                      1920848.44,
+                      2060622.85,
+                      412124.57,
+                      412124.57,
+                      1508723.87,
+                      1368949.46,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      1,
+                      "Construcción de un pozo tubular",
+                      "Campo de Pozos Veragua",
+                      "Distrito Municipal de Veragua",
+                      1200,
+                      3179737.71,
+                      2861763.94,
+                      572352.79,
+                      572352.79,
+                      2607384.92,
+                      2925358.69,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      2,
+                      "Construcción de un pozo tubular",
+                      "Caño Dulce",
+                      "Distrito Municipal de Veragua",
+                      200,
+                      3126304.25,
+                      2813673.83,
+                      562734.77,
+                      562734.77,
+                      2563569.49,
+                      2876199.91,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      7,
+                      "Ampliación de Redes",
+                      "Entrada de Gen",
+                      "Municipio Gaspar Hernández",
+                      275,
+                      2025719.18,
+                      2009340.36,
+                      401868.07,
+                      401868.07,
+                      1623851.11,
+                      1640229.93,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      8,
+                      "Ampliación de Redes",
+                      "Villa Olímpica",
+                      "Municipio Gaspar Hernández",
+                      280,
+                      2535373.49,
+                      2584327.97,
+                      516865.59,
+                      516865.59,
+                      2018507.9,
+                      1969553.42,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      9,
+                      "Ampliación de Redes",
+                      "Villa Valentina",
+                      "Municipio Gaspar Hernández",
+                      125,
+                      565528.51,
+                      581155.59,
+                      116231.12,
+                      116231.12,
+                      449297.39,
+                      433670.31,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      10,
+                      "Ampliación de Redes",
+                      "Entrada el Correo",
+                      "Municipio Gaspar Hernández",
+                      100,
+                      693468.93,
+                      671509.05,
+                      134301.81,
+                      134301.81,
+                      559167.12,
+                      581127,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      11,
+                      "Ampliación de Redes",
+                      "Las Colinas La Antena",
+                      "Municipio Gaspar Hernández",
+                      1000,
+                      2094659.12,
+                      2214571.5,
+                      442914.3,
+                      442914.3,
+                      1651744.82,
+                      1531832.44,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      12,
+                      "Ampliación de Redes",
+                      "Loma Al Medio (Entrada La Cigua)",
+                      "Municipio Gaspar Hernández",
+                      75,
+                      1228598.75,
+                      1298144.87,
+                      259628.97,
+                      259628.97,
+                      968969.78,
+                      899423.66,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      13,
+                      "Ampliación de Redes",
+                      "Entrada La Batata",
+                      "Municipio Gaspar Hernández",
+                      30,
+                      2295873.41,
+                      2424188.91,
+                      484837.78,
+                      484837.78,
+                      1811035.63,
+                      1682720.13,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      3,
+                      "Construcción de un pozo tubular",
+                      "Pozo Las Colinas (La Antena)",
+                      "Municipio Gaspar Hernández",
+                      1000,
+                      3126304.25,
+                      2813673.83,
+                      562734.77,
+                      562734.77,
+                      2563569.49,
+                      2876199.91,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      4,
+                      "Construcción de un pozo tubular",
+                      "Loma Al Medio (Entrada La Cigua)",
+                      "Municipio Gaspar Hernández",
+                      75,
+                      3126304.25,
+                      2813673.83,
+                      562734.77,
+                      562734.77,
+                      2563569.49,
+                      2876199.91,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      14,
+                      "Ampliación de Redes",
+                      "Entrada Malen",
+                      "Distrito Municipal de Villa Magante",
+                      75,
+                      705067.08,
+                      648739.39,
+                      129747.88,
+                      523184.58,
+                      181882.5,
+                      238210.19,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "BENESTAR CONSTRUCTORA, S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      15,
+                      "Ampliación de Redes",
+                      "Rincón de Genaro",
+                      "Distrito Municipal de Villa Magante",
+                      350,
+                      1502938.05,
+                      1396857.16,
+                      279371.43,
+                      1179744.72,
+                      323193.33,
+                      429274.22,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "BENESTAR CONSTRUCTORA, S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      5,
+                      "Construcción de un pozo tubular",
+                      "Pozo Tanque Entrada Los Mangos",
+                      "Distrito Municipal de Villa Magante",
+                      380,
+                      3126304.25,
+                      2813673.83,
+                      562734.77,
+                      562734.77,
+                      2563569.49,
+                      2876199.91,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    },
+    {
+        "value":  [
+                      6,
+                      "Construcción de un pozo tubular",
+                      "Vereda Al Medio",
+                      "Distrito Municipal de Villa Magante",
+                      250,
+                      3126304.25,
+                      2813673.83,
+                      562734.77,
+                      562734.77,
+                      2563569.49,
+                      2876199.91,
+                      "CORAAMOCA-CCC-CP-2025-0002",
+                      "INGENIERIA Y PERFORACIONES (INPER), S.R.L",
+                      "16879"
+                  ],
+        "Count":  14
+    }
+];
+
+    const colors = ["#1769aa", "#198754", "#0f766e", "#c47f00", "#b42318", "#6f42c1"];
+    const money = new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 2 });
+    const number = new Intl.NumberFormat("es-DO");
+    const stateKey = "coraamoca-system-v2";
+    const makeId = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const permissionLabels = {
+      dashboard: "Dashboard",
+      registro: "Registro de proyectos",
+      cubicaciones: "Registro de cubicaciones",
+      reportes: "Reportes",
+      "users-admin": "Crear usuarios",
+      backup: "Respaldos",
+      "project-edit": "Editar cÃ³digo, presupuesto y estatus",
+      "payment-create": "Registrar cubicaciones",
+      "report-municipio": "Reporte por municipio",
+      "report-contratista": "Reporte por contratista",
+      "report-disponibilidad": "Reporte disponibilidad",
+      "report-pagos": "Reporte pagos realizados",
+      "report-estatus": "Reporte estatus de obras",
+      "report-poblacion": "Reporte por poblaciÃ³n"
+    };
+    const permissionPolicies = {
+      "Administrador": Object.keys(permissionLabels),
+      "DirecciÃ³n TÃ©cnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-poblacion"],
+      "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos"],
+      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion"],
+      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion"]
+    };
+    const reportPermissions = {
+      municipio: "report-municipio",
+      contratista: "report-contratista",
+      disponibilidad: "report-disponibilidad",
+      pagos: "report-pagos",
+      estatus: "report-estatus",
+      poblacion: "report-poblacion"
+    };
+
+    function contractorFromExcel(row) {
+      return row[12] || "Sin asignar";
+    }
+
+    const baseProjects = seedRows.map((r, i) => ({
+      key: "P" + String(i + 1).padStart(3, "0"),
+      no: r[0], tipo: r[1], comunidad: r[2], municipio: r[3].trim(),
+      poblacion: r[4], presupuesto: r[5], adjudicado: r[6], comprometido: r[7],
+      pagadoBase: r[8], disponibilidadAdjudicadoBase: r[9], disponibilidadProyectoBase: r[10],
+      procesoCompra: r[11] || "", codigo: r[13] || "", contratista: contractorFromExcel(r), estatus: "En proceso"
+    }));
+
+    let state = loadState();
+    let currentReport = "municipio";
+    let creatingNewProject = false;
+
+    function loadState() {
+      const saved = localStorage.getItem(stateKey);
+      if (!saved) return { projects: baseProjects, users: [], payments: [], activeUser: "" };
+      const parsed = JSON.parse(saved);
+      return {
+        projects: mergeProjects(parsed.projects || []),
+        users: parsed.users || [],
+        payments: parsed.payments || [],
+        activeUser: parsed.activeUser || ""
+      };
+    }
+
+    function mergeProjects(saved) {
+      const byKey = Object.fromEntries(saved.map(p => [p.key, p]));
+      const mergedBase = baseProjects.map(p => {
+        const stored = byKey[p.key] || {};
+        const merged = { ...p, ...stored };
+        if (stored.pagadoBase === undefined) {
+          merged.pagadoBase = p.pagadoBase;
+        }
+        if (!stored.contratista || stored.contratista === "Sin asignar") {
+          merged.contratista = p.contratista;
+        }
+        return merged;
+      });
+      const customProjects = saved.filter(project => !baseProjects.some(base => base.key === project.key));
+      return [...mergedBase, ...customProjects];
+    }
+
+    function saveState() {
+      localStorage.setItem(stateKey, JSON.stringify(state));
+    }
+
+    function normalizedUser(user) {
+      if (!user) return null;
+      const permissions = user.permissions && user.permissions.length ? user.permissions : (permissionPolicies[user.rol] || permissionPolicies.Consulta);
+      return { ...user, permissions };
+    }
+
+    function activeUser() {
+      return normalizedUser(state.users.find(user => user.usuario === state.activeUser));
+    }
+
+    function can(permission) {
+      const user = activeUser();
+      if (!user) return true;
+      return user.permissions.includes(permission);
+    }
+
+    function policyBadges(role) {
+      const permissions = permissionPolicies[role] || [];
+      return permissionBadges(permissions);
+    }
+
+    function permissionBadges(permissions) {
+      return `<div class="permission-list">${permissions.map(permission => `<span class="badge">${permissionLabels[permission] || permission}</span>`).join("")}</div>`;
+    }
+
+    function renderPermissionChecklist(checkedPermissions) {
+      const selected = new Set(checkedPermissions || []);
+      return `<small>Permisos del usuario</small><div class="permission-checks">` +
+        Object.entries(permissionLabels).map(([permission, label]) => {
+          const checked = selected.has(permission) ? "checked" : "";
+          return `<label class="permission-check"><input type="checkbox" name="permissions" value="${permission}" ${checked}>${label}</label>`;
+        }).join("") + `</div>`;
+    }
+
+    function renderPolicyPreview(usePolicy = false) {
+      const role = document.getElementById("roleSelect").value;
+      const current = [...document.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
+      const permissions = usePolicy || !current.length ? (permissionPolicies[role] || []) : current;
+      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(permissions);
+    }
+
+    function sum(rows, field) {
+      return rows.reduce((total, item) => total + (Number(item[field]) || 0), 0);
+    }
+
+    function projectPaid(projectKey) {
+      const project = state.projects.find(p => p.key === projectKey);
+      const paidFromExcel = Number(project?.pagadoBase || 0);
+      const paidFromCubicaciones = state.payments.filter(p => p.projectKey === projectKey).reduce((t, p) => t + Number(p.monto || 0), 0);
+      return paidFromExcel + paidFromCubicaciones;
+    }
+
+    function enrichedProjects() {
+      return state.projects.map(project => {
+        const pagado = projectPaid(project.key);
+        const disponibilidadAdjudicado = Math.max(project.presupuesto - pagado, 0);
+        const disponibilidadProyecto = (project.disponibilidadProyectoBase || 0) - disponibilidadAdjudicado;
+        return { ...project, pagado, disponibilidadAdjudicado, disponibilidadProyecto };
+      });
+    }
+
+    function totals() {
+      const rows = enrichedProjects();
+      const presupuesto = sum(rows, "presupuesto");
+      const comprometido = sum(rows, "comprometido");
+      const adjudicado = sum(rows, "adjudicado");
+      const pagado = sum(rows, "pagado");
+      const disponibilidadAdjudicado = presupuesto - pagado;
+      const disponibilidadProyecto = sum(rows, "disponibilidadProyecto");
+      return { presupuesto, comprometido, adjudicado, pagado, disponibilidadAdjudicado, disponibilidadProyecto };
+    }
+
+    function renderAll() {
+      populateSelects();
+      renderMetrics();
+      renderPie();
+      renderAvailability();
+      renderUsers();
+      renderPayments();
+      renderReport();
+      renderPolicyPreview();
+      renderAccess();
+    }
+
+    function renderMetrics() {
+      const t = totals();
+      const metrics = [
+        ["Presupuesto general", t.presupuesto],
+        ["Presupuesto comprometido", t.comprometido],
+        ["Presupuesto ejecutado", t.adjudicado],
+        ["Presupuesto pagado", t.pagado],
+        ["Disponible adjudicado", t.disponibilidadAdjudicado],
+        ["Disponibilidad por proyecto", t.disponibilidadProyecto]
+      ];
+      document.getElementById("metrics").innerHTML = metrics.map(([label, value]) =>
+        `<div class="metric"><small>${label}</small><strong>${money.format(value)}</strong></div>`
+      ).join("");
+    }
+
+    function renderPie() {
+      const t = totals();
+      const data = [
+        ["General", t.presupuesto],
+        ["Comprometido", t.comprometido],
+        ["Ejecutado", t.adjudicado],
+        ["Pagado", t.pagado],
+        ["Disponible adjudicado", Math.max(t.disponibilidadAdjudicado, 0)]
+      ];
+      const canvas = document.getElementById("pieChart");
+      const ctx = canvas.getContext("2d");
+      const cx = canvas.width / 2, cy = canvas.height / 2, radius = 142;
+      const total = data.reduce((acc, item) => acc + item[1], 0) || 1;
+      let start = -Math.PI / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      data.forEach((item, i) => {
+        const angle = (item[1] / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, start, start + angle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        start += angle;
+      });
+      ctx.beginPath();
+      ctx.arc(cx, cy, 78, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.fillStyle = "#172026";
+      ctx.textAlign = "center";
+      ctx.font = "700 18px Segoe UI";
+      ctx.fillText("CORAAMOCA", cx, cy - 5);
+      ctx.font = "12px Segoe UI";
+      ctx.fillStyle = "#65727d";
+      ctx.fillText("Presupuesto", cx, cy + 16);
+
+      const legend = document.createElement("div");
+      legend.className = "legend";
+      legend.innerHTML = data.map((item, i) => `<div class="legend-row"><span class="swatch" style="background:${colors[i]}"></span><span>${item[0]}</span><strong>${money.format(item[1])}</strong></div>`).join("");
+      const panel = canvas.closest(".panel");
+      const old = panel.querySelector(".legend");
+      if (old) old.remove();
+      panel.appendChild(legend);
+    }
+
+    function renderAvailability() {
+      const rows = enrichedProjects()
+        .sort((a, b) => a.disponibilidadProyecto - b.disponibilidadProyecto)
+        .slice(0, 14);
+      renderTable("availabilityTable", ["Proyecto", "Municipio", "Pagado", "Disponible adjudicado", "Disponibilidad proyecto"], rows.map(p => [
+        `${p.tipo}<br><small>${p.comunidad}</small>`, p.municipio, money.format(p.pagado), money.format(p.disponibilidadAdjudicado), badgeMoney(p.disponibilidadProyecto)
+      ]));
+    }
+
+    function populateSelects() {
+      const options = enrichedProjects().map(p => `<option value="${p.key}">${p.key} - ${p.comunidad} (${p.municipio})</option>`).join("");
+      document.querySelectorAll('select[name="projectKey"]').forEach(select => { select.innerHTML = options; });
+      const municipalities = [...new Set(state.projects.map(p => p.municipio))].sort();
+      document.getElementById("municipalityFilter").innerHTML = `<option value="">Todos los municipios</option>` + municipalities.map(m => `<option>${m}</option>`).join("");
+      const statuses = [...new Set(["En proceso", "Contratado", "En ejecuciÃ³n", "Terminado", "Paralizado", ...state.projects.map(p => p.estatus)])];
+      document.getElementById("statusFilter").innerHTML = `<option value="">Todos los estatus</option>` + statuses.map(s => `<option>${s}</option>`).join("");
+      document.getElementById("activeUserSelect").innerHTML = `<option value="">Sin usuario activo</option>` + state.users.map(u => `<option value="${u.usuario}">${u.nombre} - ${u.area || u.rol}</option>`).join("");
+      document.getElementById("activeUserSelect").value = state.activeUser || "";
+    }
+
+    function renderAccess() {
+      document.querySelectorAll("[data-permission]").forEach(element => {
+        element.classList.toggle("hidden-by-permission", !can(element.dataset.permission));
+      });
+      document.getElementById("backupBtn").classList.toggle("hidden-by-permission", !can("backup"));
+      document.getElementById("restoreBtn").classList.toggle("hidden-by-permission", !can("backup"));
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.toggle("hidden-by-permission", !can(btn.dataset.view));
+      });
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.toggle("hidden-by-permission", !can(reportPermissions[tab.dataset.report]));
+      });
+      if (!can(currentReportPermission())) {
+        const firstReport = [...document.querySelectorAll(".tab")].find(tab => !tab.classList.contains("hidden-by-permission"));
+        if (firstReport) {
+          document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+          firstReport.classList.add("active");
+          currentReport = firstReport.dataset.report;
+          renderReport();
+        }
+      }
+      const activeSection = document.querySelector(".section.active");
+      if (activeSection && !can(activeSection.id)) {
+        const firstNav = [...document.querySelectorAll(".nav-btn")].find(btn => !btn.classList.contains("hidden-by-permission"));
+        if (firstNav) showView(firstNav.dataset.view);
+      }
+    }
+
+    function renderUsers() {
+      renderTable("usersTable", ["Nombre", "Usuario", "Ãrea", "Cargo", "Perfil base", "Permisos", "Creado"], state.users.map(user => {
+        const u = normalizedUser(user);
+        return [u.nombre, u.usuario, u.area || u.rol || "-", u.cargo || "-", u.rol, permissionBadges(u.permissions), u.creado];
+      }));
+    }
+
+    function renderPayments() {
+      const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
+      renderTable("paymentsTable", ["Fecha", "Proyecto", "CubicaciÃ³n", "Monto", "ObservaciÃ³n"], state.payments.map(p => [
+        p.fecha, projects[p.projectKey]?.comunidad || p.projectKey, p.numero || "-", money.format(p.monto), p.observacion || "-"
+      ]));
+    }
+
+    function filteredProjects() {
+      const q = document.getElementById("searchBox").value.toLowerCase();
+      const mun = document.getElementById("municipalityFilter").value;
+      const status = document.getElementById("statusFilter").value;
+      return enrichedProjects().filter(p => {
+        const haystack = `${p.key} ${p.tipo} ${p.comunidad} ${p.municipio} ${p.contratista} ${p.codigo} ${p.estatus}`.toLowerCase();
+        return (!q || haystack.includes(q)) && (!mun || p.municipio === mun) && (!status || p.estatus === status);
+      });
+    }
+
+    function renderReport() {
+      const rows = filteredProjects();
+      if (currentReport === "municipio") {
+        renderGroupedReport(groupBy(rows, "municipio"), "Municipio");
+      } else if (currentReport === "contratista") {
+        renderGroupedReport(groupBy(rows, "contratista"), "Contratista");
+      } else if (currentReport === "disponibilidad") {
+        renderTable("reportTable", ["Proyecto", "Municipio", "Presupuesto", "Pagado", "Disponible adjudicado", "Disponibilidad proyecto"], rows.map(p => [
+          p.comunidad, p.municipio, money.format(p.presupuesto), money.format(p.pagado), money.format(p.disponibilidadAdjudicado), badgeMoney(p.disponibilidadProyecto)
+        ]), ["TOTAL", "", money.format(sum(rows, "presupuesto")), money.format(sum(rows, "pagado")), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(sum(rows, "disponibilidadProyecto"))]);
+      } else if (currentReport === "pagos") {
+        const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
+        const excelPayments = enrichedProjects()
+          .filter(p => Number(p.pagadoBase || 0) > 0)
+          .map(p => ["", p.comunidad, p.municipio, p.contratista, "", money.format(p.pagadoBase)]);
+        const manualPayments = state.payments.map(p => {
+          const project = projects[p.projectKey] || {};
+          return [p.fecha, project.comunidad || p.projectKey, project.municipio || "-", project.contratista || "-", p.numero || "-", money.format(p.monto)];
+        });
+        const totalPagos = enrichedProjects().reduce((total, p) => total + Number(p.pagadoBase || 0), 0) + state.payments.reduce((total, p) => total + Number(p.monto || 0), 0);
+        renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "CubicaciÃ³n", "Monto"], [...excelPayments, ...manualPayments], ["TOTAL", "", "", "", "", money.format(totalPagos)]);
+      } else if (currentReport === "poblacion") {
+        const ordered = [...rows].sort((a, b) => b.poblacion - a.poblacion);
+        renderTable("reportTable", ["Proyecto", "Municipio", "PoblaciÃ³n / habitantes", "Tipo", "Presupuesto", "Estatus"], ordered.map(p => [
+          p.comunidad, p.municipio, number.format(p.poblacion || 0), p.tipo, money.format(p.presupuesto), p.estatus
+        ]), ["TOTAL", "", number.format(sum(rows, "poblacion")), "", money.format(sum(rows, "presupuesto")), ""]);
+      } else {
+        renderGroupedReport(groupBy(rows, "estatus"), "Estatus");
+      }
+    }
+
+    function groupBy(rows, field) {
+      return rows.reduce((acc, row) => {
+        const key = row[field] || "Sin asignar";
+        acc[key] = acc[key] || [];
+        acc[key].push(row);
+        return acc;
+      }, {});
+    }
+
+    function renderGroupedReport(groups, label) {
+      const rows = Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([name, items]) => [
+        name, number.format(items.length), money.format(sum(items, "presupuesto")), money.format(sum(items, "comprometido")),
+        money.format(sum(items, "pagado")), money.format(sum(items, "disponibilidadAdjudicado"))
+      ]);
+      const allItems = Object.values(groups).flat();
+      renderTable("reportTable", [label, "Obras", "Presupuesto", "Comprometido", "Pagado", "Disponible adjudicado"], rows, [
+        "TOTAL",
+        number.format(allItems.length),
+        money.format(sum(allItems, "presupuesto")),
+        money.format(sum(allItems, "comprometido")),
+        money.format(sum(allItems, "pagado")),
+        money.format(sum(allItems, "disponibilidadAdjudicado"))
+      ]);
+    }
+
+    function renderTable(id, headers, rows, footer = null) {
+      const table = document.getElementById(id);
+      if (!rows.length) {
+        table.innerHTML = `<tbody><tr><td class="empty">Sin registros para mostrar.</td></tr></tbody>`;
+        return;
+      }
+      table.innerHTML = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>` +
+        rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("") + "</tbody>" +
+        (footer ? `<tfoot><tr>${footer.map(cell => `<td>${cell}</td>`).join("")}</tr></tfoot>` : "");
+    }
+
+    function badgeMoney(value) {
+      const cls = value < 0 ? "bad" : value < 100000 ? "warn" : "ok";
+      return `<span class="badge ${cls}">${money.format(value)}</span>`;
+    }
+
+    function currentReportPermission() {
+      return reportPermissions[currentReport] || "reportes";
+    }
+
+    function currentReportTitle() {
+      const activeTab = document.querySelector(`.tab[data-report="${currentReport}"]`);
+      return activeTab ? activeTab.textContent.trim() : "Reporte";
+    }
+
+    function showView(view) {
+      if (!can(view)) return;
+      document.querySelectorAll(".nav-btn, .section").forEach(el => el.classList.remove("active"));
+      const button = document.querySelector(`.nav-btn[data-view="${view}"]`);
+      if (button) button.classList.add("active");
+      document.getElementById(view).classList.add("active");
+    }
+
+    function setProjectMode(isNew) {
+      creatingNewProject = isNew;
+      document.getElementById("existingProjectField").hidden = isNew;
+      document.querySelectorAll(".new-project-field").forEach(field => field.hidden = !isNew);
+      document.querySelector('#projectForm select[name="projectKey"]').required = !isNew;
+      document.querySelector('#projectForm input[name="tipoNuevo"]').required = isNew;
+      document.querySelector('#projectForm input[name="municipioNuevo"]').required = isNew;
+      document.querySelector('#projectForm input[name="comunidadNuevo"]').required = isNew;
+      document.getElementById("newProjectBtn").hidden = isNew;
+      document.getElementById("cancelNewProjectBtn").hidden = !isNew;
+      document.getElementById("projectSubmitBtn").textContent = isNew ? "Guardar nuevo proyecto" : "Actualizar proyecto";
+    }
+
+    function nextProjectKey() {
+      const max = state.projects.reduce((highest, project) => {
+        const n = Number(String(project.key || "").replace(/\D/g, ""));
+        return Number.isFinite(n) ? Math.max(highest, n) : highest;
+      }, 0);
+      return "P" + String(max + 1).padStart(3, "0");
+    }
+
+    function createProjectFromForm(form) {
+      const data = new FormData(form);
+      const presupuesto = Number(data.get("presupuesto")) || 0;
+      const adjudicado = Number(data.get("adjudicado")) || presupuesto;
+      const committed = 0;
+      const project = {
+        key: nextProjectKey(),
+        no: state.projects.length + 1,
+        tipo: data.get("tipoNuevo"),
+        comunidad: data.get("comunidadNuevo"),
+        municipio: String(data.get("municipioNuevo") || "").trim(),
+        poblacion: Number(data.get("poblacionNuevo")) || 0,
+        presupuesto,
+        adjudicado,
+        comprometido: committed,
+        pagadoBase: 0,
+        disponibilidadAdjudicadoBase: presupuesto,
+        disponibilidadProyectoBase: presupuesto,
+        codigo: data.get("codigo") || "",
+        contratista: data.get("contratista") || "Sin asignar",
+        estatus: data.get("estatus") || "En proceso"
+      };
+      state.projects.push(project);
+      saveState();
+      form.reset();
+      setProjectMode(false);
+      renderAll();
+    }
+
+    function updateProjectFromForm(form) {
+      const data = new FormData(form);
+      const project = state.projects.find(p => p.key === data.get("projectKey"));
+      if (!project) return;
+      ["codigo", "contratista", "estatus"].forEach(field => {
+        const value = data.get(field);
+        if (value) project[field] = value;
+      });
+      ["presupuesto", "adjudicado"].forEach(field => {
+        const value = Number(data.get(field));
+        if (!Number.isNaN(value) && value > 0) project[field] = value;
+      });
+      saveState();
+      form.reset();
+      renderAll();
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
+
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+      if (!can(reportPermissions[tab.dataset.report])) return;
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentReport = tab.dataset.report;
+      renderReport();
+    }));
+
+    document.getElementById("userForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("users-admin")) return alert("El usuario activo no tiene permiso para crear usuarios.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const permissions = [...event.currentTarget.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
+      if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
+      state.users.push({ ...data, permissions, creado: new Date().toLocaleDateString("es-DO") });
+      saveState();
+      event.currentTarget.reset();
+      renderAll();
+    });
+
+    document.getElementById("projectForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("project-edit")) return alert("El usuario activo no tiene permiso para editar proyectos.");
+      if (creatingNewProject) {
+        createProjectFromForm(event.currentTarget);
+      } else {
+        updateProjectFromForm(event.currentTarget);
+      }
+    });
+
+    document.getElementById("newProjectBtn").addEventListener("click", () => {
+      document.getElementById("projectForm").reset();
+      setProjectMode(true);
+    });
+
+    document.getElementById("cancelNewProjectBtn").addEventListener("click", () => {
+      document.getElementById("projectForm").reset();
+      setProjectMode(false);
+    });
+
+    document.getElementById("paymentForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("payment-create")) return alert("El usuario activo no tiene permiso para registrar cubicaciones.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      state.payments.push({ ...data, monto: Number(data.monto), id: makeId() });
+      saveState();
+      event.currentTarget.reset();
+      renderAll();
+    });
+
+    ["searchBox", "municipalityFilter", "statusFilter"].forEach(id => {
+      document.getElementById(id).addEventListener("input", renderReport);
+      document.getElementById(id).addEventListener("change", renderReport);
+    });
+
+    document.getElementById("roleSelect").addEventListener("change", event => {
+      const areaInput = document.getElementById("workAreaInput");
+      if (!areaInput.value || Object.keys(permissionPolicies).includes(areaInput.value)) {
+        areaInput.value = event.target.value;
+      }
+      renderPolicyPreview(true);
+    });
+    document.getElementById("activeUserSelect").addEventListener("change", event => {
+      state.activeUser = event.target.value;
+      saveState();
+      renderAll();
+    });
+
+    document.getElementById("togglePurchasingModule").addEventListener("click", event => {
+      const module = document.getElementById("purchasingModule");
+      module.classList.toggle("active");
+      event.currentTarget.textContent = module.classList.contains("active") ? "Cerrar procesos" : "Abrir procesos";
+    });
+
+    document.getElementById("csvBtn").addEventListener("click", () => {
+      const rows = [...document.querySelectorAll("#reportTable tr")].map(tr => [...tr.children].map(td => `"${td.innerText.replaceAll('"', '""')}"`).join(",")).join("\n");
+      const blob = new Blob([rows], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `reporte-${currentReport}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("printReportBtn").addEventListener("click", () => {
+      const table = document.getElementById("reportTable").cloneNode(true);
+      const title = currentReportTitle();
+      const printedAt = new Date().toLocaleString("es-DO");
+      const filters = [
+        document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
+        document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
+        document.getElementById("statusFilter").value ? `Estatus: ${document.getElementById("statusFilter").value}` : ""
+      ].filter(Boolean).join(" | ");
+      const printWindow = window.open("", "_blank", "width=1100,height=800");
+      if (!printWindow) {
+        alert("El navegador bloqueÃ³ la ventana de impresiÃ³n. Permita ventanas emergentes para imprimir el reporte.");
+        return;
+      }
+      printWindow.document.write(`<!doctype html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <title>${title}</title>
+          <style>
+            body { font-family: "Segoe UI", Arial, sans-serif; color: #172026; margin: 24px; }
+            h1 { font-size: 20px; margin: 0 0 4px; }
+            .meta { color: #65727d; font-size: 12px; margin-bottom: 14px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid #cfd9de; padding: 7px; text-align: left; vertical-align: top; }
+            th { background: #eef3f5; }
+            .badge { font-weight: 700; }
+            @page { size: landscape; margin: 14mm; }
+          </style>
+        </head>
+        <body>
+          <h1>CORAAMOCA - ${title}</h1>
+          <div class="meta">Impreso: ${printedAt}${filters ? " | " + filters : ""}</div>
+          ${table.outerHTML}
+        </body>
+        </html>`);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    });
+
+    document.getElementById("backupBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "respaldo-coraamoca.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("restoreBtn").addEventListener("click", () => document.getElementById("restoreFile").click());
+    document.getElementById("restoreFile").addEventListener("change", event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        state = JSON.parse(reader.result);
+        saveState();
+        state = loadState();
+        renderAll();
+      };
+      reader.readAsText(file);
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
+
