@@ -139,10 +139,10 @@
     <div class="auth-card">
       <h1>CORAAMOCA</h1>
       <p class="sub">Iniciar sesión para acceder al sistema</p>
-      <form id="loginForm">
+      <form id="loginForm" action="javascript:void(0)" onsubmit="return false;" novalidate>
         <label>Usuario o correo<input id="loginEmail" type="email" autocomplete="username" required></label>
         <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-        <button class="btn" id="loginBtn">Iniciar sesión</button>
+        <button class="btn" id="loginBtn" type="button">Iniciar sesión</button>
         <div class="auth-error" id="authError"></div>
       </form>
     </div>
@@ -2517,21 +2517,32 @@
 
     document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
 
-    document.getElementById("loginForm").addEventListener("submit", async event => {
-      event.preventDefault();
+    async function handleLogin(event) {
+      if (event) event.preventDefault();
       const button = document.getElementById("loginBtn");
       const error = document.getElementById("authError");
       button.disabled = true;
       button.textContent = "Validando...";
       error.textContent = "";
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        error.textContent = "Usuario o contraseña incorrectos.";
+      try {
+        if (!window.supabaseClient) throw new Error("No se pudo cargar Supabase. Revise la conexión a internet.");
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        if (!email || !password) throw new Error("Debe escribir correo y contraseña.");
+        const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+      } catch (loginError) {
+        error.textContent = loginError.message || "No fue posible iniciar sesión.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Iniciar sesión";
       }
-      button.disabled = false;
-      button.textContent = "Iniciar sesión";
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", handleLogin);
+    document.getElementById("loginBtn").addEventListener("click", handleLogin);
+    document.getElementById("loginPassword").addEventListener("keydown", event => {
+      if (event.key === "Enter") handleLogin(event);
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
