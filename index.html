@@ -152,10 +152,10 @@
     <aside>
       <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
       <nav>
-        <button class="nav-btn active" data-view="dashboard">Dashboard</button>
-        <button class="nav-btn" data-view="registro">Registro manual</button>
-        <button class="nav-btn" data-view="cubicaciones">Cubicaciones</button>
-        <button class="nav-btn" data-view="reportes">Reportes</button>
+        <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Dashboard</button>
+        <button class="nav-btn" data-view="registro" onclick="showView('registro')">Registro manual</button>
+        <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
+        <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
       </nav>
     </aside>
 
@@ -2061,6 +2061,8 @@
     let state = loadState();
     let currentReport = "municipio";
     let creatingNewProject = false;
+    let currentSessionEmail = "";
+    const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
@@ -2182,8 +2184,10 @@
     }
 
     function can(permission) {
+      if (adminEmails.includes(String(currentSessionEmail || "").toLowerCase())) return true;
       const user = activeUser();
       if (!user) return true;
+      if (user.rol === "Administrador") return true;
       return user.permissions.includes(permission);
     }
 
@@ -2254,6 +2258,7 @@
       renderPolicyPreview();
       renderAccess();
     }
+    window.renderAll = renderAll;
 
     function renderMetrics() {
       const t = totals();
@@ -2479,6 +2484,7 @@
 
     function applySessionUser(session) {
       const email = session?.user?.email || "";
+      currentSessionEmail = email.toLowerCase();
       document.getElementById("sessionUser").textContent = email;
       const matchedUser = state.users.find(user => {
         const userName = String(user.usuario || "").toLowerCase();
@@ -2492,7 +2498,6 @@
     }
 
     function showAuthenticated(session) {
-      applySessionUser(session);
       document.body.classList.remove("auth-locked");
       document.body.classList.add("auth-ready");
       loadSupabaseData()
@@ -2500,7 +2505,10 @@
           console.error(error);
           alert("No se pudieron cargar datos de Supabase. Se usara la base local temporalmente.");
         })
-        .finally(renderAll);
+        .finally(() => {
+          applySessionUser(session);
+          renderAll();
+        });
     }
 
     function showLogin() {
@@ -2679,6 +2687,7 @@
     document.getElementById("userForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("users-admin")) return alert("El usuario activo no tiene permiso para crear usuarios.");
+      try {
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const permissions = [...event.currentTarget.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
       if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
@@ -2706,6 +2715,9 @@
       saveState();
       event.currentTarget.reset();
       renderAll();
+      } catch (error) {
+        alert(error.message || "No se pudo guardar el usuario en Supabase.");
+      }
     });
 
     document.getElementById("projectForm").addEventListener("submit", async event => {
@@ -2735,6 +2747,7 @@
     document.getElementById("paymentForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("payment-create")) return alert("El usuario activo no tiene permiso para registrar cubicaciones.");
+      try {
       const data = Object.fromEntries(new FormData(event.currentTarget));
       if (window.supabaseClient) {
         const inserted = await window.supabaseClient.from("cubicaciones").insert({
@@ -2752,6 +2765,9 @@
       saveState();
       event.currentTarget.reset();
       renderAll();
+      } catch (error) {
+        alert(error.message || "No se pudo guardar la cubicación en Supabase.");
+      }
     });
 
     ["searchBox", "municipalityFilter", "statusFilter"].forEach(id => {
