@@ -2095,6 +2095,82 @@
       localStorage.setItem(stateKey, JSON.stringify(state));
     }
 
+    function mapProjectFromDb(project) {
+      return {
+        key: project.id,
+        dbId: project.id,
+        no: project.no_excel || 0,
+        tipo: project.tipo || "",
+        comunidad: project.comunidad || "",
+        municipio: project.municipio || "",
+        poblacion: Number(project.poblacion || 0),
+        presupuesto: Number(project.presupuesto || 0),
+        adjudicado: Number(project.adjudicado || 0),
+        comprometido: Number(project.comprometido || 0),
+        pagadoBase: Number(project.pagado_base || 0),
+        disponibilidadAdjudicadoBase: Number(project.disponibilidad_adjudicado_base || 0),
+        disponibilidadProyectoBase: Number(project.disponibilidad_proyecto_base || 0),
+        procesoCompra: project.proceso_compra || "",
+        codigo: project.snip || project.codigo_interno || "",
+        contratista: project.contratistas?.nombre || project.contratista || "Sin asignar",
+        contratistaId: project.contratista_id || "",
+        estatus: project.estatus || "En proceso"
+      };
+    }
+
+    function mapUserFromDb(user, permissionMap) {
+      return {
+        id: user.id,
+        nombre: user.nombre || user.usuario || user.correo,
+        usuario: user.usuario || user.correo,
+        correo: user.correo || user.usuario,
+        area: user.areas?.nombre || user.area || user.perfil_base || "",
+        cargo: user.cargo || "",
+        rol: user.perfil_base || "Consulta",
+        permissions: permissionMap[user.id] || [],
+        creado: user.creado_en ? new Date(user.creado_en).toLocaleDateString("es-DO") : ""
+      };
+    }
+
+    async function loadSupabaseData() {
+      if (!window.supabaseClient) return;
+      const [projectsResult, usersResult, permissionsResult, cubicacionesResult] = await Promise.all([
+        window.supabaseClient.from("proyectos").select("*, contratistas(nombre)").order("municipio", { ascending: true }),
+        window.supabaseClient.from("usuarios").select("*, areas(nombre)").order("nombre", { ascending: true }),
+        window.supabaseClient.from("usuario_permisos").select("usuario_id, permisos(codigo)"),
+        window.supabaseClient.from("cubicaciones").select("*").order("fecha", { ascending: false })
+      ]);
+      if (projectsResult.error) throw projectsResult.error;
+      if (usersResult.error) throw usersResult.error;
+      const permissionMap = {};
+      (permissionsResult.data || []).forEach(row => {
+        permissionMap[row.usuario_id] = permissionMap[row.usuario_id] || [];
+        if (row.permisos?.codigo) permissionMap[row.usuario_id].push(row.permisos.codigo);
+      });
+      state.projects = (projectsResult.data || []).map(mapProjectFromDb);
+      if (!state.projects.length) state.projects = baseProjects;
+      state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
+      state.payments = (cubicacionesResult.data || []).map(payment => ({
+        id: payment.id,
+        projectKey: payment.proyecto_id,
+        fecha: payment.fecha,
+        monto: Number(payment.monto || 0),
+        numero: payment.numero || "",
+        observacion: payment.observacion || ""
+      }));
+      saveState();
+    }
+
+    async function findOrCreateContractor(nombre) {
+      const cleanName = String(nombre || "").trim();
+      if (!cleanName || cleanName === "Sin asignar") return null;
+      const existing = await window.supabaseClient.from("contratistas").select("id").eq("nombre", cleanName).maybeSingle();
+      if (existing.data?.id) return existing.data.id;
+      const inserted = await window.supabaseClient.from("contratistas").insert({ nombre: cleanName }).select("id").single();
+      if (inserted.error) throw inserted.error;
+      return inserted.data.id;
+    }
+
     function normalizedUser(user) {
       if (!user) return null;
       const permissions = user.permissions && user.permissions.length ? user.permissions : (permissionPolicies[user.rol] || permissionPolicies.Consulta);
@@ -2419,7 +2495,12 @@
       applySessionUser(session);
       document.body.classList.remove("auth-locked");
       document.body.classList.add("auth-ready");
-      renderAll();
+      loadSupabaseData()
+        .catch(error => {
+          console.error(error);
+          alert("No se pudieron cargar datos de Supabase. Se usara la base local temporalmente.");
+        })
+        .finally(renderAll);
     }
 
     function showLogin() {
@@ -2469,11 +2550,34 @@
       return "P" + String(max + 1).padStart(3, "0");
     }
 
-    function createProjectFromForm(form) {
+    async function createProjectFromForm(form) {
       const data = new FormData(form);
       const presupuesto = Number(data.get("presupuesto")) || 0;
       const adjudicado = Number(data.get("adjudicado")) || presupuesto;
       const committed = 0;
+      const contratistaId = await findOrCreateContractor(data.get("contratista"));
+      const payload = {
+        codigo_interno: nextProjectKey(),
+        no_excel: state.projects.length + 1,
+        snip: data.get("codigo") || "",
+        tipo: data.get("tipoNuevo"),
+        comunidad: data.get("comunidadNuevo"),
+        municipio: String(data.get("municipioNuevo") || "").trim(),
+        poblacion: Number(data.get("poblacionNuevo")) || 0,
+        presupuesto,
+        adjudicado,
+        comprometido: committed,
+        pagado_base: 0,
+        disponibilidad_adjudicado_base: presupuesto,
+        disponibilidad_proyecto_base: presupuesto,
+        contratista_id: contratistaId,
+        estatus: data.get("estatus") || "En proceso"
+      };
+      if (window.supabaseClient) {
+        const inserted = await window.supabaseClient.from("proyectos").insert(payload).select("*, contratistas(nombre)").single();
+        if (inserted.error) throw inserted.error;
+        state.projects.push(mapProjectFromDb(inserted.data));
+      } else {
       const project = {
         key: nextProjectKey(),
         no: state.projects.length + 1,
@@ -2492,16 +2596,19 @@
         estatus: data.get("estatus") || "En proceso"
       };
       state.projects.push(project);
+      }
       saveState();
       form.reset();
       setProjectMode(false);
       renderAll();
     }
 
-    function updateProjectFromForm(form) {
+    async function updateProjectFromForm(form) {
       const data = new FormData(form);
       const project = state.projects.find(p => p.key === data.get("projectKey"));
       if (!project) return;
+      const contratistaValue = data.get("contratista");
+      const contratistaId = contratistaValue ? await findOrCreateContractor(contratistaValue) : project.contratistaId || null;
       ["codigo", "contratista", "estatus"].forEach(field => {
         const value = data.get(field);
         if (value) project[field] = value;
@@ -2510,6 +2617,18 @@
         const value = Number(data.get(field));
         if (!Number.isNaN(value) && value > 0) project[field] = value;
       });
+      if (window.supabaseClient && project.dbId) {
+        const payload = {
+          snip: project.codigo || "",
+          contratista_id: contratistaId,
+          estatus: project.estatus,
+          presupuesto: Number(project.presupuesto || 0),
+          adjudicado: Number(project.adjudicado || 0)
+        };
+        const updated = await window.supabaseClient.from("proyectos").update(payload).eq("id", project.dbId).select("*, contratistas(nombre)").single();
+        if (updated.error) throw updated.error;
+        Object.assign(project, mapProjectFromDb(updated.data));
+      }
       saveState();
       form.reset();
       renderAll();
@@ -2557,25 +2676,49 @@
       renderReport();
     }));
 
-    document.getElementById("userForm").addEventListener("submit", event => {
+    document.getElementById("userForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("users-admin")) return alert("El usuario activo no tiene permiso para crear usuarios.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const permissions = [...event.currentTarget.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
       if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
-      state.users.push({ ...data, permissions, creado: new Date().toLocaleDateString("es-DO") });
+      if (window.supabaseClient) {
+        const inserted = await window.supabaseClient.from("usuarios").insert({
+          nombre: data.nombre,
+          usuario: data.usuario,
+          correo: data.usuario,
+          cargo: data.cargo,
+          perfil_base: data.rol,
+          activo: true
+        }).select("*").single();
+        if (inserted.error) throw inserted.error;
+        const permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+        if (permissionRows.error) throw permissionRows.error;
+        if (permissionRows.data.length) {
+          const links = permissionRows.data.map(permission => ({ usuario_id: inserted.data.id, permiso_id: permission.id }));
+          const linkResult = await window.supabaseClient.from("usuario_permisos").insert(links);
+          if (linkResult.error) throw linkResult.error;
+        }
+        await loadSupabaseData();
+      } else {
+        state.users.push({ ...data, permissions, creado: new Date().toLocaleDateString("es-DO") });
+      }
       saveState();
       event.currentTarget.reset();
       renderAll();
     });
 
-    document.getElementById("projectForm").addEventListener("submit", event => {
+    document.getElementById("projectForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("project-edit")) return alert("El usuario activo no tiene permiso para editar proyectos.");
-      if (creatingNewProject) {
-        createProjectFromForm(event.currentTarget);
-      } else {
-        updateProjectFromForm(event.currentTarget);
+      try {
+        if (creatingNewProject) {
+          await createProjectFromForm(event.currentTarget);
+        } else {
+          await updateProjectFromForm(event.currentTarget);
+        }
+      } catch (error) {
+        alert(error.message || "No se pudo guardar el proyecto en Supabase.");
       }
     });
 
@@ -2589,11 +2732,23 @@
       setProjectMode(false);
     });
 
-    document.getElementById("paymentForm").addEventListener("submit", event => {
+    document.getElementById("paymentForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("payment-create")) return alert("El usuario activo no tiene permiso para registrar cubicaciones.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
-      state.payments.push({ ...data, monto: Number(data.monto), id: makeId() });
+      if (window.supabaseClient) {
+        const inserted = await window.supabaseClient.from("cubicaciones").insert({
+          proyecto_id: data.projectKey,
+          numero: data.numero || "",
+          fecha: data.fecha,
+          monto: Number(data.monto),
+          observacion: data.observacion || ""
+        }).select("*").single();
+        if (inserted.error) throw inserted.error;
+        state.payments.push({ projectKey: inserted.data.proyecto_id, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", id: inserted.data.id });
+      } else {
+        state.payments.push({ ...data, monto: Number(data.monto), id: makeId() });
+      }
       saveState();
       event.currentTarget.reset();
       renderAll();
