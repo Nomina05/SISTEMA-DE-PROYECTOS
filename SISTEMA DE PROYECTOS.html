@@ -378,14 +378,14 @@
       [3, "Construcción de un pozo tubular", "Pozo Las Colinas (La Antena)", "Gaspar Hernandez", 1000, 3126304.2514, 2813673.83, 562734.766, 562734.766, 2563569.4854, 2876199.9067, "CORAAMOCA-CCC-CP-2025-0002", "INGENIERIA Y PERFORACIONES (INPER), S.R.L", "16879"],
       [4, "Construcción de un pozo tubular", "Loma Al Medio (Entrada La Cigua)", "Gaspar Hernandez", 75, 3126304.2514, 2813673.83, 562734.766, 562734.766, 2563569.4854, 2876199.9067, "CORAAMOCA-CCC-CP-2025-0002", "INGENIERIA Y PERFORACIONES (INPER), S.R.L", "16879"],
       [14, "Ampliación de Redes", "Entrada Malen", "Villa Magante", 75, 705067.08, 648739.39, 129747.878, 523184.578, 181882.502, 238210.192, "CORAAMOCA-CCC-CP-2025-0002", "BENESTAR CONSTRUCTORA, S.R.L", "16879"],
-      [15, "Ampliación de Redes", "Rincón de Genaro", "", 350, 1502938.05, 1396857.16, 279371.432, 1179744.722, 323193.328, 429274.218, "CORAAMOCA-CCC-CP-2025-0002", "BENESTAR CONSTRUCTORA, S.R.L", "16879"],
-      [5, "Construcción de un pozo tubular", "Pozo Tanque Entrada Los Mangos", "", 380, 3126304.2514, 2813673.83, 562734.766, 562734.766, 2563569.4854, 2876199.9067, "CORAAMOCA-CCC-CP-2025-0002", "INGENIERIA Y PERFORACIONES (INPER), S.R.L", "16879"],
-      [6, "Construcción de un pozo tubular", "Vereda Al Medio", "", 250, 3126304.2514, 2813673.83, 562734.766, 562734.766, 2563569.4854, 2876199.9067, "CORAAMOCA-CCC-CP-2025-0002", "INGENIERIA Y PERFORACIONES (INPER), S.R.L", "16879"]
+      [15, "Ampliación de Redes", "Rincón de Genaro", "Villa Magante", 350, 1502938.05, 1396857.16, 279371.432, 1179744.722, 323193.328, 429274.218, "CORAAMOCA-CCC-CP-2025-0002", "BENESTAR CONSTRUCTORA, S.R.L", "16879"],
+      [5, "Construcción de un pozo tubular", "Pozo Tanque Entrada Los Mangos", "Villa Magante", 380, 3126304.2514, 2813673.83, 562734.766, 562734.766, 2563569.4854, 2876199.9067, "CORAAMOCA-CCC-CP-2025-0002", "INGENIERIA Y PERFORACIONES (INPER), S.R.L", "16879"],
+      [6, "Construcción de un pozo tubular", "Vereda Al Medio", "Villa Magante", 250, 3126304.2514, 2813673.83, 562734.766, 562734.766, 2563569.4854, 2876199.9067, "CORAAMOCA-CCC-CP-2025-0002", "INGENIERIA Y PERFORACIONES (INPER), S.R.L", "16879"]
     ];
     const colors = ["#1769aa", "#198754", "#0f766e", "#c47f00", "#b42318", "#6f42c1"];
     const money = new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 2 });
     const number = new Intl.NumberFormat("es-DO");
-    const stateKey = "coraamoca-system-v3-base-datos-1";
+    const stateKey = "coraamoca-system-v4-base-datos-1";
     const makeId = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const permissionLabels = {
       dashboard: "Dashboard",
@@ -1298,6 +1298,7 @@
   </script>
 </body>
 </html>
+
 
 
 
