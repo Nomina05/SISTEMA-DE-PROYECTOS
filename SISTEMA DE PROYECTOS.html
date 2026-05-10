@@ -184,8 +184,8 @@
           <button type="button" id="togglePurchasingModule">Abrir procesos</button>
         </div>
         <div class="area-card"><strong>Presupuesto</strong><span></span></div>
-        <div class="area-card"><strong>DirecciÃ³n TÃ©cnica</strong><span></span></div>
-        <div class="area-card"><strong>DirecciÃ³n General</strong><span></span></div>
+        <div class="area-card"><strong>Dirección Técnica</strong><span></span></div>
+        <div class="area-card"><strong>Dirección General</strong><span></span></div>
       </div>
 
       <div class="embedded-module" id="purchasingModule">
@@ -216,30 +216,30 @@
             <form id="userForm" class="grid">
               <label>Nombre<input name="nombre" required></label>
               <label>Usuario<input name="usuario" required></label>
-              <label>Ãrea de trabajo<input name="area" id="workAreaInput" placeholder="Ej. DirecciÃ³n TÃ©cnica" required></label>
+              <label>Área de trabajo<input name="area" id="workAreaInput" placeholder="Ej. Dirección Técnica" required></label>
               <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
-              <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>DirecciÃ³n TÃ©cnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
+              <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
               <div id="policyPreview"></div>
               <button class="btn">Guardar usuario</button>
             </form>
           </div>
           <div class="panel wide">
-            <h2>Registrar cÃ³digo y presupuesto</h2>
+            <h2>Registrar código y presupuesto</h2>
             <form id="projectForm" class="form-grid">
               <div class="span-4 actions">
                 <button class="btn secondary" type="button" id="newProjectBtn">Nuevo proyecto</button>
                 <button class="btn secondary" type="button" id="cancelNewProjectBtn" hidden>Cancelar nuevo</button>
               </div>
               <label class="span-2" id="existingProjectField">Proyecto<select name="projectKey" required></select></label>
-              <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. ConstrucciÃ³n de pozo tubular"></label>
+              <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. Construcción de pozo tubular"></label>
               <label class="span-2 new-project-field" hidden>Municipio<input name="municipioNuevo" placeholder="Ej. Municipio de Moca"></label>
               <label class="span-2 new-project-field" hidden>Comunidad / proyecto<input name="comunidadNuevo" placeholder="Nombre del proyecto o comunidad"></label>
-              <label class="new-project-field" hidden>PoblaciÃ³n<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
-              <label>CÃ³digo<input name="codigo" placeholder="Ej. SNIP-0000"></label>
-              <label>Contratista<input name="contratista" placeholder="Nombre o razÃ³n social"></label>
+              <label class="new-project-field" hidden>Población<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
+              <label>Código<input name="codigo" placeholder="Ej. SNIP-0000"></label>
+              <label>Contratista<input name="contratista" placeholder="Nombre o razón social"></label>
               <label>Presupuesto RD$<input name="presupuesto" type="number" min="0" step="0.01"></label>
               <label>Monto adjudicado RD$<input name="adjudicado" type="number" min="0" step="0.01"></label>
-              <label>Estatus<select name="estatus"><option>En proceso</option><option>Contratado</option><option>En ejecuciÃ³n</option><option>Terminado</option><option>Paralizado</option></select></label>
+              <label>Estatus<select name="estatus"><option>En proceso</option><option>Contratado</option><option>En ejecución</option><option>Terminado</option><option>Paralizado</option></select></label>
               <button class="btn" id="projectSubmitBtn">Actualizar proyecto</button>
             </form>
           </div>
@@ -257,9 +257,9 @@
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
             <label>Fecha<input name="fecha" type="date" required></label>
             <label>Monto RD$<input name="monto" type="number" min="0" step="0.01" required></label>
-            <label>NÃºmero de cubicaciÃ³n<input name="numero" placeholder="CUB-001"></label>
-            <label class="span-2">ObservaciÃ³n<input name="observacion" placeholder="Detalle de pago o avance"></label>
-            <button class="btn">Registrar cubicaciÃ³n</button>
+            <label>Número de cubicación<input name="numero" placeholder="CUB-001"></label>
+            <label class="span-2">Observación<input name="observacion" placeholder="Detalle de pago o avance"></label>
+            <button class="btn">Registrar cubicación</button>
           </form>
         </div>
         <div class="panel" style="margin-top:14px;">
@@ -277,8 +277,8 @@
             <button class="tab" data-report="disponibilidad">Disponibilidad de presupuesto</button>
             <button class="tab" data-report="pagos">Pagos realizados</button>
             <button class="tab" data-report="estatus">Estatus de obras</button>
-            <button class="tab" data-report="poblacion">Por poblaciÃ³n</button>
-            <button class="tab" data-report="snip">Por cÃ³digo SNIP</button>
+            <button class="tab" data-report="poblacion">Por población</button>
+            <button class="tab" data-report="snip">Por código SNIP</button>
           </div>
           <div class="table-tools">
             <div class="filters">
@@ -394,19 +394,19 @@
       reportes: "Reportes",
       "users-admin": "Crear usuarios",
       backup: "Respaldos",
-      "project-edit": "Editar cÃ³digo, presupuesto y estatus",
+      "project-edit": "Editar código, presupuesto y estatus",
       "payment-create": "Registrar cubicaciones",
       "report-municipio": "Reporte por municipio",
       "report-contratista": "Reporte por contratista",
       "report-disponibilidad": "Reporte disponibilidad",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
-      "report-poblacion": "Reporte por poblaciÃ³n",
-      "report-snip": "Reporte por cÃ³digo SNIP"
+      "report-poblacion": "Reporte por población",
+      "report-snip": "Reporte por código SNIP"
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "DirecciÃ³n TÃ©cnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-poblacion", "report-snip"],
+      "Dirección Técnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-poblacion", "report-snip"],
       "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-snip"],
       "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion", "report-snip"],
       "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion", "report-snip"]
@@ -713,7 +713,7 @@
       document.querySelectorAll('select[name="projectKey"]').forEach(select => { select.innerHTML = options; });
       const municipalities = [...new Set(state.projects.map(p => p.municipio))].sort();
       document.getElementById("municipalityFilter").innerHTML = `<option value="">Todos los municipios</option>` + municipalities.map(m => `<option>${m}</option>`).join("");
-      const statuses = [...new Set(["En proceso", "Contratado", "En ejecuciÃ³n", "Terminado", "Paralizado", ...state.projects.map(p => p.estatus)])];
+      const statuses = [...new Set(["En proceso", "Contratado", "En ejecución", "Terminado", "Paralizado", ...state.projects.map(p => p.estatus)])];
       document.getElementById("statusFilter").innerHTML = `<option value="">Todos los estatus</option>` + statuses.map(s => `<option>${s}</option>`).join("");
       document.getElementById("activeUserSelect").innerHTML = `<option value="">Sin usuario activo</option>` + state.users.map(u => `<option value="${u.usuario}">${u.nombre} - ${u.area || u.rol}</option>`).join("");
       document.getElementById("activeUserSelect").value = state.activeUser || "";
@@ -748,7 +748,7 @@
     }
 
     function renderUsers() {
-      renderTable("usersTable", ["Nombre", "Usuario", "Ãrea", "Cargo", "Perfil base", "Permisos", "Creado"], state.users.map(user => {
+      renderTable("usersTable", ["Nombre", "Usuario", "Área", "Cargo", "Perfil base", "Permisos", "Creado"], state.users.map(user => {
         const u = normalizedUser(user);
         return [u.nombre, u.usuario, u.area || u.rol || "-", u.cargo || "-", u.rol, permissionBadges(u.permissions), u.creado];
       }));
@@ -756,7 +756,7 @@
 
     function renderPayments() {
       const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
-      renderTable("paymentsTable", ["Fecha", "Proyecto", "CubicaciÃ³n", "Monto", "ObservaciÃ³n"], state.payments.map(p => [
+      renderTable("paymentsTable", ["Fecha", "Proyecto", "Cubicación", "Monto", "Observación"], state.payments.map(p => [
         p.fecha, projects[p.projectKey]?.comunidad || p.projectKey, p.numero || "-", money.format(p.monto), p.observacion || "-"
       ]));
     }
@@ -791,10 +791,10 @@
           return [p.fecha, project.comunidad || p.projectKey, project.municipio || "-", project.contratista || "-", p.numero || "-", money.format(p.monto)];
         });
         const totalPagos = enrichedProjects().reduce((total, p) => total + Number(p.pagadoBase || 0), 0) + state.payments.reduce((total, p) => total + Number(p.monto || 0), 0);
-        renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "CubicaciÃ³n", "Monto"], [...excelPayments, ...manualPayments], ["TOTAL", "", "", "", "", money.format(totalPagos)]);
+        renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "Cubicación", "Monto"], [...excelPayments, ...manualPayments], ["TOTAL", "", "", "", "", money.format(totalPagos)]);
       } else if (currentReport === "poblacion") {
         const ordered = [...rows].sort((a, b) => b.poblacion - a.poblacion);
-        renderTable("reportTable", ["Proyecto", "Municipio", "PoblaciÃ³n / habitantes", "Tipo", "Presupuesto", "Estatus"], ordered.map(p => [
+        renderTable("reportTable", ["Proyecto", "Municipio", "Población / habitantes", "Tipo", "Presupuesto", "Estatus"], ordered.map(p => [
           p.comunidad, p.municipio, number.format(p.poblacion || 0), p.tipo, money.format(p.presupuesto), p.estatus
         ]), ["TOTAL", "", number.format(sum(rows, "poblacion")), "", money.format(sum(rows, "presupuesto")), ""]);
       } else if (currentReport === "snip") {
@@ -806,7 +806,7 @@
 
     function renderSnipReport(rows) {
       const groups = rows.reduce((acc, project) => {
-        const code = String(project.codigo || "").trim() || "SIN CÃ“DIGO SNIP";
+        const code = String(project.codigo || "").trim() || "SIN CÓDIGO SNIP";
         acc[code] = acc[code] || [];
         acc[code].push(project);
         return acc;
@@ -818,14 +818,14 @@
           const twentyPaid = items.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
           const paid = sum(items, "pagado");
           const pending = adjudicado - paid;
-          const pendingWithoutSnip = code === "SIN CÃ“DIGO SNIP" ? pending : 0;
+          const pendingWithoutSnip = code === "SIN CÓDIGO SNIP" ? pending : 0;
           return [code, number.format(items.length), money.format(adjudicado), money.format(twentyPaid), money.format(paid), money.format(pending), money.format(pendingWithoutSnip)];
         });
       const totalAdjudicado = sum(rows, "adjudicado");
       const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
       const totalPaid = sum(rows, "pagado");
       const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-      renderTable("reportTable", ["CÃ³digo SNIP", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin cÃ³digo SNIP"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
         "TOTAL",
         number.format(rows.length),
         money.format(totalAdjudicado),
@@ -1239,7 +1239,7 @@
       ].filter(Boolean).join(" | ");
       const printWindow = window.open("", "_blank", "width=1100,height=800");
       if (!printWindow) {
-        alert("El navegador bloqueÃ³ la ventana de impresiÃ³n. Permita ventanas emergentes para imprimir el reporte.");
+        alert("El navegador bloqueó la ventana de impresión. Permita ventanas emergentes para imprimir el reporte.");
         return;
       }
       printWindow.document.write(`<!doctype html>
