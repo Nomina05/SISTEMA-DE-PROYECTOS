@@ -93,6 +93,15 @@
     .filters input, .filters select { width: auto; min-width: 180px; }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
     table { width: 100%; border-collapse: collapse; min-width: 1060px; }
+    table.compact-report { min-width: 1380px; table-layout: fixed; }
+    table.compact-report th, table.compact-report td { padding: 8px 9px; font-size: 12px; line-height: 1.25; }
+    table.compact-report th:nth-child(1), table.compact-report td:nth-child(1) { width: 112px; }
+    table.compact-report th:nth-child(2), table.compact-report td:nth-child(2) { width: 190px; }
+    table.compact-report th:nth-child(3), table.compact-report td:nth-child(3) { width: 145px; }
+    table.compact-report th:nth-child(4), table.compact-report td:nth-child(4) { width: 230px; }
+    table.compact-report th:nth-child(n+5), table.compact-report td:nth-child(n+5) { text-align: right; font-variant-numeric: tabular-nums; }
+    table.compact-report td:nth-child(-n+4) { overflow-wrap: anywhere; }
+    table.compact-report small { color: var(--muted); font-size: 11px; }
     th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
     th { position: sticky; top: 0; background: #eef3f5; z-index: 1; white-space: nowrap; }
     tfoot td { background: #eef3f5; font-weight: 800; border-top: 2px solid #b9c8cf; }
@@ -936,6 +945,7 @@
 
     function renderTable(id, headers, rows, footer = null) {
       const table = document.getElementById(id);
+      table.classList.toggle("compact-report", id === "reportTable" && currentReport === "snip");
       if (!rows.length) {
         table.innerHTML = `<tbody><tr><td class="empty">Sin registros para mostrar.</td></tr></tbody>`;
         return;
