@@ -858,6 +858,12 @@
     }
 
     function renderSnipReport(rows) {
+      const summarizeValues = (items, field) => {
+        const values = [...new Set(items.map(item => String(item[field] || "").trim()).filter(Boolean))];
+        if (!values.length) return "Sin asignar";
+        if (values.length <= 3) return values.join("<br>");
+        return `${values.slice(0, 3).join("<br>")}<br><small>+${values.length - 3} más</small>`;
+      };
       const groups = rows.reduce((acc, project) => {
         const code = String(project.codigo || "").trim() || "SNIP: 00001";
         acc[code] = acc[code] || [];
@@ -872,14 +878,28 @@
           const paid = sum(items, "pagado");
           const pending = adjudicado - paid;
           const pendingWithoutSnip = code === "SNIP: 00001" ? pending : 0;
-          return [code, number.format(items.length), money.format(adjudicado), money.format(twentyPaid), money.format(paid), money.format(pending), money.format(pendingWithoutSnip)];
+          return [
+            code,
+            summarizeValues(items, "tipo"),
+            summarizeValues(items, "municipio"),
+            summarizeValues(items, "comunidad"),
+            number.format(items.length),
+            money.format(adjudicado),
+            money.format(twentyPaid),
+            money.format(paid),
+            money.format(pending),
+            money.format(pendingWithoutSnip)
+          ];
         });
       const totalAdjudicado = sum(rows, "adjudicado");
       const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
       const totalPaid = sum(rows, "pagado");
       const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-      renderTable("reportTable", ["Código SNIP", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
         "TOTAL",
+        "",
+        "",
+        "",
         number.format(rows.length),
         money.format(totalAdjudicado),
         money.format(totalTwentyPaid),
