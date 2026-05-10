@@ -65,6 +65,13 @@
     .embedded-module { display: none; margin: -4px 0 16px; }
     .embedded-module.active { display: block; }
     .embedded-frame { width: 100%; height: 680px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: var(--shadow); }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 18px; background: rgba(15, 23, 42, .42); }
+    .modal-backdrop[hidden] { display: none; }
+    .modal { width: min(420px, 100%); background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 22px 50px rgba(15, 23, 42, .22); padding: 18px; }
+    .modal h2 { margin-bottom: 6px; }
+    .modal form { display: grid; gap: 12px; margin-top: 14px; }
+    .form-message { min-height: 20px; font-size: 13px; font-weight: 700; color: var(--blue); }
+    .form-message.error { color: var(--red); }
     .dashboard-layout { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; }
     .chart-wrap { display: grid; place-items: center; min-height: 360px; }
     canvas { max-width: 100%; }
@@ -171,8 +178,25 @@
           <label style="min-width:220px;">Usuario activo<select id="activeUserSelect"><option value="">Sin usuario activo</option></select></label>
           <button class="btn secondary" id="backupBtn">Exportar respaldo</button>
           <button class="btn secondary" id="restoreBtn">Importar respaldo</button>
+          <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseña</button>
           <button class="btn danger" id="logoutBtn" onclick="logoutSupabase()">Cerrar sesión</button>
           <input type="file" id="restoreFile" accept="application/json" hidden>
+        </div>
+      </div>
+
+      <div class="modal-backdrop" id="passwordModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+          <h2 id="passwordModalTitle">Cambiar contraseña</h2>
+          <p class="sub">La nueva contraseña se guardará en Supabase para el usuario conectado.</p>
+          <form id="passwordForm">
+            <label>Nueva contraseña<input id="newPassword" type="password" autocomplete="new-password" minlength="6" required></label>
+            <label>Confirmar contraseña<input id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required></label>
+            <div class="form-message" id="passwordMessage"></div>
+            <div class="actions">
+              <button class="btn" id="savePasswordBtn" type="submit">Guardar contraseña</button>
+              <button class="btn secondary" id="cancelPasswordBtn" type="button">Cancelar</button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -951,6 +975,51 @@
       document.getElementById("sessionUser").textContent = "";
     }
 
+    function setPasswordMessage(message, isError = false) {
+      const box = document.getElementById("passwordMessage");
+      box.textContent = message || "";
+      box.classList.toggle("error", Boolean(isError));
+    }
+
+    function openPasswordModal() {
+      document.getElementById("passwordForm").reset();
+      setPasswordMessage("");
+      document.getElementById("passwordModal").hidden = false;
+      document.getElementById("newPassword").focus();
+    }
+
+    function closePasswordModal() {
+      document.getElementById("passwordModal").hidden = true;
+      document.getElementById("passwordForm").reset();
+      setPasswordMessage("");
+    }
+
+    async function handlePasswordChange(event) {
+      event.preventDefault();
+      const saveButton = document.getElementById("savePasswordBtn");
+      const password = document.getElementById("newPassword").value;
+      const confirmation = document.getElementById("confirmPassword").value;
+      setPasswordMessage("");
+      try {
+        if (!window.supabaseClient) throw new Error("No hay conexión con Supabase. Inicie sesión en línea para cambiar la contraseña.");
+        const { data } = await window.supabaseClient.auth.getSession();
+        if (!data.session) throw new Error("Debe iniciar sesión antes de cambiar la contraseña.");
+        if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
+        if (password !== confirmation) throw new Error("Las contraseñas no coinciden.");
+        saveButton.disabled = true;
+        saveButton.textContent = "Guardando...";
+        const { error } = await window.supabaseClient.auth.updateUser({ password });
+        if (error) throw error;
+        setPasswordMessage("Contraseña actualizada correctamente.");
+        document.getElementById("passwordForm").reset();
+      } catch (error) {
+        setPasswordMessage(error.message || "No fue posible cambiar la contraseña.", true);
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "Guardar contraseña";
+      }
+    }
+
     async function initAuth() {
       if (!window.supabaseClient) {
         document.getElementById("authError").textContent = "No se pudo cargar Supabase.";
@@ -1111,6 +1180,13 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await window.supabaseClient.auth.signOut();
+    });
+
+    document.getElementById("changePasswordBtn").addEventListener("click", openPasswordModal);
+    document.getElementById("cancelPasswordBtn").addEventListener("click", closePasswordModal);
+    document.getElementById("passwordForm").addEventListener("submit", handlePasswordChange);
+    document.getElementById("passwordModal").addEventListener("click", event => {
+      if (event.target.id === "passwordModal") closePasswordModal();
     });
 
     document.getElementById("localModeBtn").addEventListener("click", () => {
