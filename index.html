@@ -278,6 +278,7 @@
             <button class="tab" data-report="pagos">Pagos realizados</button>
             <button class="tab" data-report="estatus">Estatus de obras</button>
             <button class="tab" data-report="poblacion">Por poblaciÃ³n</button>
+            <button class="tab" data-report="snip">Por cÃ³digo SNIP</button>
           </div>
           <div class="table-tools">
             <div class="filters">
@@ -2029,14 +2030,15 @@
       "report-disponibilidad": "Reporte disponibilidad",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
-      "report-poblacion": "Reporte por poblaciÃ³n"
+      "report-poblacion": "Reporte por poblaciÃ³n",
+      "report-snip": "Reporte por cÃ³digo SNIP"
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "DirecciÃ³n TÃ©cnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-poblacion"],
-      "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos"],
-      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion"],
-      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion"]
+      "DirecciÃ³n TÃ©cnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-poblacion", "report-snip"],
+      "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-snip"],
+      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion", "report-snip"],
+      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion", "report-snip"]
     };
     const reportPermissions = {
       municipio: "report-municipio",
@@ -2044,7 +2046,8 @@
       disponibilidad: "report-disponibilidad",
       pagos: "report-pagos",
       estatus: "report-estatus",
-      poblacion: "report-poblacion"
+      poblacion: "report-poblacion",
+      snip: "report-snip"
     };
 
     function contractorFromExcel(row) {
@@ -2423,9 +2426,43 @@
         renderTable("reportTable", ["Proyecto", "Municipio", "PoblaciÃ³n / habitantes", "Tipo", "Presupuesto", "Estatus"], ordered.map(p => [
           p.comunidad, p.municipio, number.format(p.poblacion || 0), p.tipo, money.format(p.presupuesto), p.estatus
         ]), ["TOTAL", "", number.format(sum(rows, "poblacion")), "", money.format(sum(rows, "presupuesto")), ""]);
+      } else if (currentReport === "snip") {
+        renderSnipReport(rows);
       } else {
         renderGroupedReport(groupBy(rows, "estatus"), "Estatus");
       }
+    }
+
+    function renderSnipReport(rows) {
+      const groups = rows.reduce((acc, project) => {
+        const code = String(project.codigo || "").trim() || "SIN CÃ“DIGO SNIP";
+        acc[code] = acc[code] || [];
+        acc[code].push(project);
+        return acc;
+      }, {});
+      const tableRows = Object.entries(groups)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([code, items]) => {
+          const adjudicado = sum(items, "adjudicado");
+          const twentyPaid = items.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
+          const paid = sum(items, "pagado");
+          const pending = adjudicado - paid;
+          const pendingWithoutSnip = code === "SIN CÃ“DIGO SNIP" ? pending : 0;
+          return [code, number.format(items.length), money.format(adjudicado), money.format(twentyPaid), money.format(paid), money.format(pending), money.format(pendingWithoutSnip)];
+        });
+      const totalAdjudicado = sum(rows, "adjudicado");
+      const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
+      const totalPaid = sum(rows, "pagado");
+      const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
+      renderTable("reportTable", ["CÃ³digo SNIP", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin cÃ³digo SNIP"], tableRows, [
+        "TOTAL",
+        number.format(rows.length),
+        money.format(totalAdjudicado),
+        money.format(totalTwentyPaid),
+        money.format(totalPaid),
+        money.format(totalAdjudicado - totalPaid),
+        money.format(totalPendingWithoutSnip)
+      ]);
     }
 
     function groupBy(rows, field) {
