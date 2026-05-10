@@ -316,6 +316,10 @@
             <div class="filters">
               <input id="searchBox" placeholder="Buscar...">
               <select id="snipFilter" class="snip-filter" hidden><option value="">Todos los códigos SNIP</option></select>
+              <select id="snipModeFilter" class="snip-filter" hidden>
+                <option value="detalle">Detalle por obra</option>
+                <option value="agrupado">Agrupar por código SNIP</option>
+              </select>
               <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
               <select id="statusFilter"><option value="">Todos los estatus</option></select>
             </div>
@@ -847,6 +851,7 @@
 
     function renderReport() {
       document.getElementById("snipFilter").hidden = currentReport !== "snip";
+      document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       const rows = filteredProjects();
       if (currentReport === "municipio") {
         renderGroupedReport(groupBy(rows, "municipio"), "Municipio");
@@ -880,12 +885,36 @@
     }
 
     function renderSnipReport(rows) {
-      const summarizeValues = (items, field) => {
-        const values = [...new Set(items.map(item => String(item[field] || "").trim()).filter(Boolean))];
-        if (!values.length) return "Sin asignar";
-        if (values.length <= 3) return values.join("<br>");
-        return `${values.slice(0, 3).join("<br>")}<br><small>+${values.length - 3} más</small>`;
-      };
+      const mode = document.getElementById("snipModeFilter").value;
+      if (mode === "detalle") {
+        const tableRows = rows
+          .sort((a, b) => displaySnip(a).localeCompare(displaySnip(b)) || String(a.municipio || "").localeCompare(String(b.municipio || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
+          .map(project => {
+            const code = displaySnip(project);
+            const pending = Number(project.adjudicado || 0) - Number(project.pagado || 0);
+            return [
+              code,
+              project.tipo || "Sin asignar",
+              project.municipio || "Sin asignar",
+              project.comunidad || "Sin asignar",
+              "1",
+              money.format(project.adjudicado || 0),
+              money.format(project.comprometido || (Number(project.adjudicado || 0) * 0.2)),
+              money.format(project.pagado || 0),
+              money.format(pending),
+              money.format(code === "SNIP: 00001" ? pending : 0)
+            ];
+          });
+        const totalAdjudicado = sum(rows, "adjudicado");
+        const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
+        const totalPaid = sum(rows, "pagado");
+        const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
+        renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
+          "TOTAL", "", "", "", number.format(rows.length), money.format(totalAdjudicado), money.format(totalTwentyPaid), money.format(totalPaid), money.format(totalAdjudicado - totalPaid), money.format(totalPendingWithoutSnip)
+        ]);
+        return;
+      }
+
       const groups = rows.reduce((acc, project) => {
         const code = displaySnip(project);
         acc[code] = acc[code] || [];
@@ -902,9 +931,6 @@
           const pendingWithoutSnip = code === "SNIP: 00001" ? pending : 0;
           return [
             code,
-            summarizeValues(items, "tipo"),
-            summarizeValues(items, "municipio"),
-            summarizeValues(items, "comunidad"),
             number.format(items.length),
             money.format(adjudicado),
             money.format(twentyPaid),
@@ -917,11 +943,8 @@
       const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
       const totalPaid = sum(rows, "pagado");
       const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-      renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
         "TOTAL",
-        "",
-        "",
-        "",
         number.format(rows.length),
         money.format(totalAdjudicado),
         money.format(totalTwentyPaid),
@@ -1371,7 +1394,7 @@
       }
     });
 
-    ["searchBox", "snipFilter", "municipalityFilter", "statusFilter"].forEach(id => {
+    ["searchBox", "snipFilter", "snipModeFilter", "municipalityFilter", "statusFilter"].forEach(id => {
       document.getElementById(id).addEventListener("input", renderReport);
       document.getElementById(id).addEventListener("change", renderReport);
     });
