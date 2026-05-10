@@ -23,7 +23,8 @@
     }
 
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--ink); }
+    html { width: 100%; overflow-x: hidden; }
+    body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: hidden; }
     body.auth-locked .shell { display: none; }
     body.auth-ready .auth-screen { display: none; }
     button, input, select, textarea { font: inherit; }
@@ -92,7 +93,7 @@
     .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .filters input, .filters select { width: auto; min-width: 180px; }
     .snip-filter[hidden] { display: none; }
-    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; -webkit-overflow-scrolling: touch; }
     table { width: 100%; border-collapse: collapse; min-width: 1060px; }
     table.compact-report { min-width: 0; width: 100%; table-layout: fixed; }
     table.compact-report th, table.compact-report td { padding: 7px 7px; font-size: 11px; line-height: 1.2; }
@@ -124,26 +125,67 @@
     .wide { grid-column: span 2; }
     .empty { padding: 18px; color: var(--muted); text-align: center; }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 220px minmax(0, 1fr); }
+      main { padding: 18px; }
+      .metrics { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+      .dashboard-layout { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+      .area-panel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 900px) {
       .shell { grid-template-columns: 1fr; }
-      aside { height: auto; position: static; }
+      aside { height: auto; position: static; padding: 14px; }
+      .brand { margin-bottom: 12px; }
       nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .metrics { grid-template-columns: repeat(3, minmax(132px, 1fr)); }
+      .nav-btn { justify-content: center; text-align: center; min-height: 42px; }
+      main { padding: 16px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .form-grid, .cards, .dashboard-layout, .area-panel { grid-template-columns: 1fr 1fr; }
+      .panel { padding: 14px; }
       .chart-wrap { min-height: 300px; }
+      .embedded-frame { height: 560px; }
+      table.compact-report { min-width: 980px; }
     }
 
     @media (max-width: 720px) {
-      main { padding: 16px; }
+      .auth-screen { padding: 14px; }
+      .auth-card { padding: 18px; }
+      main { padding: 12px; }
+      aside { padding: 12px; }
+      .brand { font-size: 16px; }
       .topbar { align-items: flex-start; flex-direction: column; }
-      nav, .metrics, .form-grid, .cards, .dashboard-layout, .area-panel { grid-template-columns: 1fr; }
+      nav { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .nav-btn { padding: 9px 8px; font-size: 13px; }
+      .metrics, .form-grid, .cards, .dashboard-layout, .area-panel { grid-template-columns: 1fr; }
+      .area-card { min-height: 48px; }
+      .panel { padding: 12px; border-radius: 6px; }
       .metric strong { font-size: 16px; }
-      .span-2 { grid-column: auto; }
+      .span-2, .span-4 { grid-column: auto; }
       .wide { grid-column: auto; }
       .filters input, .filters select { width: 100%; }
       .table-tools { align-items: stretch; }
       .actions, .filters { width: 100%; }
       .btn { width: 100%; }
+      .tabs { display: grid; grid-template-columns: 1fr; }
+      .tab { width: 100%; }
+      .chart-wrap { min-height: 240px; }
+      .embedded-frame { height: 480px; }
+      table { min-width: 840px; }
+      table.compact-report { min-width: 920px; }
+      th, td { font-size: 12px; padding: 8px; }
+      .permission-checks { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 420px) {
+      nav { grid-template-columns: 1fr; }
+      .metrics { gap: 10px; }
+      .metric { min-height: 70px; }
+      .metric small { font-size: 9px; }
+      .metric strong { font-size: 15px; white-space: normal; }
+      .modal { padding: 14px; }
+      .embedded-frame { height: 420px; }
     }
 
     @media print {
