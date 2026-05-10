@@ -940,6 +940,7 @@
               project.municipio || "Sin asignar",
               project.comunidad || "Sin asignar",
               "1",
+              money.format(project.presupuesto || 0),
               money.format(project.adjudicado || 0),
               money.format(project.comprometido || (Number(project.adjudicado || 0) * 0.2)),
               money.format(project.pagado || 0),
@@ -948,11 +949,12 @@
             ];
           });
         const totalAdjudicado = sum(rows, "adjudicado");
+        const totalPresupuesto = sum(rows, "presupuesto");
         const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
         const totalPaid = sum(rows, "pagado");
         const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-        renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
-          "TOTAL", "", "", "", number.format(rows.length), money.format(totalAdjudicado), money.format(totalTwentyPaid), money.format(totalPaid), money.format(totalAdjudicado - totalPaid), money.format(totalPendingWithoutSnip)
+        renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Proyectos", "Presupuesto", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
+          "TOTAL", "", "", "", number.format(rows.length), money.format(totalPresupuesto), money.format(totalAdjudicado), money.format(totalTwentyPaid), money.format(totalPaid), money.format(totalAdjudicado - totalPaid), money.format(totalPendingWithoutSnip)
         ]);
         return;
       }
@@ -966,6 +968,7 @@
       const tableRows = Object.entries(groups)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([code, items]) => {
+          const presupuesto = sum(items, "presupuesto");
           const adjudicado = sum(items, "adjudicado");
           const twentyPaid = items.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
           const paid = sum(items, "pagado");
@@ -974,6 +977,7 @@
           return [
             code,
             number.format(items.length),
+            money.format(presupuesto),
             money.format(adjudicado),
             money.format(twentyPaid),
             money.format(paid),
@@ -981,13 +985,15 @@
             money.format(pendingWithoutSnip)
           ];
         });
+      const totalPresupuesto = sum(rows, "presupuesto");
       const totalAdjudicado = sum(rows, "adjudicado");
       const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
       const totalPaid = sum(rows, "pagado");
       const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-      renderTable("reportTable", ["Código SNIP", "Proyectos", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Proyectos", "Presupuesto", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
         "TOTAL",
         number.format(rows.length),
+        money.format(totalPresupuesto),
         money.format(totalAdjudicado),
         money.format(totalTwentyPaid),
         money.format(totalPaid),
