@@ -465,6 +465,8 @@
     let creatingNewProject = false;
     let currentSessionEmail = "";
     const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
+    const inactivityLimitMs = 20 * 60 * 1000;
+    let inactivityTimer = null;
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
@@ -958,6 +960,7 @@
     function showAuthenticated(session) {
       document.body.classList.remove("auth-locked");
       document.body.classList.add("auth-ready");
+      resetInactivityTimer();
       loadSupabaseData()
         .catch(error => {
           console.error(error);
@@ -973,6 +976,34 @@
       document.body.classList.remove("auth-ready");
       document.body.classList.add("auth-locked");
       document.getElementById("sessionUser").textContent = "";
+      document.getElementById("loginEmail").value = "";
+      document.getElementById("loginPassword").value = "";
+    }
+
+    async function closeSessionByInactivity() {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = null;
+      try {
+        if (window.supabaseClient) await window.supabaseClient.auth.signOut();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        sessionStorage.setItem("coraamocaSessionExpired", "1");
+        window.location.reload();
+      }
+    }
+
+    function resetInactivityTimer() {
+      if (!document.body.classList.contains("auth-ready")) return;
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(closeSessionByInactivity, inactivityLimitMs);
+    }
+
+    function startInactivityWatcher() {
+      ["click", "keydown", "mousemove", "scroll", "touchstart"].forEach(eventName => {
+        window.addEventListener(eventName, resetInactivityTimer, { passive: true });
+      });
+      resetInactivityTimer();
     }
 
     function setPasswordMessage(message, isError = false) {
@@ -1194,6 +1225,7 @@
       document.getElementById("sessionUser").textContent = "Modo local";
       document.body.classList.remove("auth-locked");
       document.body.classList.add("auth-ready");
+      resetInactivityTimer();
       renderAll();
     });
 
@@ -1392,6 +1424,11 @@
       reader.readAsText(file);
     });
 
+    startInactivityWatcher();
+    if (sessionStorage.getItem("coraamocaSessionExpired") === "1") {
+      sessionStorage.removeItem("coraamocaSessionExpired");
+      document.getElementById("authError").textContent = "La sesión se cerró por inactividad.";
+    }
     initAuth();
   </script>
 </body>
