@@ -67,6 +67,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   if (!window.supabaseClient) {
     setAuthMessage("No se pudo cargar la librería de Supabase. Revise la conexión a internet.");
+    document.body.classList.remove("auth-locked");
+    document.body.classList.add("auth-ready");
+    if (typeof window.renderAll === "function") window.renderAll();
     return;
   }
   const { data } = await window.supabaseClient.auth.getSession();

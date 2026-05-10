@@ -143,6 +143,7 @@
         <label>Usuario o correo<input id="loginEmail" type="email" autocomplete="username" required></label>
         <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
         <button class="btn" id="loginBtn" type="button" onclick="loginSupabase(event)">Iniciar sesión</button>
+        <button class="btn secondary" type="button" id="localModeBtn">Entrar en modo local</button>
         <div class="auth-error" id="authError"></div>
       </form>
     </div>
@@ -2050,13 +2051,16 @@
       return row[12] || "Sin asignar";
     }
 
-    const baseProjects = seedRows.map((r, i) => ({
+    const baseProjects = seedRows.map((row, i) => {
+      const r = Array.isArray(row) ? row : row.value;
+      return {
       key: "P" + String(i + 1).padStart(3, "0"),
       no: r[0], tipo: r[1], comunidad: r[2], municipio: r[3].trim(),
       poblacion: r[4], presupuesto: r[5], adjudicado: r[6], comprometido: r[7],
       pagadoBase: r[8], disponibilidadAdjudicadoBase: r[9], disponibilidadProyectoBase: r[10],
       procesoCompra: r[11] || "", codigo: r[13] || "", contratista: contractorFromExcel(r), estatus: "En proceso"
-    }));
+      };
+    });
 
     let state = loadState();
     let currentReport = "municipio";
@@ -2520,6 +2524,9 @@
     async function initAuth() {
       if (!window.supabaseClient) {
         document.getElementById("authError").textContent = "No se pudo cargar Supabase.";
+        document.body.classList.remove("auth-locked");
+        document.body.classList.add("auth-ready");
+        renderAll();
         return;
       }
       const { data } = await window.supabaseClient.auth.getSession();
@@ -2674,6 +2681,14 @@
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await window.supabaseClient.auth.signOut();
+    });
+
+    document.getElementById("localModeBtn").addEventListener("click", () => {
+      currentSessionEmail = "modo-local";
+      document.getElementById("sessionUser").textContent = "Modo local";
+      document.body.classList.remove("auth-locked");
+      document.body.classList.add("auth-ready");
+      renderAll();
     });
 
     document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
