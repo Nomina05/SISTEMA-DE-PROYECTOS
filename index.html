@@ -708,9 +708,31 @@
       ]));
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function projectOptionLabel(project) {
+      const snip = String(project.codigo || "").trim() || "SIN SNIP";
+      const no = project.no ? `No. ${project.no}` : "";
+      const details = [no, project.tipo, project.comunidad].filter(Boolean).join(" - ");
+      const municipio = project.municipio ? ` (${project.municipio})` : "";
+      return `SNIP ${snip} - ${details}${municipio}`;
+    }
+
     function populateSelects() {
-      const options = enrichedProjects().map(p => `<option value="${p.key}">${p.key} - ${p.comunidad} (${p.municipio})</option>`).join("");
-      document.querySelectorAll('select[name="projectKey"]').forEach(select => { select.innerHTML = options; });
+      const options = enrichedProjects().map(p => `<option value="${escapeHtml(p.key)}">${escapeHtml(projectOptionLabel(p))}</option>`).join("");
+      document.querySelectorAll('select[name="projectKey"]').forEach(select => {
+        const selected = select.value;
+        select.innerHTML = options;
+        if (selected && [...select.options].some(option => option.value === selected)) select.value = selected;
+      });
       const municipalities = [...new Set(state.projects.map(p => p.municipio))].sort();
       document.getElementById("municipalityFilter").innerHTML = `<option value="">Todos los municipios</option>` + municipalities.map(m => `<option>${m}</option>`).join("");
       const statuses = [...new Set(["En proceso", "Contratado", "En ejecución", "Terminado", "Paralizado", ...state.projects.map(p => p.estatus)])];
