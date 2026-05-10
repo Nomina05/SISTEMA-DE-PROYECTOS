@@ -224,6 +224,7 @@
       <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
       <nav>
         <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Dashboard</button>
+        <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuario</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Registro manual</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
@@ -290,7 +291,7 @@
         </div>
       </section>
 
-      <section class="section" id="registro">
+      <section class="section" id="usuarios">
         <div class="grid cards">
           <div class="panel" data-permission="users-admin">
             <h2>Crear usuario</h2>
@@ -306,6 +307,15 @@
               <button class="btn">Guardar usuario</button>
             </form>
           </div>
+          <div class="panel wide" data-permission="users-admin">
+            <h2>Usuarios creados</h2>
+            <div class="table-wrap"><table id="usersTable"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="registro">
+        <div class="grid cards">
           <div class="panel wide">
             <h2>Registrar código y presupuesto</h2>
             <form id="projectForm" class="form-grid">
@@ -326,10 +336,6 @@
               <button class="btn" id="projectSubmitBtn">Actualizar proyecto</button>
             </form>
           </div>
-        </div>
-        <div class="panel" style="margin-top:14px;" data-permission="users-admin">
-          <h2>Usuarios creados</h2>
-          <div class="table-wrap"><table id="usersTable"></table></div>
         </div>
       </section>
 
@@ -485,6 +491,7 @@
     const makeId = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const permissionLabels = {
       dashboard: "Dashboard",
+      usuarios: "Usuario",
       registro: "Registro de proyectos",
       cubicaciones: "Registro de cubicaciones",
       reportes: "Reportes",
