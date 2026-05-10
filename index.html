@@ -43,6 +43,7 @@
     .nav-btn.active, .nav-btn:hover { background: #243844; color: #fff; }
     main { padding: 24px; min-width: 0; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .hidden-system-bar { display: none !important; }
     h1 { margin: 0; font-size: 26px; line-height: 1.2; }
     h2 { margin: 0 0 14px; font-size: 18px; }
     .sub { color: var(--muted); margin: 6px 0 0; }
@@ -168,19 +169,14 @@
     </aside>
 
     <main>
-      <div class="topbar">
-        <div>
-          <h1>Sistema de control presupuestario</h1>
-        </div>
-        <div class="actions">
-          <span class="session-badge" id="sessionUser"></span>
-          <label style="min-width:220px;">Usuario activo<select id="activeUserSelect"><option value="">Sin usuario activo</option></select></label>
-          <button class="btn secondary" id="backupBtn">Exportar respaldo</button>
-          <button class="btn secondary" id="restoreBtn">Importar respaldo</button>
-          <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseña</button>
-          <button class="btn danger" id="logoutBtn" onclick="logoutSupabase()">Cerrar sesión</button>
-          <input type="file" id="restoreFile" accept="application/json" hidden>
-        </div>
+      <div class="topbar hidden-system-bar">
+        <span class="session-badge" id="sessionUser"></span>
+        <select id="activeUserSelect"><option value="">Sin usuario activo</option></select>
+        <button class="btn secondary" id="backupBtn" type="button">Exportar respaldo</button>
+        <button class="btn secondary" id="restoreBtn" type="button">Importar respaldo</button>
+        <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseña</button>
+        <button class="btn danger" id="logoutBtn" type="button" onclick="logoutSupabase()">Cerrar sesión</button>
+        <input type="file" id="restoreFile" accept="application/json" hidden>
       </div>
 
       <div class="modal-backdrop" id="passwordModal" hidden>
