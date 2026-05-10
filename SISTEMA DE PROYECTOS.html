@@ -522,7 +522,7 @@
         disponibilidadAdjudicadoBase: Number(project.disponibilidad_adjudicado_base || 0),
         disponibilidadProyectoBase: Number(project.disponibilidad_proyecto_base || 0),
         procesoCompra: project.proceso_compra || "",
-        codigo: project.snip || project.codigo_interno || "",
+        codigo: project.snip || "",
         contratista: project.contratistas?.nombre || project.contratista || "Sin asignar",
         contratistaId: project.contratista_id || "",
         estatus: project.estatus || "En proceso"
@@ -750,11 +750,11 @@
     }
 
     function projectOptionLabel(project) {
-      const snip = String(project.codigo || "").trim() || "SIN SNIP";
+      const snip = String(project.codigo || "").trim() || "00001";
       const no = project.no ? `No. ${project.no}` : "";
       const details = [no, project.tipo, project.comunidad].filter(Boolean).join(" - ");
       const municipio = project.municipio ? ` (${project.municipio})` : "";
-      return `SNIP ${snip} - ${details}${municipio}`;
+      return `SNIP: ${snip} - ${details}${municipio}`;
     }
 
     function populateSelects() {
@@ -859,7 +859,7 @@
 
     function renderSnipReport(rows) {
       const groups = rows.reduce((acc, project) => {
-        const code = String(project.codigo || "").trim() || "SIN CÓDIGO SNIP";
+        const code = String(project.codigo || "").trim() || "SNIP: 00001";
         acc[code] = acc[code] || [];
         acc[code].push(project);
         return acc;
@@ -871,7 +871,7 @@
           const twentyPaid = items.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
           const paid = sum(items, "pagado");
           const pending = adjudicado - paid;
-          const pendingWithoutSnip = code === "SIN CÓDIGO SNIP" ? pending : 0;
+          const pendingWithoutSnip = code === "SNIP: 00001" ? pending : 0;
           return [code, number.format(items.length), money.format(adjudicado), money.format(twentyPaid), money.format(paid), money.format(pending), money.format(pendingWithoutSnip)];
         });
       const totalAdjudicado = sum(rows, "adjudicado");
