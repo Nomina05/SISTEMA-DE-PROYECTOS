@@ -91,17 +91,19 @@
     .table-tools { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
     .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .filters input, .filters select { width: auto; min-width: 180px; }
+    .snip-filter[hidden] { display: none; }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
     table { width: 100%; border-collapse: collapse; min-width: 1060px; }
-    table.compact-report { min-width: 1380px; table-layout: fixed; }
-    table.compact-report th, table.compact-report td { padding: 8px 9px; font-size: 12px; line-height: 1.25; }
-    table.compact-report th:nth-child(1), table.compact-report td:nth-child(1) { width: 112px; }
-    table.compact-report th:nth-child(2), table.compact-report td:nth-child(2) { width: 190px; }
-    table.compact-report th:nth-child(3), table.compact-report td:nth-child(3) { width: 145px; }
-    table.compact-report th:nth-child(4), table.compact-report td:nth-child(4) { width: 230px; }
+    table.compact-report { min-width: 0; width: 100%; table-layout: fixed; }
+    table.compact-report th, table.compact-report td { padding: 7px 7px; font-size: 11px; line-height: 1.2; }
+    table.compact-report th:nth-child(1), table.compact-report td:nth-child(1) { width: 9%; }
+    table.compact-report th:nth-child(2), table.compact-report td:nth-child(2) { width: 14%; }
+    table.compact-report th:nth-child(3), table.compact-report td:nth-child(3) { width: 10%; }
+    table.compact-report th:nth-child(4), table.compact-report td:nth-child(4) { width: 17%; }
+    table.compact-report th:nth-child(5), table.compact-report td:nth-child(5) { width: 6%; }
     table.compact-report th:nth-child(n+5), table.compact-report td:nth-child(n+5) { text-align: right; font-variant-numeric: tabular-nums; }
     table.compact-report td:nth-child(-n+4) { overflow-wrap: anywhere; }
-    table.compact-report small { color: var(--muted); font-size: 11px; }
+    table.compact-report small { color: var(--muted); font-size: 10px; }
     th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
     th { position: sticky; top: 0; background: #eef3f5; z-index: 1; white-space: nowrap; }
     tfoot td { background: #eef3f5; font-weight: 800; border-top: 2px solid #b9c8cf; }
@@ -313,6 +315,7 @@
           <div class="table-tools">
             <div class="filters">
               <input id="searchBox" placeholder="Buscar...">
+              <select id="snipFilter" class="snip-filter" hidden><option value="">Todos los códigos SNIP</option></select>
               <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
               <select id="statusFilter"><option value="">Todos los estatus</option></select>
             </div>
@@ -634,6 +637,10 @@
       document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(permissions);
     }
 
+    function displaySnip(project) {
+      return String(project.codigo || "").trim() || "SNIP: 00001";
+    }
+
     function sum(rows, field) {
       return rows.reduce((total, item) => total + (Number(item[field]) || 0), 0);
     }
@@ -777,6 +784,10 @@
       document.getElementById("municipalityFilter").innerHTML = `<option value="">Todos los municipios</option>` + municipalities.map(m => `<option>${m}</option>`).join("");
       const statuses = [...new Set(["En proceso", "Contratado", "En ejecución", "Terminado", "Paralizado", ...state.projects.map(p => p.estatus)])];
       document.getElementById("statusFilter").innerHTML = `<option value="">Todos los estatus</option>` + statuses.map(s => `<option>${s}</option>`).join("");
+      const selectedSnip = document.getElementById("snipFilter").value;
+      const snips = [...new Set(state.projects.map(displaySnip))].sort((a, b) => a.localeCompare(b));
+      document.getElementById("snipFilter").innerHTML = `<option value="">Todos los códigos SNIP</option>` + snips.map(code => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`).join("");
+      if (selectedSnip && snips.includes(selectedSnip)) document.getElementById("snipFilter").value = selectedSnip;
       document.getElementById("activeUserSelect").innerHTML = `<option value="">Sin usuario activo</option>` + state.users.map(u => `<option value="${u.usuario}">${u.nombre} - ${u.area || u.rol}</option>`).join("");
       document.getElementById("activeUserSelect").value = state.activeUser || "";
     }
@@ -827,13 +838,15 @@
       const q = document.getElementById("searchBox").value.toLowerCase();
       const mun = document.getElementById("municipalityFilter").value;
       const status = document.getElementById("statusFilter").value;
+      const snip = currentReport === "snip" ? document.getElementById("snipFilter").value : "";
       return enrichedProjects().filter(p => {
         const haystack = `${p.key} ${p.tipo} ${p.comunidad} ${p.municipio} ${p.contratista} ${p.codigo} ${p.estatus}`.toLowerCase();
-        return (!q || haystack.includes(q)) && (!mun || p.municipio === mun) && (!status || p.estatus === status);
+        return (!q || haystack.includes(q)) && (!mun || p.municipio === mun) && (!status || p.estatus === status) && (!snip || displaySnip(p) === snip);
       });
     }
 
     function renderReport() {
+      document.getElementById("snipFilter").hidden = currentReport !== "snip";
       const rows = filteredProjects();
       if (currentReport === "municipio") {
         renderGroupedReport(groupBy(rows, "municipio"), "Municipio");
@@ -874,7 +887,7 @@
         return `${values.slice(0, 3).join("<br>")}<br><small>+${values.length - 3} más</small>`;
       };
       const groups = rows.reduce((acc, project) => {
-        const code = String(project.codigo || "").trim() || "SNIP: 00001";
+        const code = displaySnip(project);
         acc[code] = acc[code] || [];
         acc[code].push(project);
         return acc;
@@ -1358,7 +1371,7 @@
       }
     });
 
-    ["searchBox", "municipalityFilter", "statusFilter"].forEach(id => {
+    ["searchBox", "snipFilter", "municipalityFilter", "statusFilter"].forEach(id => {
       document.getElementById(id).addEventListener("input", renderReport);
       document.getElementById(id).addEventListener("change", renderReport);
     });
@@ -1399,6 +1412,7 @@
       const printedAt = new Date().toLocaleString("es-DO");
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
+        currentReport === "snip" && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
         document.getElementById("statusFilter").value ? `Estatus: ${document.getElementById("statusFilter").value}` : ""
       ].filter(Boolean).join(" | ");
