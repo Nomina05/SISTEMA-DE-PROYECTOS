@@ -95,19 +95,21 @@
     .snip-filter[hidden] { display: none; }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; -webkit-overflow-scrolling: touch; }
     table { width: 100%; border-collapse: collapse; min-width: 1060px; }
-    table.compact-report { min-width: 0; width: 100%; table-layout: fixed; }
+    table.compact-report { width: 100%; table-layout: fixed; }
+    table.snip-detail-report { min-width: 1320px; }
+    table.snip-group-report { min-width: 980px; }
     table.compact-report th, table.compact-report td { padding: 7px 7px; font-size: 11px; line-height: 1.2; }
     table.compact-report th:nth-child(1), table.compact-report td:nth-child(1) { width: 9%; }
     table.compact-report th:nth-child(2), table.compact-report td:nth-child(2) { width: 14%; }
     table.compact-report th:nth-child(3), table.compact-report td:nth-child(3) { width: 10%; }
     table.compact-report th:nth-child(4), table.compact-report td:nth-child(4) { width: 17%; }
     table.compact-report th:nth-child(5), table.compact-report td:nth-child(5) { width: 6%; }
-    table.compact-report th:nth-child(n+5), table.compact-report td:nth-child(n+5) { text-align: right; font-variant-numeric: tabular-nums; }
+    table.compact-report th:nth-child(n+5), table.compact-report td:nth-child(n+5) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     table.compact-report td:nth-child(-n+4) { overflow-wrap: anywhere; }
     table.compact-report small { color: var(--muted); font-size: 10px; }
     th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
     th { position: sticky; top: 0; background: #eef3f5; z-index: 1; white-space: nowrap; }
-    tfoot td { background: #eef3f5; font-weight: 800; border-top: 2px solid #b9c8cf; }
+    tfoot td { background: #eef3f5; font-weight: 800; border-top: 2px solid #b9c8cf; white-space: nowrap; }
     td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     .badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; background: #e7edf0; color: #22323c; font-weight: 700; font-size: 12px; }
     .badge.ok { background: #dff4e8; color: #12633d; }
@@ -146,7 +148,8 @@
       .panel { padding: 14px; }
       .chart-wrap { min-height: 300px; }
       .embedded-frame { height: 560px; }
-      table.compact-report { min-width: 980px; }
+      table.snip-detail-report { min-width: 1180px; }
+      table.snip-group-report { min-width: 920px; }
     }
 
     @media (max-width: 720px) {
@@ -173,7 +176,8 @@
       .chart-wrap { min-height: 240px; }
       .embedded-frame { height: 480px; }
       table { min-width: 840px; }
-      table.compact-report { min-width: 920px; }
+      table.snip-detail-report { min-width: 1120px; }
+      table.snip-group-report { min-width: 900px; }
       th, td { font-size: 12px; padding: 8px; }
       .permission-checks { grid-template-columns: 1fr; }
     }
@@ -1029,7 +1033,11 @@
 
     function renderTable(id, headers, rows, footer = null) {
       const table = document.getElementById(id);
-      table.classList.toggle("compact-report", id === "reportTable" && currentReport === "snip");
+      const isSnipReport = id === "reportTable" && currentReport === "snip";
+      const snipMode = document.getElementById("snipModeFilter")?.value || "detalle";
+      table.classList.toggle("compact-report", isSnipReport);
+      table.classList.toggle("snip-detail-report", isSnipReport && snipMode === "detalle");
+      table.classList.toggle("snip-group-report", isSnipReport && snipMode === "agrupado");
       if (!rows.length) {
         table.innerHTML = `<tbody><tr><td class="empty">Sin registros para mostrar.</td></tr></tbody>`;
         return;
