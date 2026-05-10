@@ -300,6 +300,8 @@
               <label>Área de trabajo<input name="area" id="workAreaInput" placeholder="Ej. Dirección Técnica" required></label>
               <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
               <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
+              <label>Contraseña temporal<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Contraseña genérica" required></label>
+              <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
               <div id="policyPreview"></div>
               <button class="btn">Guardar usuario</button>
             </form>
@@ -534,6 +536,8 @@
     let currentReport = "municipio";
     let creatingNewProject = false;
     let currentSessionEmail = "";
+    let passwordChangeRequired = false;
+    let passwordChangeUser = null;
     const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
     const inactivityLimitMs = 20 * 60 * 1000;
     let inactivityTimer = null;
@@ -604,6 +608,7 @@
         cargo: user.cargo || "",
         rol: user.perfil_base || "Consulta",
         permissions: permissionMap[user.id] || [],
+        requiereCambioPassword: Boolean(user.requiere_cambio_password),
         creado: user.creado_en ? new Date(user.creado_en).toLocaleDateString("es-DO") : ""
       };
     }
@@ -874,9 +879,9 @@
     }
 
     function renderUsers() {
-      renderTable("usersTable", ["Nombre", "Usuario", "Área", "Cargo", "Perfil base", "Permisos", "Creado"], state.users.map(user => {
+      renderTable("usersTable", ["Nombre", "Usuario", "Área", "Cargo", "Perfil base", "Cambio clave", "Permisos", "Creado"], state.users.map(user => {
         const u = normalizedUser(user);
-        return [u.nombre, u.usuario, u.area || u.rol || "-", u.cargo || "-", u.rol, permissionBadges(u.permissions), u.creado];
+        return [u.nombre, u.usuario, u.area || u.rol || "-", u.cargo || "-", u.rol, u.requiereCambioPassword ? "Pendiente" : "No", permissionBadges(u.permissions), u.creado];
       }));
     }
 
@@ -1085,6 +1090,7 @@
         state.activeUser = matchedUser.usuario;
         saveState();
       }
+      return matchedUser || null;
     }
 
     function showAuthenticated(session) {
@@ -1097,8 +1103,11 @@
           alert("No se pudieron cargar datos de Supabase. Se usara la base local temporalmente.");
         })
         .finally(() => {
-          applySessionUser(session);
+          const matchedUser = applySessionUser(session);
           renderAll();
+          if (matchedUser?.requiereCambioPassword) {
+            openPasswordModal(true, matchedUser);
+          }
         });
     }
 
@@ -1142,14 +1151,18 @@
       box.classList.toggle("error", Boolean(isError));
     }
 
-    function openPasswordModal() {
+    function openPasswordModal(required = false, user = null) {
+      passwordChangeRequired = required;
+      passwordChangeUser = user;
       document.getElementById("passwordForm").reset();
-      setPasswordMessage("");
+      setPasswordMessage(required ? "Debe cambiar la contraseña temporal para continuar." : "");
+      document.getElementById("cancelPasswordBtn").hidden = required;
       document.getElementById("passwordModal").hidden = false;
       document.getElementById("newPassword").focus();
     }
 
     function closePasswordModal() {
+      if (passwordChangeRequired) return;
       document.getElementById("passwordModal").hidden = true;
       document.getElementById("passwordForm").reset();
       setPasswordMessage("");
@@ -1171,8 +1184,21 @@
         saveButton.textContent = "Guardando...";
         const { error } = await window.supabaseClient.auth.updateUser({ password });
         if (error) throw error;
+        if (passwordChangeUser?.id) {
+          const updateResult = await window.supabaseClient.from("usuarios").update({ requiere_cambio_password: false }).eq("id", passwordChangeUser.id);
+          if (updateResult.error) throw updateResult.error;
+          const localUser = state.users.find(user => user.id === passwordChangeUser.id);
+          if (localUser) localUser.requiereCambioPassword = false;
+          saveState();
+        }
+        passwordChangeRequired = false;
+        passwordChangeUser = null;
+        document.getElementById("cancelPasswordBtn").hidden = false;
         setPasswordMessage("Contraseña actualizada correctamente.");
         document.getElementById("passwordForm").reset();
+        if (document.getElementById("passwordModal")) {
+          setTimeout(closePasswordModal, 900);
+        }
       } catch (error) {
         setPasswordMessage(error.message || "No fue posible cambiar la contraseña.", true);
       } finally {
@@ -1374,13 +1400,29 @@
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const permissions = [...event.currentTarget.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
       if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
+      if (!data.passwordTemporal || data.passwordTemporal.length < 6) return alert("Debe colocar una contraseña temporal de al menos 6 caracteres.");
+      const mustChangePassword = event.currentTarget.querySelector('input[name="requiereCambioPassword"]').checked;
       if (window.supabaseClient) {
+        const currentSession = await window.supabaseClient.auth.getSession();
+        const authResult = await window.supabaseClient.auth.signUp({
+          email: data.usuario,
+          password: data.passwordTemporal,
+          options: { data: { nombre: data.nombre, requiere_cambio_password: mustChangePassword } }
+        });
+        if (authResult.error) throw authResult.error;
+        if (currentSession.data.session?.access_token && currentSession.data.session?.refresh_token) {
+          await window.supabaseClient.auth.setSession({
+            access_token: currentSession.data.session.access_token,
+            refresh_token: currentSession.data.session.refresh_token
+          });
+        }
         const inserted = await window.supabaseClient.from("usuarios").insert({
           nombre: data.nombre,
           usuario: data.usuario,
           correo: data.usuario,
           cargo: data.cargo,
           perfil_base: data.rol,
+          requiere_cambio_password: mustChangePassword,
           activo: true
         }).select("*").single();
         if (inserted.error) throw inserted.error;
@@ -1393,7 +1435,7 @@
         }
         await loadSupabaseData();
       } else {
-        state.users.push({ ...data, permissions, creado: new Date().toLocaleDateString("es-DO") });
+        state.users.push({ ...data, passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, permissions, creado: new Date().toLocaleDateString("es-DO") });
       }
       saveState();
       event.currentTarget.reset();
