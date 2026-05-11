@@ -373,6 +373,8 @@
                 <option value="detalle">Detalle por obra</option>
                 <option value="agrupado">Agrupar por código SNIP</option>
               </select>
+              <select id="providerFilter" hidden><option value="">Todos los proveedores</option></select>
+              <select id="typeFilter" hidden><option value="">Todos los tipos de obra</option></select>
               <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
               <select id="statusFilter"><option value="">Todos los estatus</option></select>
             </div>
@@ -861,6 +863,14 @@
       const snips = [...new Set(state.projects.map(displaySnip))].sort((a, b) => a.localeCompare(b));
       document.getElementById("snipFilter").innerHTML = `<option value="">Todos los códigos SNIP</option>` + snips.map(code => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`).join("");
       if (selectedSnip && snips.includes(selectedSnip)) document.getElementById("snipFilter").value = selectedSnip;
+      const selectedProvider = document.getElementById("providerFilter").value;
+      const providers = [...new Set(state.projects.map(p => p.contratista || "Sin asignar"))].sort((a, b) => a.localeCompare(b));
+      document.getElementById("providerFilter").innerHTML = `<option value="">Todos los proveedores</option>` + providers.map(provider => `<option value="${escapeHtml(provider)}">${escapeHtml(provider)}</option>`).join("");
+      if (selectedProvider && providers.includes(selectedProvider)) document.getElementById("providerFilter").value = selectedProvider;
+      const selectedType = document.getElementById("typeFilter").value;
+      const types = [...new Set(state.projects.map(p => p.tipo || "Sin asignar"))].sort((a, b) => a.localeCompare(b));
+      document.getElementById("typeFilter").innerHTML = `<option value="">Todos los tipos de obra</option>` + types.map(type => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
+      if (selectedType && types.includes(selectedType)) document.getElementById("typeFilter").value = selectedType;
       document.getElementById("activeUserSelect").innerHTML = `<option value="">Sin usuario activo</option>` + state.users.map(u => `<option value="${u.usuario}">${u.nombre} - ${u.area || u.rol}</option>`).join("");
       document.getElementById("activeUserSelect").value = state.activeUser || "";
     }
@@ -911,16 +921,25 @@
       const q = document.getElementById("searchBox").value.toLowerCase();
       const mun = document.getElementById("municipalityFilter").value;
       const status = document.getElementById("statusFilter").value;
-      const snip = currentReport === "snip" ? document.getElementById("snipFilter").value : "";
+      const snip = ["municipio", "contratista", "estatus", "snip"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
+      const provider = currentReport === "contratista" ? document.getElementById("providerFilter").value : "";
+      const type = ["municipio", "contratista", "estatus"].includes(currentReport) ? document.getElementById("typeFilter").value : "";
       return enrichedProjects().filter(p => {
         const haystack = `${p.key} ${p.tipo} ${p.comunidad} ${p.municipio} ${p.contratista} ${p.codigo} ${p.estatus}`.toLowerCase();
-        return (!q || haystack.includes(q)) && (!mun || p.municipio === mun) && (!status || p.estatus === status) && (!snip || displaySnip(p) === snip);
+        return (!q || haystack.includes(q)) &&
+          (!mun || p.municipio === mun) &&
+          (!status || p.estatus === status) &&
+          (!snip || displaySnip(p) === snip) &&
+          (!provider || p.contratista === provider) &&
+          (!type || p.tipo === type);
       });
     }
 
     function renderReport() {
-      document.getElementById("snipFilter").hidden = currentReport !== "snip";
+      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "estatus", "snip"].includes(currentReport);
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
+      document.getElementById("providerFilter").hidden = currentReport !== "contratista";
+      document.getElementById("typeFilter").hidden = !["municipio", "contratista", "estatus"].includes(currentReport);
       const rows = filteredProjects();
       if (currentReport === "municipio") {
         renderMunicipioReport(rows);
@@ -1112,7 +1131,8 @@
 
     function renderEstatusReport(rows) {
       const ordered = [...rows].sort((a, b) => String(a.estatus || "").localeCompare(String(b.estatus || "")) || String(a.municipio || "").localeCompare(String(b.municipio || "")));
-      renderTable("reportTable", ["Tipo de Obra", "Municipio", "Sector", "Presupuesto", "Comprometido", "Pagado", "Disponible adjudicado", "Estatus de Obra"], ordered.map(p => [
+      renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Municipio", "Sector", "Presupuesto", "Comprometido", "Pagado", "Disponible adjudicado", "Estatus de Obra"], ordered.map(p => [
+        displaySnip(p),
         p.tipo || "Sin asignar",
         p.municipio || "Sin asignar",
         p.comunidad || "Sin asignar",
@@ -1123,6 +1143,7 @@
         p.estatus || "Sin asignar"
       ]), [
         "TOTAL",
+        "",
         "",
         "",
         money.format(sum(rows, "presupuesto")),
@@ -1596,7 +1617,7 @@
       }
     });
 
-    ["searchBox", "snipFilter", "snipModeFilter", "municipalityFilter", "statusFilter"].forEach(id => {
+    ["searchBox", "snipFilter", "snipModeFilter", "providerFilter", "typeFilter", "municipalityFilter", "statusFilter"].forEach(id => {
       document.getElementById(id).addEventListener("input", renderReport);
       document.getElementById(id).addEventListener("change", renderReport);
     });
@@ -1637,7 +1658,9 @@
       const printedAt = new Date().toLocaleString("es-DO");
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
-        currentReport === "snip" && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
+        ["municipio", "contratista", "estatus", "snip"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
+        currentReport === "contratista" && document.getElementById("providerFilter").value ? `Proveedor: ${document.getElementById("providerFilter").value}` : "",
+        ["municipio", "contratista", "estatus"].includes(currentReport) && document.getElementById("typeFilter").value ? `Tipo de obra: ${document.getElementById("typeFilter").value}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
         document.getElementById("statusFilter").value ? `Estatus: ${document.getElementById("statusFilter").value}` : ""
       ].filter(Boolean).join(" | ");
