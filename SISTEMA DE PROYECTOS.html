@@ -1066,8 +1066,8 @@
     function renderDisponibilidadReport(rows) {
       const tableRows = [...rows]
         .sort((a, b) => displaySnip(a).localeCompare(displaySnip(b)) || String(a.municipio || "").localeCompare(String(b.municipio || "")))
-        .map(p => disponibilidadValues(p));
-      renderTable("reportTable", ["Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, []));
+        .map(p => [displaySnip(p), ...disponibilidadValues(p)]);
+      renderTable("reportTable", ["Código SNIP", "Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, ["TOTAL"]));
     }
 
     function renderComprasReport(rows) {
