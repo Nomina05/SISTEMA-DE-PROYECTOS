@@ -96,17 +96,13 @@
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; -webkit-overflow-scrolling: touch; }
     table { width: 100%; border-collapse: collapse; min-width: 1060px; }
     table.compact-report { width: max-content; table-layout: auto; }
-    table.snip-detail-report { min-width: 1380px; }
-    table.snip-group-report { min-width: 1100px; }
+    table.snip-detail-report { min-width: 1080px; }
+    table.snip-group-report { min-width: 1080px; }
     table.compact-report th, table.compact-report td { padding: 7px 7px; font-size: 11px; line-height: 1.2; }
     table.snip-detail-report th:nth-child(1), table.snip-detail-report td:nth-child(1) { min-width: 120px; }
-    table.snip-detail-report th:nth-child(2), table.snip-detail-report td:nth-child(2) { min-width: 220px; }
-    table.snip-detail-report th:nth-child(3), table.snip-detail-report td:nth-child(3) { min-width: 150px; }
-    table.snip-detail-report th:nth-child(n+4), table.snip-detail-report td:nth-child(n+4) { min-width: 150px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.snip-detail-report th:nth-child(n+2), table.snip-detail-report td:nth-child(n+2) { min-width: 150px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     table.snip-group-report th:nth-child(1), table.snip-group-report td:nth-child(1) { min-width: 130px; }
-    table.snip-group-report th:nth-child(2), table.snip-group-report td:nth-child(2) { min-width: 220px; }
-    table.snip-group-report th:nth-child(3), table.snip-group-report td:nth-child(3) { min-width: 150px; }
-    table.snip-group-report th:nth-child(n+4), table.snip-group-report td:nth-child(n+4) { min-width: 155px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.snip-group-report th:nth-child(n+2), table.snip-group-report td:nth-child(n+2) { min-width: 155px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     table.compact-report td:nth-child(-n+4) { overflow-wrap: anywhere; }
     table.compact-report small { color: var(--muted); font-size: 10px; }
     th, td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
@@ -150,7 +146,7 @@
       .panel { padding: 14px; }
       .chart-wrap { min-height: 300px; }
       .embedded-frame { height: 560px; }
-      table.snip-detail-report { min-width: 1380px; }
+      table.snip-detail-report { min-width: 1080px; }
       table.snip-group-report { min-width: 1100px; }
     }
 
@@ -178,7 +174,7 @@
       .chart-wrap { min-height: 240px; }
       .embedded-frame { height: 480px; }
       table { min-width: 840px; }
-      table.snip-detail-report { min-width: 1380px; }
+      table.snip-detail-report { min-width: 1080px; }
       table.snip-group-report { min-width: 1100px; }
       th, td { font-size: 12px; padding: 8px; }
       .permission-checks { grid-template-columns: 1fr; }
@@ -1091,8 +1087,6 @@
             const code = displaySnip(project);
             return [
               code,
-              project.tipo || "Sin asignar",
-              project.municipio || "Sin asignar",
               money.format(snipAmount(project)),
               money.format(project.adjudicado || 0),
               money.format(project.comprometido || 0),
@@ -1106,8 +1100,8 @@
         const totalComprometido = sum(rows, "comprometido");
         const totalPaid = sum(rows, "pagado");
         const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
-        renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Municipio", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
-          "TOTAL", "", "", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalComprometido), money.format(totalPaid), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(totalPendienteAdjudicacion)
+        renderTable("reportTable", ["Código SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+          "TOTAL", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalComprometido), money.format(totalPaid), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(totalPendienteAdjudicacion)
         ]);
         return;
       }
@@ -1128,8 +1122,6 @@
           const pendienteAdjudicacion = items.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
           return [
             code,
-            [...new Set(items.map(item => item.tipo || "Sin asignar"))].join(", "),
-            [...new Set(items.map(item => item.municipio || "Sin asignar"))].join(", "),
             money.format(totalSnip),
             money.format(adjudicado),
             money.format(comprometido),
@@ -1143,10 +1135,8 @@
       const totalComprometido = sum(rows, "comprometido");
       const totalPaid = sum(rows, "pagado");
       const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
-      renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Municipio", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
         "TOTAL",
-        "",
-        "",
         money.format(totalSnip),
         money.format(totalAdjudicado),
         money.format(totalComprometido),
