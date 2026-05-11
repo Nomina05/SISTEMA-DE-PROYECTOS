@@ -292,25 +292,23 @@
       </section>
 
       <section class="section" id="usuarios">
-        <div class="grid cards">
-          <div class="panel" data-permission="users-admin">
-            <h2>Crear usuario</h2>
-            <form id="userForm" class="grid">
-              <label>Nombre<input name="nombre" required></label>
-              <label>Usuario<input name="usuario" required></label>
-              <label>Área de trabajo<input name="area" id="workAreaInput" placeholder="Ej. Dirección Técnica" required></label>
-              <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
-              <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
-              <label>Contraseña temporal<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Contraseña genérica" required></label>
-              <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
-              <div id="policyPreview"></div>
-              <button class="btn">Guardar usuario</button>
-            </form>
-          </div>
-          <div class="panel wide" data-permission="users-admin">
-            <h2>Usuarios creados</h2>
-            <div class="table-wrap"><table id="usersTable"></table></div>
-          </div>
+        <div class="panel" data-permission="users-admin">
+          <h2>Registro de usuarios</h2>
+          <form id="userForm" class="form-grid">
+            <label>Nombre<input name="nombre" required></label>
+            <label>Usuario<input name="usuario" required></label>
+            <label>Área de trabajo<input name="area" id="workAreaInput" placeholder="Ej. Dirección Técnica" required></label>
+            <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
+            <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
+            <label>Contraseña temporal<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Contraseña genérica" required></label>
+            <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
+            <div class="span-4" id="policyPreview"></div>
+            <button class="btn">Guardar usuario</button>
+          </form>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="users-admin">
+          <h2>Usuarios creados</h2>
+          <div class="table-wrap"><table id="usersTable"></table></div>
         </div>
       </section>
 
