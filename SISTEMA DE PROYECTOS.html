@@ -945,33 +945,32 @@
 
     function renderSnipReport(rows) {
       const mode = document.getElementById("snipModeFilter").value;
+      const snipAmount = project => displaySnip(project) === "SNIP: 00001" ? 0 : Number(project.presupuesto || 0);
+      const withoutSnipAmount = project => displaySnip(project) === "SNIP: 00001" ? Number(project.presupuesto || 0) : 0;
       if (mode === "detalle") {
         const tableRows = rows
           .sort((a, b) => displaySnip(a).localeCompare(displaySnip(b)) || String(a.municipio || "").localeCompare(String(b.municipio || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
           .map(project => {
             const code = displaySnip(project);
-            const pending = Number(project.adjudicado || 0) - Number(project.pagado || 0);
             return [
               code,
               project.tipo || "Sin asignar",
               project.municipio || "Sin asignar",
               project.comunidad || "Sin asignar",
-              "1",
-              money.format(project.presupuesto || 0),
+              money.format(snipAmount(project)),
               money.format(project.adjudicado || 0),
-              money.format(project.comprometido || (Number(project.adjudicado || 0) * 0.2)),
               money.format(project.pagado || 0),
-              money.format(pending),
-              money.format(code === "SNIP: 00001" ? pending : 0)
+              money.format(project.presupuesto || 0),
+              money.format(withoutSnipAmount(project))
             ];
           });
-        const totalAdjudicado = sum(rows, "adjudicado");
+        const totalSnip = rows.reduce((total, item) => total + snipAmount(item), 0);
         const totalPresupuesto = sum(rows, "presupuesto");
-        const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
+        const totalAdjudicado = sum(rows, "adjudicado");
         const totalPaid = sum(rows, "pagado");
-        const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-        renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Proyectos", "Presupuesto", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
-          "TOTAL", "", "", "", number.format(rows.length), money.format(totalPresupuesto), money.format(totalAdjudicado), money.format(totalTwentyPaid), money.format(totalPaid), money.format(totalAdjudicado - totalPaid), money.format(totalPendingWithoutSnip)
+        const totalWithoutSnip = rows.reduce((total, item) => total + withoutSnipAmount(item), 0);
+        renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Monto total de los SNIP", "Monto Contratado", "Monto Pagado", "Monto Publicado", "Monto sin SNIP"], tableRows, [
+          "TOTAL", "", "", "", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalPaid), money.format(totalPresupuesto), money.format(totalWithoutSnip)
         ]);
         return;
       }
@@ -986,36 +985,33 @@
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([code, items]) => {
           const presupuesto = sum(items, "presupuesto");
+          const totalSnip = items.reduce((total, item) => total + snipAmount(item), 0);
           const adjudicado = sum(items, "adjudicado");
-          const twentyPaid = items.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
           const paid = sum(items, "pagado");
-          const pending = adjudicado - paid;
-          const pendingWithoutSnip = code === "SNIP: 00001" ? pending : 0;
+          const montoSinSnip = items.reduce((total, item) => total + withoutSnipAmount(item), 0);
           return [
             code,
             number.format(items.length),
-            money.format(presupuesto),
+            money.format(totalSnip),
             money.format(adjudicado),
-            money.format(twentyPaid),
             money.format(paid),
-            money.format(pending),
-            money.format(pendingWithoutSnip)
+            money.format(presupuesto),
+            money.format(montoSinSnip)
           ];
         });
+      const totalSnip = rows.reduce((total, item) => total + snipAmount(item), 0);
       const totalPresupuesto = sum(rows, "presupuesto");
       const totalAdjudicado = sum(rows, "adjudicado");
-      const totalTwentyPaid = rows.reduce((total, item) => total + Number(item.comprometido || (Number(item.adjudicado || 0) * 0.2)), 0);
       const totalPaid = sum(rows, "pagado");
-      const totalPendingWithoutSnip = rows.filter(item => !String(item.codigo || "").trim()).reduce((total, item) => total + (Number(item.adjudicado || 0) - Number(item.pagado || 0)), 0);
-      renderTable("reportTable", ["Código SNIP", "Proyectos", "Presupuesto", "Adjudicado", "20% pagado", "Total pagado", "Pendiente por pagar", "Pendiente sin código SNIP"], tableRows, [
+      const totalWithoutSnip = rows.reduce((total, item) => total + withoutSnipAmount(item), 0);
+      renderTable("reportTable", ["Código SNIP", "Proyectos", "Monto total de los SNIP", "Monto Contratado", "Monto Pagado", "Monto Publicado", "Monto sin SNIP"], tableRows, [
         "TOTAL",
         number.format(rows.length),
-        money.format(totalPresupuesto),
+        money.format(totalSnip),
         money.format(totalAdjudicado),
-        money.format(totalTwentyPaid),
         money.format(totalPaid),
-        money.format(totalAdjudicado - totalPaid),
-        money.format(totalPendingWithoutSnip)
+        money.format(totalPresupuesto),
+        money.format(totalWithoutSnip)
       ]);
     }
 
