@@ -359,11 +359,10 @@
           <h2>Reportes</h2>
           <div class="tabs">
             <button class="tab active" data-report="municipio">Por municipio</button>
-            <button class="tab" data-report="contratista">Por contratista</button>
+            <button class="tab" data-report="contratista">Por proveedor</button>
             <button class="tab" data-report="disponibilidad">Disponibilidad de presupuesto</button>
             <button class="tab" data-report="pagos">Pagos realizados</button>
             <button class="tab" data-report="estatus">Estatus de obras</button>
-            <button class="tab" data-report="poblacion">Por población</button>
             <button class="tab" data-report="snip">Por código SNIP</button>
           </div>
           <div class="table-tools">
@@ -506,19 +505,18 @@
       "project-edit": "Editar código, presupuesto y estatus",
       "payment-create": "Registrar cubicaciones",
       "report-municipio": "Reporte por municipio",
-      "report-contratista": "Reporte por contratista",
+      "report-contratista": "Reporte por proveedor",
       "report-disponibilidad": "Reporte disponibilidad",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
-      "report-poblacion": "Reporte por población",
       "report-snip": "Reporte por código SNIP"
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-poblacion", "report-snip"],
+      "Dirección Técnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-estatus", "report-snip"],
       "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-snip"],
-      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion", "report-snip"],
-      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-poblacion", "report-snip"]
+      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-snip"],
+      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-pagos", "report-estatus", "report-snip"]
     };
     const reportPermissions = {
       municipio: "report-municipio",
@@ -526,7 +524,6 @@
       disponibilidad: "report-disponibilidad",
       pagos: "report-pagos",
       estatus: "report-estatus",
-      poblacion: "report-poblacion",
       snip: "report-snip"
     };
 
@@ -926,9 +923,9 @@
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       const rows = filteredProjects();
       if (currentReport === "municipio") {
-        renderGroupedReport(groupBy(rows, "municipio"), "Municipio");
+        renderMunicipioReport(rows);
       } else if (currentReport === "contratista") {
-        renderGroupedReport(groupBy(rows, "contratista"), "Contratista");
+        renderProveedorReport(rows);
       } else if (currentReport === "disponibilidad") {
         renderTable("reportTable", ["Proyecto", "Municipio", "Presupuesto", "Pagado", "Disponible adjudicado", "Disponibilidad proyecto"], rows.map(p => [
           p.comunidad, p.municipio, money.format(p.presupuesto), money.format(p.pagado), money.format(p.disponibilidadAdjudicado), badgeMoney(p.disponibilidadProyecto)
@@ -944,16 +941,70 @@
         });
         const totalPagos = enrichedProjects().reduce((total, p) => total + Number(p.pagadoBase || 0), 0) + state.payments.reduce((total, p) => total + Number(p.monto || 0), 0);
         renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "Cubicación", "Monto"], [...excelPayments, ...manualPayments], ["TOTAL", "", "", "", "", money.format(totalPagos)]);
-      } else if (currentReport === "poblacion") {
-        const ordered = [...rows].sort((a, b) => b.poblacion - a.poblacion);
-        renderTable("reportTable", ["Proyecto", "Municipio", "Población / habitantes", "Tipo", "Presupuesto", "Estatus"], ordered.map(p => [
-          p.comunidad, p.municipio, number.format(p.poblacion || 0), p.tipo, money.format(p.presupuesto), p.estatus
-        ]), ["TOTAL", "", number.format(sum(rows, "poblacion")), "", money.format(sum(rows, "presupuesto")), ""]);
       } else if (currentReport === "snip") {
         renderSnipReport(rows);
       } else {
-        renderGroupedReport(groupBy(rows, "estatus"), "Estatus");
+        renderEstatusReport(rows);
       }
+    }
+
+    function groupRows(rows, keyFn) {
+      return rows.reduce((acc, row) => {
+        const key = keyFn(row);
+        acc[key] = acc[key] || [];
+        acc[key].push(row);
+        return acc;
+      }, {});
+    }
+
+    function renderMunicipioReport(rows) {
+      const groups = groupRows(rows, p => [displaySnip(p), p.tipo || "", p.municipio || ""].join("|"));
+      const tableRows = Object.values(groups)
+        .sort((a, b) => String(a[0].municipio || "").localeCompare(String(b[0].municipio || "")) || displaySnip(a[0]).localeCompare(displaySnip(b[0])))
+        .map(items => {
+          const p = items[0];
+          return [
+            displaySnip(p),
+            p.tipo || "Sin asignar",
+            number.format(items.length),
+            number.format(sum(items, "poblacion")),
+            p.municipio || "Sin asignar",
+            [...new Set(items.map(item => item.comunidad || "Sin asignar"))].join(", "),
+            money.format(sum(items, "presupuesto"))
+          ];
+        });
+      renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Cantidad de Obra por Tipo de Obra", "Población", "Municipio", "Sector", "Monto total por SNIP"], tableRows, [
+        "TOTAL", "", number.format(rows.length), number.format(sum(rows, "poblacion")), "", "", money.format(sum(rows, "presupuesto"))
+      ]);
+    }
+
+    function renderProveedorReport(rows) {
+      const groups = groupRows(rows, p => [p.contratista || "", displaySnip(p), p.tipo || "", p.estatus || ""].join("|"));
+      const tableRows = Object.values(groups)
+        .sort((a, b) => String(a[0].contratista || "").localeCompare(String(b[0].contratista || "")) || displaySnip(a[0]).localeCompare(displaySnip(b[0])))
+        .map(items => {
+          const p = items[0];
+          const adjudicado = sum(items, "adjudicado");
+          const pagado = sum(items, "pagado");
+          return [
+            displaySnip(p),
+            p.contratista || "Sin asignar",
+            number.format(items.length),
+            p.tipo || "Sin asignar",
+            money.format(sum(items, "presupuesto")),
+            money.format(adjudicado),
+            money.format(adjudicado),
+            money.format(sum(items, "comprometido")),
+            money.format(pagado),
+            money.format(Math.max(adjudicado - pagado, 0)),
+            p.estatus || "Sin asignar"
+          ];
+        });
+      const totalAdjudicado = sum(rows, "adjudicado");
+      const totalPagado = sum(rows, "pagado");
+      renderTable("reportTable", ["Código SNIP", "Nombre del Proveedor", "Cantidad de Obras por Proveedor", "Tipo de Obra", "Monto total del SNIP", "Adjudicado", "Contratado", "20% Pagado", "Total Pagado", "Pendiente por pagar", "Estatus de Obras"], tableRows, [
+        "TOTAL", "", number.format(rows.length), "", money.format(sum(rows, "presupuesto")), money.format(totalAdjudicado), money.format(totalAdjudicado), money.format(sum(rows, "comprometido")), money.format(totalPagado), money.format(Math.max(totalAdjudicado - totalPagado, 0)), ""
+      ]);
     }
 
     function renderSnipReport(rows) {
@@ -971,16 +1022,19 @@
               project.comunidad || "Sin asignar",
               money.format(snipAmount(project)),
               money.format(project.adjudicado || 0),
+              money.format(project.comprometido || 0),
               money.format(project.pagado || 0),
-              money.format(project.montoPublicado || 0)
+              money.format(project.disponibilidadAdjudicado || 0),
+              money.format(Math.max((project.presupuesto || 0) - (project.adjudicado || 0), 0))
             ];
           });
         const totalSnip = rows.reduce((total, item) => total + snipAmount(item), 0);
-        const totalPublicado = sum(rows, "montoPublicado");
         const totalAdjudicado = sum(rows, "adjudicado");
+        const totalComprometido = sum(rows, "comprometido");
         const totalPaid = sum(rows, "pagado");
-        renderTable("reportTable", ["Código SNIP", "Obra", "Municipio", "Sector", "Monto total de los SNIP", "Monto Contratado", "Monto Pagado", "Monto Publicado"], tableRows, [
-          "TOTAL", "", "", "", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalPaid), money.format(totalPublicado)
+        const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
+        renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Municipio", "Sector", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+          "TOTAL", "", "", "", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalComprometido), money.format(totalPaid), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(totalPendienteAdjudicacion)
         ]);
         return;
       }
@@ -996,28 +1050,38 @@
         .map(([code, items]) => {
           const totalSnip = items.reduce((total, item) => total + snipAmount(item), 0);
           const adjudicado = sum(items, "adjudicado");
+          const comprometido = sum(items, "comprometido");
           const paid = sum(items, "pagado");
-          const publicado = sum(items, "montoPublicado");
+          const pendienteAdjudicacion = items.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
           return [
             code,
-            number.format(items.length),
+            [...new Set(items.map(item => item.tipo || "Sin asignar"))].join(", "),
+            [...new Set(items.map(item => item.municipio || "Sin asignar"))].join(", "),
+            [...new Set(items.map(item => item.comunidad || "Sin asignar"))].join(", "),
             money.format(totalSnip),
             money.format(adjudicado),
+            money.format(comprometido),
             money.format(paid),
-            money.format(publicado)
+            money.format(sum(items, "disponibilidadAdjudicado")),
+            money.format(pendienteAdjudicacion)
           ];
         });
       const totalSnip = rows.reduce((total, item) => total + snipAmount(item), 0);
-      const totalPublicado = sum(rows, "montoPublicado");
       const totalAdjudicado = sum(rows, "adjudicado");
+      const totalComprometido = sum(rows, "comprometido");
       const totalPaid = sum(rows, "pagado");
-      renderTable("reportTable", ["Código SNIP", "Proyectos", "Monto total de los SNIP", "Monto Contratado", "Monto Pagado", "Monto Publicado"], tableRows, [
+      const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
+      renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Municipio", "Sector", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
         "TOTAL",
-        number.format(rows.length),
+        "",
+        "",
+        "",
         money.format(totalSnip),
         money.format(totalAdjudicado),
+        money.format(totalComprometido),
         money.format(totalPaid),
-        money.format(totalPublicado)
+        money.format(sum(rows, "disponibilidadAdjudicado")),
+        money.format(totalPendienteAdjudicacion)
       ]);
     }
 
@@ -1043,6 +1107,29 @@
         money.format(sum(allItems, "comprometido")),
         money.format(sum(allItems, "pagado")),
         money.format(sum(allItems, "disponibilidadAdjudicado"))
+      ]);
+    }
+
+    function renderEstatusReport(rows) {
+      const ordered = [...rows].sort((a, b) => String(a.estatus || "").localeCompare(String(b.estatus || "")) || String(a.municipio || "").localeCompare(String(b.municipio || "")));
+      renderTable("reportTable", ["Tipo de Obra", "Municipio", "Sector", "Presupuesto", "Comprometido", "Pagado", "Disponible adjudicado", "Estatus de Obra"], ordered.map(p => [
+        p.tipo || "Sin asignar",
+        p.municipio || "Sin asignar",
+        p.comunidad || "Sin asignar",
+        money.format(p.presupuesto || 0),
+        money.format(p.comprometido || 0),
+        money.format(p.pagado || 0),
+        money.format(p.disponibilidadAdjudicado || 0),
+        p.estatus || "Sin asignar"
+      ]), [
+        "TOTAL",
+        "",
+        "",
+        money.format(sum(rows, "presupuesto")),
+        money.format(sum(rows, "comprometido")),
+        money.format(sum(rows, "pagado")),
+        money.format(sum(rows, "disponibilidadAdjudicado")),
+        ""
       ]);
     }
 
