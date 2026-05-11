@@ -931,7 +931,7 @@
       const q = document.getElementById("searchBox").value.toLowerCase();
       const mun = document.getElementById("municipalityFilter").value;
       const status = document.getElementById("statusFilter").value;
-      const snip = ["municipio", "contratista", "estatus", "snip"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
+      const snip = ["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
       const provider = currentReport === "contratista" ? document.getElementById("providerFilter").value : "";
       const type = ["municipio", "contratista", "estatus"].includes(currentReport) ? document.getElementById("typeFilter").value : "";
       return enrichedProjects().filter(p => {
@@ -946,7 +946,7 @@
     }
 
     function renderReport() {
-      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "estatus", "snip"].includes(currentReport);
+      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport);
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       document.getElementById("providerFilter").hidden = currentReport !== "contratista";
       document.getElementById("typeFilter").hidden = !["municipio", "contratista", "estatus"].includes(currentReport);
@@ -1711,7 +1711,7 @@
       const printedAt = new Date().toLocaleString("es-DO");
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
-        ["municipio", "contratista", "estatus", "snip"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
+        ["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
         currentReport === "contratista" && document.getElementById("providerFilter").value ? `Proveedor: ${document.getElementById("providerFilter").value}` : "",
         ["municipio", "contratista", "estatus"].includes(currentReport) && document.getElementById("typeFilter").value ? `Tipo de obra: ${document.getElementById("typeFilter").value}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
