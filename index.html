@@ -1375,6 +1375,7 @@
         .map(([code]) => {
           return [
             code,
+            number.format(snipGroups[code].length),
             money.format(snipTotals[code] || 0),
             money.format(snipAdjudicado[code] || 0),
             money.format(snipSinAdjudicar[code] || 0),
@@ -1385,8 +1386,9 @@
       const uniqueAdjudicado = Object.values(snipAdjudicado).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueSinAdjudicar = Object.values(snipSinAdjudicar).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueDisponibilidad = Object.values(snipDisponibilidad).reduce((total, value) => total + Number(value || 0), 0);
-      renderTable("reportTable", ["Código SNIP", "Total por Código SNIP", "Monto Adjudicado", "Monto sin Adjudicar", "Disponibilidad"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Cantidad de Obras por Código SNIP", "Total por Código SNIP", "Monto Adjudicado", "Monto sin Adjudicar", "Disponibilidad"], tableRows, [
         "TOTAL",
+        number.format(rowsWithMoney.length),
         money.format(uniqueSnipTotal),
         money.format(uniqueAdjudicado),
         money.format(uniqueSinAdjudicar),
