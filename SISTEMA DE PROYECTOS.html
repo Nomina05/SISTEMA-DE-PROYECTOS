@@ -113,6 +113,9 @@
     .badge.ok { background: #dff4e8; color: #12633d; }
     .badge.warn { background: #fff0cf; color: #845300; }
     .badge.bad { background: #ffe3df; color: #98251a; }
+    .floating-alert { position: fixed; left: 18px; bottom: 18px; z-index: 80; width: min(360px, calc(100vw - 36px)); padding: 14px 16px; border: 1px solid #f2c36b; border-left: 5px solid var(--amber); border-radius: 8px; background: #fff8e5; color: #4d3500; box-shadow: 0 18px 36px rgba(23, 32, 38, .18); font-weight: 700; }
+    .floating-alert strong { display: block; margin-bottom: 4px; color: #172026; }
+    .floating-alert[hidden] { display: none; }
     .permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .permission-checks { display: grid; grid-template-columns: repeat(2, minmax(170px, 1fr)); gap: 8px; margin-top: 8px; }
     .permission-check { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #f9fbfc; color: var(--ink); font-weight: 700; }
@@ -212,6 +215,7 @@
       </form>
     </div>
   </div>
+  <div class="floating-alert" id="movementAlert" role="status" aria-live="polite" hidden></div>
 
   <div class="shell">
     <aside>
@@ -635,7 +639,9 @@
         codigo: project.snip || "",
         contratista: project.contratistas?.nombre || project.contratista || "Sin asignar",
         contratistaId: project.contratista_id || "",
-        estatus: project.estatus || "En proceso"
+        estatus: project.estatus || "En proceso",
+        creadoEn: project.creado_en || "",
+        actualizadoEn: project.actualizado_en || ""
       };
     }
 
@@ -761,6 +767,48 @@
     function alertLevelBadge(level) {
       const cls = level === "Crítico" ? "bad" : level === "Alerta" ? "warn" : "ok";
       return `<span class="badge ${cls}">${level}</span>`;
+    }
+
+    function parseDateOnly(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function businessDaysBetween(startDate, endDate = new Date()) {
+      if (!startDate) return Infinity;
+      const current = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 1);
+      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      let days = 0;
+      while (current <= end) {
+        const day = current.getDay();
+        if (day >= 1 && day <= 5) days++;
+        current.setDate(current.getDate() + 1);
+      }
+      return days;
+    }
+
+    function noMovementProjects(rows = enrichedProjects()) {
+      return rows.filter(project => {
+        const withoutExecution = Number(project.comprometido || 0) <= 0 && Number(project.cubicaciones || 0) <= 0;
+        if (!withoutExecution) return false;
+        const startDate = parseDateOnly(project.actualizadoEn || project.creadoEn);
+        return businessDaysBetween(startDate) >= 10;
+      });
+    }
+
+    function showMovementAlert() {
+      const key = `movement-alert-${currentSessionEmail || "session"}`;
+      if (sessionStorage.getItem(key)) return;
+      const total = noMovementProjects().length;
+      if (!total) return;
+      const alertBox = document.getElementById("movementAlert");
+      alertBox.innerHTML = `<strong>Alerta de seguimiento</strong>${number.format(total)} obras no tienen movimientos de ejecución o cubicación después de 10 días laborables.`;
+      alertBox.hidden = false;
+      sessionStorage.setItem(key, "1");
+      setTimeout(() => {
+        alertBox.hidden = true;
+      }, 15000);
     }
 
     function projectPaid(projectKey) {
@@ -1413,6 +1461,7 @@
           const matchedUser = applySessionUser(session);
           renderAll();
           notifyLoginAlerts();
+          showMovementAlert();
           if (matchedUser?.requiereCambioPassword) {
             openPasswordModal(true, matchedUser);
           }
@@ -1620,7 +1669,9 @@
         montoPublicado: data.get("estatus") === "Publicado" ? presupuesto : 0,
         codigo: data.get("codigo") || "",
         contratista: data.get("contratista") || "Sin asignar",
-        estatus: data.get("estatus") || "En proceso"
+        estatus: data.get("estatus") || "En proceso",
+        creadoEn: new Date().toISOString(),
+        actualizadoEn: new Date().toISOString()
       };
       state.projects.push(project);
       }
@@ -1645,6 +1696,7 @@
         const value = Number(data.get(field));
         if (!Number.isNaN(value) && value > 0) project[field] = value;
       });
+      project.actualizadoEn = new Date().toISOString();
       validateProjectAmounts(project.presupuesto, project.adjudicado);
       if (window.supabaseClient && project.dbId) {
         const payload = {
