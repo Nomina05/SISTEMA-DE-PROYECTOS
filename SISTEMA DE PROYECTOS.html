@@ -222,6 +222,7 @@
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Registro manual</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
+        <button class="nav-btn" data-view="controles" onclick="showView('controles')">Controles y alertas</button>
       </nav>
     </aside>
 
@@ -282,6 +283,22 @@
             <h2>Disponibilidad por proyecto</h2>
             <div class="table-wrap"><table id="availabilityTable"></table></div>
           </div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <h2>Alertas principales</h2>
+          <div class="table-wrap"><table id="dashboardAlertsTable"></table></div>
+        </div>
+      </section>
+
+      <section class="section" id="controles">
+        <div class="panel">
+          <h2>Controles y alertas</h2>
+          <div class="grid metrics" id="controlMetrics"></div>
+          <div class="table-wrap" style="margin-top:14px;"><table id="alertsTable"></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <h2>Control de cambios</h2>
+          <div class="table-wrap"><table id="auditTable"></table></div>
         </div>
       </section>
 
@@ -361,6 +378,7 @@
             <button class="tab" data-report="pagos">Pagos realizados</button>
             <button class="tab" data-report="estatus">Estatus de obras</button>
             <button class="tab" data-report="snip">Por código SNIP</button>
+            <button class="tab" data-report="inconsistencias">Inconsistencias</button>
           </div>
           <div class="table-tools">
             <div class="filters">
@@ -497,6 +515,7 @@
     const permissionLabels = {
       dashboard: "Dashboard",
       usuarios: "Usuario",
+      controles: "Controles y alertas",
       registro: "Registro de proyectos",
       cubicaciones: "Registro de cubicaciones",
       reportes: "Reportes",
@@ -509,16 +528,17 @@
       "report-disponibilidad": "Reporte disponibilidad",
       "report-compras": "Reporte proceso de compras",
       "report-inversion": "Reporte inversión pública",
+      "report-inconsistencias": "Reporte de inconsistencias",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
       "report-snip": "Reporte por código SNIP"
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-estatus", "report-snip"],
-      "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-snip"],
-      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-estatus", "report-snip"],
-      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-estatus", "report-snip"]
+      "Dirección Técnica": ["dashboard", "controles", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Financiera": ["dashboard", "controles", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-snip", "report-inconsistencias"],
+      "Registro": ["dashboard", "controles", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Consulta": ["dashboard", "controles", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
       municipio: "report-municipio",
@@ -528,7 +548,8 @@
       inversion: "report-inversion",
       pagos: "report-pagos",
       estatus: "report-estatus",
-      snip: "report-snip"
+      snip: "report-snip",
+      inconsistencias: "report-inconsistencias"
     };
 
     function contractorFromExcel(row) {
@@ -560,12 +581,13 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: baseProjects, users: [], payments: [], activeUser: "" };
+      if (!saved) return { projects: baseProjects, users: [], payments: [], audit: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: mergeProjects(parsed.projects || []),
         users: parsed.users || [],
         payments: parsed.payments || [],
+        audit: parsed.audit || [],
         activeUser: parsed.activeUser || ""
       };
     }
@@ -650,6 +672,7 @@
       state.projects = (projectsResult.data || []).map(mapProjectFromDb);
       if (!state.projects.length) state.projects = baseProjects;
       state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
+      state.audit = state.audit || [];
       state.payments = (cubicacionesResult.data || []).map(payment => ({
         id: payment.id,
         projectKey: payment.proyecto_id,
@@ -722,6 +745,24 @@
       return rows.reduce((total, item) => total + (Number(item[field]) || 0), 0);
     }
 
+    function audit(action, detail) {
+      state.audit = state.audit || [];
+      state.audit.unshift({
+        id: makeId(),
+        fecha: new Date().toLocaleString("es-DO"),
+        usuario: currentSessionEmail || state.activeUser || "Sistema",
+        accion: action,
+        detalle: detail
+      });
+      state.audit = state.audit.slice(0, 250);
+      saveState();
+    }
+
+    function alertLevelBadge(level) {
+      const cls = level === "Crítico" ? "bad" : level === "Alerta" ? "warn" : "ok";
+      return `<span class="badge ${cls}">${level}</span>`;
+    }
+
     function projectPaid(projectKey) {
       const project = state.projects.find(p => p.key === projectKey);
       return Number(project?.comprometido || 0) + projectCubicaciones(projectKey);
@@ -763,6 +804,7 @@
       renderAvailability();
       renderUsers();
       renderPayments();
+      renderControls();
       renderReport();
       renderPolicyPreview();
       renderAccess();
@@ -926,11 +968,78 @@
       ]));
     }
 
+    function projectAlerts(rows = enrichedProjects()) {
+      const alerts = [];
+      const push = (level, type, project, detail, action) => alerts.push({
+        level,
+        type,
+        codigo: project ? displaySnip(project) : "-",
+        proyecto: project?.comunidad || project?.tipo || "-",
+        municipio: project?.municipio || "-",
+        detail,
+        action
+      });
+      rows.forEach(project => {
+        const snip = String(project.codigo || "").trim();
+        const proveedor = String(project.contratista || "").trim().toLowerCase();
+        if (!Number(project.presupuesto || 0)) push("Crítico", "Presupuesto en cero", project, "El proyecto no tiene monto de presupuesto.", "Completar presupuesto antes de ejecutar compras o pagos.");
+        if (!snip || snip === "00001" || snip.toLowerCase().includes("sin")) push("Alerta", "Proyecto sin SNIP", project, "El proyecto no tiene un código SNIP definitivo.", "Asignar o confirmar el código SNIP.");
+        if (!proveedor || proveedor === "sin asignar" || proveedor === "sin adjudicar") push("Alerta", "Proyecto sin proveedor", project, "El proyecto no tiene proveedor adjudicado.", "Completar proveedor o marcar como pendiente de adjudicación.");
+        if (Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Sin adjudicación", project, "Tiene presupuesto, pero no tiene monto adjudicado.", "Completar adjudicación cuando el proceso sea aprobado.");
+        if (Number(project.adjudicado || 0) > Number(project.presupuesto || 0) && Number(project.presupuesto || 0) > 0) push("Crítico", "Adjudicado mayor al presupuesto", project, "El monto adjudicado supera el presupuesto.", "Revisar presupuesto o adjudicación.");
+        if (Number(project.disponibilidadAdjudicado || 0) <= 0 && Number(project.adjudicado || 0) > 0) push("Crítico", "Presupuesto adjudicado agotado", project, "La disponibilidad adjudicada está en cero o negativa.", "Revisar pagos y cubicaciones antes de registrar nuevos desembolsos.");
+        if (Number(project.pagado || 0) > Number(project.adjudicado || 0) && Number(project.adjudicado || 0) > 0) push("Crítico", "Pagos mayores al adjudicado", project, "El total pagado supera el monto adjudicado.", "Solicitar aprobación y corregir el monto antes de continuar.");
+        if ((project.estatus === "Publicado" || String(project.procesoCompra || "").trim()) && Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Proceso sin adjudicación", project, "Proceso publicado o cargado sin adjudicación.", "Dar seguimiento a Compras y Contrataciones.");
+        if (Number(project.adjudicado || 0) > 0 && Number(project.comprometido || 0) <= 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Adjudicado sin avance", project, "Existe adjudicación sin avance de obra ni cubicaciones.", "Verificar estatus físico y financiero.");
+        if (Number(project.pagado || 0) > 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Pagos sin cubicaciones", project, "Existe pago o avance registrado sin cubicación asociada.", "Registrar cubicación o corregir avance inicial.");
+      });
+      const seen = new Set();
+      state.payments.forEach(payment => {
+        const numberKey = String(payment.numero || "").trim().toLowerCase();
+        if (!numberKey) return;
+        const key = `${payment.projectKey}|${numberKey}`;
+        const project = rows.find(item => item.key === payment.projectKey);
+        if (seen.has(key)) push("Crítico", "Cubicación duplicada", project, `La cubicación ${payment.numero} está repetida para el mismo proyecto.`, "Unificar o corregir el número de cubicación.");
+        seen.add(key);
+      });
+      return alerts;
+    }
+
+    function renderAlertsTable(id, alerts, limit = null) {
+      const visible = limit ? alerts.slice(0, limit) : alerts;
+      renderTable(id, ["Nivel", "Control", "Código SNIP", "Proyecto", "Municipio", "Detalle", "Acción sugerida"], visible.map(alert => [
+        alertLevelBadge(alert.level),
+        alert.type,
+        alert.codigo,
+        alert.proyecto,
+        alert.municipio,
+        alert.detail,
+        alert.action
+      ]));
+    }
+
+    function renderControls() {
+      const alerts = projectAlerts();
+      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const warning = alerts.filter(alert => alert.level === "Alerta").length;
+      const ok = Math.max(state.projects.length - new Set(alerts.map(alert => `${alert.codigo}|${alert.proyecto}`)).size, 0);
+      document.getElementById("controlMetrics").innerHTML = [
+        ["Alertas críticas", critical],
+        ["Alertas preventivas", warning],
+        ["Proyectos sin alertas", ok]
+      ].map(([label, value]) => `<div class="metric"><small>${label}</small><strong>${number.format(value)}</strong></div>`).join("");
+      renderAlertsTable("alertsTable", alerts);
+      renderAlertsTable("dashboardAlertsTable", alerts, 8);
+      renderTable("auditTable", ["Fecha", "Usuario", "Acción", "Detalle"], (state.audit || []).map(row => [
+        row.fecha, row.usuario, row.accion, row.detalle
+      ]));
+    }
+
     function filteredProjects() {
       const q = document.getElementById("searchBox").value.toLowerCase();
       const mun = document.getElementById("municipalityFilter").value;
       const status = document.getElementById("statusFilter").value;
-      const snip = ["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
+      const snip = ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
       const provider = currentReport === "contratista" ? document.getElementById("providerFilter").value : "";
       const type = ["municipio", "contratista", "estatus"].includes(currentReport) ? document.getElementById("typeFilter").value : "";
       return enrichedProjects().filter(p => {
@@ -945,7 +1054,7 @@
     }
 
     function renderReport() {
-      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport);
+      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias"].includes(currentReport);
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       document.getElementById("providerFilter").hidden = currentReport !== "contratista";
       document.getElementById("typeFilter").hidden = !["municipio", "contratista", "estatus"].includes(currentReport);
@@ -971,6 +1080,8 @@
         });
         const totalPagos = enrichedProjects().reduce((total, p) => total + Number(p.pagadoBase || 0), 0) + state.payments.reduce((total, p) => total + Number(p.monto || 0), 0);
         renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "Cubicación", "Monto"], [...excelPayments, ...manualPayments], ["TOTAL", "", "", "", "", money.format(totalPagos)]);
+      } else if (currentReport === "inconsistencias") {
+        renderAlertsTable("reportTable", projectAlerts(rows));
       } else if (currentReport === "snip") {
         renderSnipReport(rows);
       } else {
@@ -1292,15 +1403,32 @@
       loadSupabaseData()
         .catch(error => {
           console.error(error);
-          alert("No se pudieron cargar datos de Supabase. Se usara la base local temporalmente.");
+          alert("No se pudieron cargar datos de Supabase. El sistema cerrará la sesión para evitar trabajar con datos locales.");
+          document.body.classList.remove("auth-ready");
+          document.body.classList.add("auth-locked");
+          window.supabaseClient.auth.signOut();
         })
         .finally(() => {
+          if (document.body.classList.contains("auth-locked")) return;
           const matchedUser = applySessionUser(session);
           renderAll();
+          notifyLoginAlerts();
           if (matchedUser?.requiereCambioPassword) {
             openPasswordModal(true, matchedUser);
           }
         });
+    }
+
+    function notifyLoginAlerts() {
+      const key = `alerts-notified-${currentSessionEmail}`;
+      if (sessionStorage.getItem(key)) return;
+      const alerts = projectAlerts();
+      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const warning = alerts.filter(alert => alert.level === "Alerta").length;
+      if (critical || warning) {
+        alert(`Controles activos: ${critical} alertas críticas y ${warning} alertas preventivas. Revise la sección Controles y alertas.`);
+      }
+      sessionStorage.setItem(key, "1");
     }
 
     function showLogin() {
@@ -1446,6 +1574,7 @@
       const data = new FormData(form);
       const presupuesto = Number(data.get("presupuesto")) || 0;
       const adjudicado = Number(data.get("adjudicado")) || presupuesto;
+      validateProjectAmounts(presupuesto, adjudicado);
       const committed = 0;
       const contratistaId = await findOrCreateContractor(data.get("contratista"));
       const payload = {
@@ -1496,6 +1625,7 @@
       state.projects.push(project);
       }
       saveState();
+      audit("Proyecto creado", `${data.get("comunidadNuevo")} | SNIP ${data.get("codigo") || "sin código"} | Presupuesto ${money.format(presupuesto)}`);
       form.reset();
       setProjectMode(false);
       renderAll();
@@ -1515,6 +1645,7 @@
         const value = Number(data.get(field));
         if (!Number.isNaN(value) && value > 0) project[field] = value;
       });
+      validateProjectAmounts(project.presupuesto, project.adjudicado);
       if (window.supabaseClient && project.dbId) {
         const payload = {
           snip: project.codigo || "",
@@ -1529,8 +1660,38 @@
         Object.assign(project, mapProjectFromDb(updated.data));
       }
       saveState();
+      audit("Proyecto actualizado", `${project.comunidad || project.tipo} | SNIP ${displaySnip(project)} | Presupuesto ${money.format(project.presupuesto || 0)} | Adjudicado ${money.format(project.adjudicado || 0)}`);
       form.reset();
       renderAll();
+    }
+
+    function validateProjectAmounts(presupuesto, adjudicado) {
+      if (Number(presupuesto || 0) <= 0) {
+        throw new Error("El presupuesto debe ser mayor que cero.");
+      }
+      if (Number(adjudicado || 0) > Number(presupuesto || 0)) {
+        const proceed = confirm("El monto adjudicado supera el presupuesto. ¿Desea guardar de todos modos y dejar la alerta activa?");
+        if (!proceed) throw new Error("Registro cancelado por control de presupuesto.");
+      }
+    }
+
+    function validatePaymentControl(data) {
+      const project = enrichedProjects().find(p => p.key === data.projectKey);
+      if (!project) throw new Error("Debe seleccionar un proyecto válido.");
+      const amount = Number(data.monto || 0);
+      if (amount <= 0) throw new Error("El monto de la cubicación debe ser mayor que cero.");
+      const numberKey = String(data.numero || "").trim().toLowerCase();
+      if (numberKey) {
+        const duplicated = state.payments.some(payment => payment.projectKey === data.projectKey && String(payment.numero || "").trim().toLowerCase() === numberKey);
+        if (duplicated) throw new Error("Ya existe una cubicación con ese número para el mismo proyecto.");
+      }
+      const projectedPaid = Number(project.pagado || 0) + amount;
+      if (Number(project.adjudicado || 0) > 0 && projectedPaid > Number(project.adjudicado || 0)) {
+        const proceed = confirm(`Esta cubicación hará que el total pagado (${money.format(projectedPaid)}) supere el monto adjudicado (${money.format(project.adjudicado)}). ¿Desea continuar y dejar la alerta activa?`);
+        if (!proceed) throw new Error("Cubicación cancelada por control de sobregiro.");
+        audit("Aprobación requerida", `${project.comunidad || project.tipo} supera el adjudicado con total pagado proyectado ${money.format(projectedPaid)}`);
+      }
+      return project;
     }
 
     document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
@@ -1663,6 +1824,7 @@
       if (!can("payment-create")) return alert("El usuario activo no tiene permiso para registrar cubicaciones.");
       try {
       const data = Object.fromEntries(new FormData(event.currentTarget));
+      const project = validatePaymentControl(data);
       if (window.supabaseClient) {
         const inserted = await window.supabaseClient.from("cubicaciones").insert({
           proyecto_id: data.projectKey,
@@ -1677,6 +1839,7 @@
         state.payments.push({ ...data, monto: Number(data.monto), id: makeId() });
       }
       saveState();
+      audit("Cubicación registrada", `${project.comunidad || project.tipo} | ${data.numero || "sin número"} | ${money.format(Number(data.monto || 0))}`);
       event.currentTarget.reset();
       renderAll();
       } catch (error) {
@@ -1726,7 +1889,7 @@
       const fileName = `reporte-${currentReport}`;
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
-        ["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
+        ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
         currentReport === "contratista" && document.getElementById("providerFilter").value ? `Proveedor: ${document.getElementById("providerFilter").value}` : "",
         ["municipio", "contratista", "estatus"].includes(currentReport) && document.getElementById("typeFilter").value ? `Tipo de obra: ${document.getElementById("typeFilter").value}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
