@@ -419,8 +419,8 @@
             </div>
             <div class="actions">
               <button class="btn secondary" id="csvBtn">Exportar CSV</button>
-              <button class="btn secondary" id="pdfReportBtn">Exportar PDF</button>
-              <button class="btn secondary" id="printReportBtn">Imprimir</button>
+              <button class="btn secondary" id="pdfReportBtn" type="button">Exportar PDF</button>
+              <button class="btn secondary" id="printReportBtn" type="button">Imprimir</button>
             </div>
           </div>
           <div class="table-wrap"><table id="reportTable"></table></div>
@@ -2112,13 +2112,13 @@
       const fileName = `reporte-${currentReport}`;
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
-        ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
+        ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
         currentReport === "contratista" && document.getElementById("providerFilter").value ? `Proveedor: ${document.getElementById("providerFilter").value}` : "",
         ["municipio", "contratista", "estatus"].includes(currentReport) && document.getElementById("typeFilter").value ? `Tipo de obra: ${document.getElementById("typeFilter").value}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
         document.getElementById("statusFilter").value ? `Estatus: ${document.getElementById("statusFilter").value}` : ""
       ].filter(Boolean).join(" | ");
-      const printWindow = window.open("", "_blank", "width=1100,height=800");
+      const printWindow = window.open("about:blank", "_blank", "width=1200,height=850");
       if (!printWindow) {
         alert("El navegador bloqueó la ventana del reporte. Permita ventanas emergentes para imprimir o exportar PDF.");
         return;
@@ -2132,10 +2132,12 @@
             body { font-family: "Segoe UI", Arial, sans-serif; color: #172026; margin: 24px; }
             h1 { font-size: 20px; margin: 0 0 4px; }
             .meta { color: #65727d; font-size: 12px; margin-bottom: 14px; }
-            table { width: 100%; border-collapse: collapse; font-size: 11px; }
-            th, td { border: 1px solid #cfd9de; padding: 7px; text-align: left; vertical-align: top; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: auto; }
+            th, td { border: 1px solid #cfd9de; padding: 6px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
             th { background: #eef3f5; }
             .badge { font-weight: 700; }
+            tfoot td { font-weight: 800; background: #f7fafb; }
+            @media print { body { margin: 0; } }
             @page { size: landscape; margin: 14mm; }
           </style>
         </head>
@@ -2147,9 +2149,18 @@
         </body>
         </html>`);
       printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+      const runPrint = () => {
+        printWindow.focus();
+        setTimeout(() => {
+          if (mode === "print") printWindow.onafterprint = () => printWindow.close();
+          printWindow.print();
+        }, 250);
+      };
+      if (printWindow.document.readyState === "complete") {
+        runPrint();
+      } else {
+        printWindow.onload = runPrint;
+      }
     }
 
     document.getElementById("printReportBtn").addEventListener("click", () => openReportPrintWindow("print"));
