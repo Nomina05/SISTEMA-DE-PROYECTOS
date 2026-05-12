@@ -357,6 +357,7 @@
             <button class="tab" data-report="contratista">Por proveedor</button>
             <button class="tab" data-report="disponibilidad">Disponibilidad de presupuesto</button>
             <button class="tab" data-report="compras">Proceso de compras</button>
+            <button class="tab" data-report="inversion">Inversión Pública</button>
             <button class="tab" data-report="pagos">Pagos realizados</button>
             <button class="tab" data-report="estatus">Estatus de obras</button>
             <button class="tab" data-report="snip">Por código SNIP</button>
@@ -376,6 +377,7 @@
             </div>
             <div class="actions">
               <button class="btn secondary" id="csvBtn">Exportar CSV</button>
+              <button class="btn secondary" id="pdfReportBtn">Exportar PDF</button>
               <button class="btn secondary" id="printReportBtn">Imprimir</button>
             </div>
           </div>
@@ -506,22 +508,24 @@
       "report-contratista": "Reporte por proveedor",
       "report-disponibilidad": "Reporte disponibilidad",
       "report-compras": "Reporte proceso de compras",
+      "report-inversion": "Reporte inversión pública",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
       "report-snip": "Reporte por código SNIP"
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-compras", "report-estatus", "report-snip"],
-      "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-pagos", "report-snip"],
-      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-pagos", "report-estatus", "report-snip"],
-      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-pagos", "report-estatus", "report-snip"]
+      "Dirección Técnica": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-estatus", "report-snip"],
+      "Financiera": ["dashboard", "reportes", "cubicaciones", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-snip"],
+      "Registro": ["dashboard", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-estatus", "report-snip"],
+      "Consulta": ["dashboard", "reportes", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-pagos", "report-estatus", "report-snip"]
     };
     const reportPermissions = {
       municipio: "report-municipio",
       contratista: "report-contratista",
       disponibilidad: "report-disponibilidad",
       compras: "report-compras",
+      inversion: "report-inversion",
       pagos: "report-pagos",
       estatus: "report-estatus",
       snip: "report-snip"
@@ -954,6 +958,8 @@
         renderDisponibilidadReport(rows);
       } else if (currentReport === "compras") {
         renderComprasReport(rows);
+      } else if (currentReport === "inversion") {
+        renderInversionPublicaReport(rows);
       } else if (currentReport === "pagos") {
         const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
         const excelPayments = enrichedProjects()
@@ -1075,6 +1081,35 @@
           ...disponibilidadValues(p)
         ]);
       renderTable("reportTable", ["Código SNIP", "Proceso de Compras", "Tipo de Obra", "Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, ["TOTAL", "", ""]));
+    }
+
+    function renderInversionPublicaReport(rows) {
+      const rowsWithMoney = rows.filter(p => Number(p.presupuesto || 0) > 0 || Number(p.adjudicado || 0) > 0 || Number(p.pagado || 0) > 0);
+      const snipTotals = Object.fromEntries(Object.entries(groupRows(rowsWithMoney, displaySnip)).map(([code, items]) => [code, sum(items, "presupuesto")]));
+      const groups = groupRows(rowsWithMoney, p => [displaySnip(p), p.procesoCompra || "Sin proceso"].join("|"));
+      const tableRows = Object.values(groups)
+        .sort((a, b) => displaySnip(a[0]).localeCompare(displaySnip(b[0])) || String(a[0].procesoCompra || "").localeCompare(String(b[0].procesoCompra || "")))
+        .map(items => {
+          const p = items[0];
+          const code = displaySnip(p);
+          return [
+            code,
+            money.format(snipTotals[code] || 0),
+            money.format(sum(items, "adjudicado")),
+            p.procesoCompra || "Sin proceso",
+            money.format(sum(items, "disponibilidadProyecto")),
+            money.format(sum(items, "disponibilidadAdjudicado"))
+          ];
+        });
+      const uniqueSnipTotal = Object.values(snipTotals).reduce((total, value) => total + Number(value || 0), 0);
+      renderTable("reportTable", ["Código SNIP", "Total por código SNIP", "Monto Adjudicado", "Proceso de Compras", "Disponibilidad de los Proyectos", "Disponibilidad dentro del Proceso de Compra"], tableRows, [
+        "TOTAL",
+        money.format(uniqueSnipTotal),
+        money.format(sum(rowsWithMoney, "adjudicado")),
+        "",
+        money.format(sum(rowsWithMoney, "disponibilidadProyecto")),
+        money.format(sum(rowsWithMoney, "disponibilidadAdjudicado"))
+      ]);
     }
 
     function renderSnipReport(rows) {
@@ -1684,10 +1719,11 @@
       URL.revokeObjectURL(url);
     });
 
-    document.getElementById("printReportBtn").addEventListener("click", () => {
+    function openReportPrintWindow(mode = "print") {
       const table = document.getElementById("reportTable").cloneNode(true);
       const title = currentReportTitle();
       const printedAt = new Date().toLocaleString("es-DO");
+      const fileName = `reporte-${currentReport}`;
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
         ["municipio", "contratista", "disponibilidad", "estatus", "snip"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
@@ -1698,14 +1734,14 @@
       ].filter(Boolean).join(" | ");
       const printWindow = window.open("", "_blank", "width=1100,height=800");
       if (!printWindow) {
-        alert("El navegador bloqueó la ventana de impresión. Permita ventanas emergentes para imprimir el reporte.");
+        alert("El navegador bloqueó la ventana del reporte. Permita ventanas emergentes para imprimir o exportar PDF.");
         return;
       }
       printWindow.document.write(`<!doctype html>
         <html lang="es">
         <head>
           <meta charset="utf-8">
-          <title>${title}</title>
+          <title>${fileName}</title>
           <style>
             body { font-family: "Segoe UI", Arial, sans-serif; color: #172026; margin: 24px; }
             h1 { font-size: 20px; margin: 0 0 4px; }
@@ -1720,6 +1756,7 @@
         <body>
           <h1>CORAAMOCA - ${title}</h1>
           <div class="meta">Impreso: ${printedAt}${filters ? " | " + filters : ""}</div>
+          ${mode === "pdf" ? `<div class="meta">Seleccione "Guardar como PDF" en el destino de impresión.</div>` : ""}
           ${table.outerHTML}
         </body>
         </html>`);
@@ -1727,7 +1764,10 @@
       printWindow.focus();
       printWindow.print();
       printWindow.close();
-    });
+    }
+
+    document.getElementById("printReportBtn").addEventListener("click", () => openReportPrintWindow("print"));
+    document.getElementById("pdfReportBtn").addEventListener("click", () => openReportPrintWindow("pdf"));
 
     document.getElementById("backupBtn").addEventListener("click", () => {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
