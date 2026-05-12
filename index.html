@@ -43,7 +43,7 @@
     nav { display: grid; gap: 8px; }
     .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 6px; color: #d8e6eb; background: transparent; text-align: left; }
     .nav-btn.active, .nav-btn:hover { background: #243844; color: #fff; }
-    main { padding: 24px; min-width: 0; }
+    main { width: min(100%, 1680px); padding: clamp(12px, 2vw, 28px); min-width: 0; margin: 0 auto; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
     .hidden-system-bar { display: none !important; }
     h1 { margin: 0; font-size: 26px; line-height: 1.2; }
@@ -57,9 +57,30 @@
     .metrics { grid-template-columns: repeat(6, minmax(132px, 1fr)); }
     .metric, .panel, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
     .metric { padding: 10px 11px; min-height: 78px; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+    .metric.ok { border-left: 4px solid var(--green); }
+    .metric.warn { border-left: 4px solid var(--amber); }
+    .metric.bad { border-left: 4px solid var(--red); }
     .metric small { color: var(--muted); font-weight: 800; text-transform: uppercase; font-size: 10px; line-height: 1.15; }
     .metric strong { font-size: clamp(14px, 1.05vw, 17px); line-height: 1.18; white-space: nowrap; letter-spacing: 0; }
     .panel { padding: 16px; }
+    .executive-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 14px; margin: 14px 0; }
+    .executive-metrics { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 10px; }
+    .executive-card { min-height: 92px; padding: 13px; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; }
+    .executive-card small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; line-height: 1.2; text-transform: uppercase; }
+    .executive-card strong { display: block; margin-top: 8px; font-size: clamp(15px, 1.15vw, 19px); line-height: 1.15; white-space: nowrap; }
+    .executive-card.ok { border-left-color: var(--green); }
+    .executive-card.warn { border-left-color: var(--amber); }
+    .executive-card.bad { border-left-color: var(--red); }
+    .semaphore-grid { display: grid; gap: 10px; }
+    .signal-row { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .signal-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); }
+    .signal-dot.warn { background: var(--amber); }
+    .signal-dot.bad { background: var(--red); }
+    .area-insights { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; margin: 14px 0; }
+    .area-insight { padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .area-insight h3 { margin: 0 0 10px; font-size: 14px; }
+    .area-insight p { margin: 5px 0; color: var(--muted); font-size: 12px; }
+    .area-insight strong { color: var(--ink); }
     .area-panel { display: grid; grid-template-columns: repeat(5, minmax(132px, 1fr)); gap: 8px; margin-bottom: 14px; }
     .area-card { min-height: 54px; padding: 9px 10px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--blue); border-radius: 6px; box-shadow: 0 4px 14px rgba(23, 32, 38, .06); }
     .area-card strong { display: block; font-size: 11px; text-transform: uppercase; color: var(--ink); line-height: 1.2; }
@@ -71,10 +92,16 @@
     .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 18px; background: rgba(15, 23, 42, .42); }
     .modal-backdrop[hidden] { display: none; }
     .modal { width: min(420px, 100%); background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 22px 50px rgba(15, 23, 42, .22); padding: 18px; }
+    .modal.wide-modal { width: min(980px, 100%); max-height: min(860px, calc(100vh - 36px)); overflow: auto; }
     .modal h2 { margin-bottom: 6px; }
     .modal form { display: grid; gap: 12px; margin-top: 14px; }
     .form-message { min-height: 20px; font-size: 13px; font-weight: 700; color: var(--blue); }
     .form-message.error { color: var(--red); }
+    .detail-grid { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
+    .detail-item { padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #f9fbfc; }
+    .detail-item small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .detail-item strong { display: block; margin-top: 5px; font-size: 13px; line-height: 1.25; overflow-wrap: anywhere; }
+    .project-detail-btn { padding: 0; border: 0; background: transparent; color: var(--blue); font-weight: 800; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
     .dashboard-layout { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; }
     .chart-wrap { display: grid; place-items: center; min-height: 360px; }
     canvas { max-width: 100%; }
@@ -93,6 +120,7 @@
     .table-tools { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
     .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .filters input, .filters select { width: auto; min-width: 180px; }
+    .filters .amount-filter { min-width: 150px; }
     .snip-filter[hidden] { display: none; }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; -webkit-overflow-scrolling: touch; }
     table { width: 100%; border-collapse: collapse; min-width: 1060px; }
@@ -114,6 +142,10 @@
     .badge.ok { background: #dff4e8; color: #12633d; }
     .badge.warn { background: #fff0cf; color: #845300; }
     .badge.bad { background: #ffe3df; color: #98251a; }
+    .status-cell { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+    .status-cell::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
+    .status-cell.warn::before { background: var(--amber); }
+    .status-cell.bad::before { background: var(--red); }
     .floating-alert { position: fixed; left: 18px; bottom: 18px; z-index: 80; width: min(360px, calc(100vw - 36px)); padding: 14px 16px; border: 1px solid #f2c36b; border-left: 5px solid var(--amber); border-radius: 8px; background: #fff8e5; color: #4d3500; box-shadow: 0 18px 36px rgba(23, 32, 38, .18); font-weight: 700; }
     .floating-alert strong { display: block; margin-bottom: 4px; color: #172026; }
     .floating-alert[hidden] { display: none; }
@@ -134,6 +166,9 @@
       main { padding: 18px; }
       .metrics { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
       .dashboard-layout { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+      .executive-grid { grid-template-columns: 1fr; }
+      .executive-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .area-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .area-panel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -163,7 +198,7 @@
       .topbar { align-items: flex-start; flex-direction: column; }
       nav { grid-template-columns: 1fr 1fr; gap: 6px; }
       .nav-btn { padding: 9px 8px; font-size: 13px; }
-      .metrics, .form-grid, .cards, .dashboard-layout, .area-panel { grid-template-columns: 1fr; }
+      .metrics, .form-grid, .cards, .dashboard-layout, .area-panel, .executive-metrics, .area-insights, .detail-grid { grid-template-columns: 1fr; }
       .area-card { min-height: 48px; }
       .panel { padding: 12px; border-radius: 6px; }
       .metric strong { font-size: 16px; }
@@ -222,9 +257,9 @@
     <aside>
       <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
       <nav>
-        <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Dashboard</button>
+        <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Inicio</button>
         <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuario</button>
-        <button class="nav-btn" data-view="registro" onclick="showView('registro')">Registro manual</button>
+        <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
         <button class="nav-btn" data-view="controles" onclick="showView('controles')">Controles y alertas</button>
@@ -258,6 +293,19 @@
         </div>
       </div>
 
+      <div class="modal-backdrop" id="projectDetailModal" hidden>
+        <div class="modal wide-modal" role="dialog" aria-modal="true" aria-labelledby="projectDetailTitle">
+          <div class="topbar" style="margin-bottom:8px;">
+            <div>
+              <h2 id="projectDetailTitle">Detalle del proyecto</h2>
+              <p class="sub" id="projectDetailSubtitle"></p>
+            </div>
+            <button class="btn secondary" id="closeProjectDetailBtn" type="button">Cerrar</button>
+          </div>
+          <div id="projectDetailContent"></div>
+        </div>
+      </div>
+
       <div class="area-panel" aria-label="Panel institucional">
         <div class="area-card"><strong>Finanzas</strong><span></span></div>
         <div class="area-card">
@@ -279,6 +327,17 @@
 
       <section class="section active" id="dashboard">
         <div class="grid metrics" id="metrics"></div>
+        <div class="executive-grid">
+          <div class="panel">
+            <h2>Dashboard ejecutivo</h2>
+            <div class="executive-metrics" id="executiveMetrics"></div>
+          </div>
+          <div class="panel">
+            <h2>Semáforo general</h2>
+            <div class="semaphore-grid" id="semaphoreGrid"></div>
+          </div>
+        </div>
+        <div class="area-insights" id="areaInsights"></div>
         <div class="dashboard-layout">
           <div class="panel">
             <h2>Dashboard de pastel</h2>
@@ -414,11 +473,14 @@
               </select>
               <select id="providerFilter" hidden><option value="">Todos los proveedores</option></select>
               <select id="typeFilter" hidden><option value="">Todos los tipos de obra</option></select>
+              <select id="processTypeFilter"><option value="">Todos los tipos de proceso</option></select>
+              <input id="minAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto mínimo">
+              <input id="maxAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto máximo">
               <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
               <select id="statusFilter"><option value="">Todos los estatus</option></select>
             </div>
             <div class="actions">
-              <button class="btn secondary" id="csvBtn">Exportar CSV</button>
+              <button class="btn secondary" id="csvBtn" type="button">Exportar CSV</button>
               <button class="btn secondary" id="pdfReportBtn" type="button">Exportar PDF</button>
               <button class="btn secondary" id="printReportBtn" type="button">Imprimir</button>
             </div>
@@ -790,6 +852,8 @@
     function renderAll() {
       populateSelects();
       renderMetrics();
+      renderExecutiveDashboard();
+      renderAreaInsights();
       renderPie();
       renderAvailability();
       renderUsers();
@@ -804,16 +868,82 @@
     function renderMetrics() {
       const t = totals();
       const metrics = [
-        ["Presupuesto general", t.presupuesto],
-        ["Presupuesto comprometido", t.comprometido],
-        ["Presupuesto ejecutado", t.adjudicado],
-        ["Presupuesto pagado", t.pagado],
-        ["Disponible adjudicado", t.disponibilidadAdjudicado],
-        ["Disponibilidad por proyecto", t.disponibilidadProyecto]
+        ["Presupuesto general", t.presupuesto, "ok"],
+        ["Presupuesto comprometido", t.comprometido, "warn"],
+        ["Presupuesto ejecutado", t.adjudicado, "ok"],
+        ["Presupuesto pagado", t.pagado, "ok"],
+        ["Disponible adjudicado", t.disponibilidadAdjudicado, t.disponibilidadAdjudicado < 0 ? "bad" : "ok"],
+        ["Disponibilidad por proyecto", t.disponibilidadProyecto, t.disponibilidadProyecto < 0 ? "bad" : "warn"]
       ];
-      document.getElementById("metrics").innerHTML = metrics.map(([label, value]) =>
-        `<div class="metric"><small>${label}</small><strong>${money.format(value)}</strong></div>`
+      document.getElementById("metrics").innerHTML = metrics.map(([label, value, cls]) =>
+        `<div class="metric ${cls}"><small>${label}</small><strong>${money.format(value)}</strong></div>`
       ).join("");
+    }
+
+    function investmentTotals(rows = enrichedProjects()) {
+      const snipRows = rows.filter(project => displaySnip(project) !== "SNIP: 00001");
+      const totalSnip = sum(snipRows, "presupuesto");
+      const adjudicado = sum(snipRows, "adjudicado");
+      const sinAdjudicar = snipRows.reduce((total, project) => {
+        const processType = String(project.tipoProceso || "").trim().toLowerCase();
+        const provider = String(project.contratista || "").trim().toLowerCase();
+        const isUnawarded = processType === "sin adjudicar" || provider === "sin adjudicar" || provider === "sin proveedor";
+        return total + (isUnawarded ? Number(project.montoSinAdjudicar || project.presupuesto || 0) : 0);
+      }, 0);
+      return { totalSnip, adjudicado, sinAdjudicar, disponible: totalSnip - adjudicado - sinAdjudicar };
+    }
+
+    function renderExecutiveDashboard() {
+      const rows = enrichedProjects();
+      const inv = investmentTotals(rows);
+      const alerts = projectAlerts(rows);
+      const unawarded = rows.filter(project => String(project.tipoProceso || "").trim().toLowerCase() === "sin adjudicar" || Number(project.adjudicado || 0) <= 0).length;
+      const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
+      const cards = [
+        ["Total Código SNIP", inv.totalSnip, "ok"],
+        ["Monto adjudicado", inv.adjudicado, "ok"],
+        ["Monto sin adjudicar", inv.sinAdjudicar, "warn"],
+        ["Disponible", inv.disponible, inv.disponible < 0 ? "bad" : "ok"],
+        ["Obras adjudicadas", rows.length - unawarded, "ok", "count"],
+        ["Obras sin adjudicar", unawarded, unawarded ? "warn" : "ok", "count"],
+        ["Cubicaciones pendientes", pendingPayments, pendingPayments ? "warn" : "ok", "count"],
+        ["Alertas críticas", alerts.filter(alert => alert.level === "Crítico").length, alerts.some(alert => alert.level === "Crítico") ? "bad" : "ok", "count"]
+      ];
+      document.getElementById("executiveMetrics").innerHTML = cards.map(([label, value, cls, type]) =>
+        `<div class="executive-card ${cls}"><small>${label}</small><strong>${type === "count" ? number.format(value) : money.format(value)}</strong></div>`
+      ).join("");
+      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const warning = alerts.filter(alert => alert.level === "Alerta").length;
+      const availabilityLevel = inv.disponible < 0 ? "bad" : inv.disponible < inv.totalSnip * 0.05 ? "warn" : "ok";
+      document.getElementById("semaphoreGrid").innerHTML = [
+        ["Disponibilidad presupuestaria", availabilityLevel, availabilityLevel === "bad" ? "Sobregiro o disponibilidad negativa" : availabilityLevel === "warn" ? "Disponibilidad baja" : "Dentro del margen"],
+        ["Alertas críticas", critical ? "bad" : "ok", critical ? `${number.format(critical)} controles críticos` : "Sin alertas críticas"],
+        ["Alertas preventivas", warning ? "warn" : "ok", warning ? `${number.format(warning)} controles preventivos` : "Sin alertas preventivas"],
+        ["Cubicaciones pendientes", pendingPayments ? "warn" : "ok", pendingPayments ? `${number.format(pendingPayments)} por aprobar` : "Sin pendientes"]
+      ].map(([label, level, text]) => `<div class="signal-row"><span class="signal-dot ${level === "ok" ? "" : level}"></span><strong>${label}</strong><span>${text}</span></div>`).join("");
+    }
+
+    function renderAreaInsights() {
+      const rows = enrichedProjects();
+      const alerts = projectAlerts(rows);
+      const inv = investmentTotals(rows);
+      const comprasPendientes = rows.filter(project => String(project.tipoProceso || "").toLowerCase() === "sin adjudicar" || Number(project.adjudicado || 0) <= 0).length;
+      const vencidas = projectDeadlineRows().filter(row => row.status === "Vencido").length;
+      const areaData = [
+        ["Finanzas", `${money.format(sum(rows, "pagado"))} pagado`, `${number.format(state.payments.filter(payment => payment.estado === "Pendiente").length)} cubicaciones pendientes`],
+        ["Compras", `${money.format(inv.sinAdjudicar)} sin adjudicar`, `${number.format(comprasPendientes)} obras pendientes`],
+        ["Presupuesto", `${money.format(inv.disponible)} disponible`, `${money.format(sum(rows, "presupuesto"))} presupuesto`],
+        ["Dirección Técnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`]
+      ];
+      document.getElementById("areaInsights").innerHTML = areaData.map(([title, line1, line2]) =>
+        `<div class="area-insight"><h3>${title}</h3><p><strong>${line1}</strong></p><p>${line2}</p></div>`
+      ).join("");
+      const cards = document.querySelectorAll(".area-card span");
+      if (cards[0]) cards[0].textContent = `${money.format(sum(rows, "pagado"))} pagado`;
+      if (cards[1]) cards[1].textContent = `${number.format(comprasPendientes)} pendientes`;
+      if (cards[2]) cards[2].textContent = `${money.format(inv.disponible)} disponible`;
+      if (cards[3]) cards[3].textContent = `${number.format(vencidas)} vencidas`;
+      if (cards[4]) cards[4].textContent = `${number.format(alerts.length)} alertas`;
     }
 
     function renderPie() {
@@ -867,7 +997,11 @@
         .sort((a, b) => a.disponibilidadProyecto - b.disponibilidadProyecto)
         .slice(0, 14);
       renderTable("availabilityTable", ["Proyecto", "Municipio", "Pagado", "Disponible adjudicado", "Disponibilidad proyecto"], rows.map(p => [
-        `${p.tipo}<br><small>${p.comunidad}</small>`, p.municipio, money.format(p.pagado), money.format(p.disponibilidadAdjudicado), badgeMoney(p.disponibilidadProyecto)
+        `<button class="project-detail-btn" type="button" data-project-key="${escapeHtml(p.key)}">${escapeHtml(p.tipo)}</button><br><small>${escapeHtml(p.comunidad)}</small>`,
+        p.municipio,
+        money.format(p.pagado),
+        money.format(p.disponibilidadAdjudicado),
+        badgeMoney(p.disponibilidadProyecto)
       ]));
     }
 
@@ -912,6 +1046,10 @@
       const types = [...new Set(state.projects.map(p => p.tipo || "Sin asignar"))].sort((a, b) => a.localeCompare(b));
       document.getElementById("typeFilter").innerHTML = `<option value="">Todos los tipos de obra</option>` + types.map(type => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
       if (selectedType && types.includes(selectedType)) document.getElementById("typeFilter").value = selectedType;
+      const selectedProcess = document.getElementById("processTypeFilter").value;
+      const processTypes = [...new Set(state.projects.map(p => p.tipoProceso || "Sin asignar"))].sort((a, b) => a.localeCompare(b));
+      document.getElementById("processTypeFilter").innerHTML = `<option value="">Todos los tipos de proceso</option>` + processTypes.map(type => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
+      if (selectedProcess && processTypes.includes(selectedProcess)) document.getElementById("processTypeFilter").value = selectedProcess;
       document.getElementById("activeUserSelect").innerHTML = `<option value="">Sin usuario activo</option>` + state.users.map(u => `<option value="${u.usuario}">${u.nombre} - ${u.area || u.rol}</option>`).join("");
       document.getElementById("activeUserSelect").value = state.activeUser || "";
       const historySelect = document.getElementById("historyProjectSelect");
@@ -1195,22 +1333,29 @@
       const q = document.getElementById("searchBox").value.toLowerCase();
       const mun = document.getElementById("municipalityFilter").value;
       const status = document.getElementById("statusFilter").value;
-      const snip = ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
+      const snip = ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport) ? document.getElementById("snipFilter").value : "";
       const provider = currentReport === "contratista" ? document.getElementById("providerFilter").value : "";
       const type = ["municipio", "contratista", "estatus"].includes(currentReport) ? document.getElementById("typeFilter").value : "";
+      const processType = document.getElementById("processTypeFilter").value;
+      const minAmount = Number(document.getElementById("minAmountFilter").value || 0);
+      const maxAmount = Number(document.getElementById("maxAmountFilter").value || 0);
       return enrichedProjects().filter(p => {
-        const haystack = `${p.key} ${p.tipo} ${p.comunidad} ${p.municipio} ${p.contratista} ${p.codigo} ${p.estatus}`.toLowerCase();
+        const amount = Number(p.presupuesto || 0);
+        const haystack = `${p.key} ${p.tipo} ${p.comunidad} ${p.municipio} ${p.contratista} ${p.codigo} ${p.estatus} ${p.tipoProceso} ${p.procesoCompra}`.toLowerCase();
         return (!q || haystack.includes(q)) &&
           (!mun || p.municipio === mun) &&
           (!status || p.estatus === status) &&
           (!snip || displaySnip(p) === snip) &&
           (!provider || p.contratista === provider) &&
-          (!type || p.tipo === type);
+          (!type || p.tipo === type) &&
+          (!processType || (p.tipoProceso || "Sin asignar") === processType) &&
+          (!minAmount || amount >= minAmount) &&
+          (!maxAmount || amount <= maxAmount);
       });
     }
 
     function renderReport() {
-      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias"].includes(currentReport);
+      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport);
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       document.getElementById("providerFilter").hidden = currentReport !== "contratista";
       document.getElementById("typeFilter").hidden = !["municipio", "contratista", "estatus"].includes(currentReport);
@@ -1520,7 +1665,7 @@
         money.format(p.comprometido || 0),
         money.format(p.pagado || 0),
         money.format(p.disponibilidadAdjudicado || 0),
-        p.estatus || "Sin asignar"
+        statusBadge(p)
       ]), [
         "TOTAL",
         "",
@@ -1537,8 +1682,9 @@
     function renderTable(id, headers, rows, footer = null) {
       const table = document.getElementById(id);
       const isSnipReport = id === "reportTable" && currentReport === "snip";
+      const isInvestmentReport = id === "reportTable" && currentReport === "inversion";
       const snipMode = document.getElementById("snipModeFilter")?.value || "detalle";
-      table.classList.toggle("compact-report", isSnipReport);
+      table.classList.toggle("compact-report", isSnipReport || isInvestmentReport);
       table.classList.toggle("snip-detail-report", isSnipReport && snipMode === "detalle");
       table.classList.toggle("snip-group-report", isSnipReport && snipMode === "agrupado");
       if (!rows.length) {
@@ -1553,6 +1699,56 @@
     function badgeMoney(value) {
       const cls = value < 0 ? "bad" : value < 100000 ? "warn" : "ok";
       return `<span class="badge ${cls}">${money.format(value)}</span>`;
+    }
+
+    function projectSignal(project) {
+      if (Number(project.pagado || 0) > Number(project.adjudicado || 0) && Number(project.adjudicado || 0) > 0) return "bad";
+      if (Number(project.disponibilidadProyecto || 0) < 0) return "bad";
+      if (Number(project.adjudicado || 0) <= 0 || String(project.tipoProceso || "").toLowerCase() === "sin adjudicar") return "warn";
+      if (["Paralizado", "Sin Publicar"].includes(project.estatus)) return "warn";
+      return "ok";
+    }
+
+    function statusBadge(project) {
+      const cls = projectSignal(project);
+      return `<span class="status-cell ${cls === "ok" ? "" : cls}">${escapeHtml(project.estatus || "Sin asignar")}</span>`;
+    }
+
+    function openProjectDetail(key) {
+      const project = enrichedProjects().find(item => item.key === key);
+      if (!project) return;
+      document.getElementById("projectDetailTitle").textContent = project.comunidad || project.tipo || "Detalle del proyecto";
+      document.getElementById("projectDetailSubtitle").textContent = `${displaySnip(project)} | ${project.municipio || "Sin municipio"} | ${project.tipo || "Sin tipo"}`;
+      const payments = state.payments.filter(payment => payment.projectKey === key);
+      const alerts = projectAlerts([project]).filter(alert => alert.proyecto === (project.comunidad || project.tipo || "-"));
+      document.getElementById("projectDetailContent").innerHTML = `
+        <div class="detail-grid">
+          <div class="detail-item"><small>Presupuesto</small><strong>${money.format(project.presupuesto || 0)}</strong></div>
+          <div class="detail-item"><small>Adjudicado</small><strong>${money.format(project.adjudicado || 0)}</strong></div>
+          <div class="detail-item"><small>Pagado</small><strong>${money.format(project.pagado || 0)}</strong></div>
+          <div class="detail-item"><small>Disponible adjudicado</small><strong>${money.format(project.disponibilidadAdjudicado || 0)}</strong></div>
+          <div class="detail-item"><small>Proveedor</small><strong>${escapeHtml(project.contratista || "Sin asignar")}</strong></div>
+          <div class="detail-item"><small>Tipo de proceso</small><strong>${escapeHtml(project.tipoProceso || "Sin asignar")}</strong></div>
+          <div class="detail-item"><small>Proceso de compras</small><strong>${escapeHtml(project.procesoCompra || "Sin proceso")}</strong></div>
+          <div class="detail-item"><small>Estatus</small><strong>${statusBadge(project)}</strong></div>
+        </div>
+        <div class="panel" style="margin-top:14px; box-shadow:none;">
+          <h2>Cubicaciones</h2>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Número</th><th>Monto</th><th>Estado</th><th>Observación</th></tr></thead><tbody>
+            ${payments.length ? payments.map(payment => `<tr><td>${payment.fecha || "-"}</td><td>${escapeHtml(payment.numero || "-")}</td><td>${money.format(payment.monto || 0)}</td><td>${escapeHtml(payment.estado || "Aprobada")}</td><td>${escapeHtml(payment.observacion || "-")}</td></tr>`).join("") : `<tr><td colspan="5" class="empty">Sin cubicaciones registradas.</td></tr>`}
+          </tbody></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px; box-shadow:none;">
+          <h2>Alertas del proyecto</h2>
+          <div class="table-wrap"><table><thead><tr><th>Nivel</th><th>Control</th><th>Detalle</th><th>Acción sugerida</th></tr></thead><tbody>
+            ${alerts.length ? alerts.map(alert => `<tr><td>${alertLevelBadge(alert.level)}</td><td>${escapeHtml(alert.type)}</td><td>${escapeHtml(alert.detail)}</td><td>${escapeHtml(alert.action)}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin alertas activas.</td></tr>`}
+          </tbody></table></div>
+        </div>`;
+      document.getElementById("projectDetailModal").hidden = false;
+    }
+
+    function closeProjectDetail() {
+      document.getElementById("projectDetailModal").hidden = true;
     }
 
     function currentReportPermission() {
@@ -1904,6 +2100,13 @@
     document.addEventListener("click", event => {
       const approveButton = event.target.closest(".approve-payment-btn");
       if (approveButton) approvePayment(approveButton.dataset.id).catch(error => alert(error.message || "No se pudo aprobar la cubicación."));
+      const detailButton = event.target.closest(".project-detail-btn");
+      if (detailButton) openProjectDetail(detailButton.dataset.projectKey);
+    });
+
+    document.getElementById("closeProjectDetailBtn").addEventListener("click", closeProjectDetail);
+    document.getElementById("projectDetailModal").addEventListener("click", event => {
+      if (event.target.id === "projectDetailModal") closeProjectDetail();
     });
 
     async function handleLogin(event) {
@@ -2063,7 +2266,7 @@
       }
     });
 
-    ["searchBox", "snipFilter", "snipModeFilter", "providerFilter", "typeFilter", "municipalityFilter", "statusFilter"].forEach(id => {
+    ["searchBox", "snipFilter", "snipModeFilter", "providerFilter", "typeFilter", "processTypeFilter", "minAmountFilter", "maxAmountFilter", "municipalityFilter", "statusFilter"].forEach(id => {
       document.getElementById(id).addEventListener("input", renderReport);
       document.getElementById(id).addEventListener("change", renderReport);
     });
@@ -2115,6 +2318,9 @@
         ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
         currentReport === "contratista" && document.getElementById("providerFilter").value ? `Proveedor: ${document.getElementById("providerFilter").value}` : "",
         ["municipio", "contratista", "estatus"].includes(currentReport) && document.getElementById("typeFilter").value ? `Tipo de obra: ${document.getElementById("typeFilter").value}` : "",
+        document.getElementById("processTypeFilter").value ? `Tipo de proceso: ${document.getElementById("processTypeFilter").value}` : "",
+        document.getElementById("minAmountFilter").value ? `Monto mínimo: ${money.format(Number(document.getElementById("minAmountFilter").value || 0))}` : "",
+        document.getElementById("maxAmountFilter").value ? `Monto máximo: ${money.format(Number(document.getElementById("maxAmountFilter").value || 0))}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
         document.getElementById("statusFilter").value ? `Estatus: ${document.getElementById("statusFilter").value}` : ""
       ].filter(Boolean).join(" | ");
@@ -2130,6 +2336,8 @@
           <title>${fileName}</title>
           <style>
             body { font-family: "Segoe UI", Arial, sans-serif; color: #172026; margin: 24px; }
+            .report-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 3px solid #1769aa; padding-bottom: 10px; margin-bottom: 12px; }
+            .logo { width: 54px; height: 54px; border-radius: 8px; background: #1769aa; color: #fff; display: grid; place-items: center; font-weight: 900; }
             h1 { font-size: 20px; margin: 0 0 4px; }
             .meta { color: #65727d; font-size: 12px; margin-bottom: 14px; }
             table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: auto; }
@@ -2142,7 +2350,10 @@
           </style>
         </head>
         <body>
-          <h1>CORAAMOCA - ${title}</h1>
+          <div class="report-header">
+            <div><h1>CORAAMOCA - ${title}</h1><div class="meta">Sistema de control presupuestario</div></div>
+            <div class="logo">CA</div>
+          </div>
           <div class="meta">Impreso: ${printedAt}${filters ? " | " + filters : ""}</div>
           ${mode === "pdf" ? `<div class="meta">Seleccione "Guardar como PDF" en el destino de impresión.</div>` : ""}
           ${table.outerHTML}
