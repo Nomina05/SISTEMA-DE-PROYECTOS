@@ -1453,33 +1453,35 @@
       const snipAdjudicado = Object.fromEntries(Object.entries(snipGroups).map(([code, items]) => [code, sum(items, "adjudicado")]));
       const snipSinAdjudicar = Object.fromEntries(Object.entries(snipGroups).map(([code, items]) => [
         code,
-        items.reduce((total, item) => total + (Number(item.adjudicado || 0) <= 0 ? Number(item.presupuesto || 0) : 0), 0)
+        items.reduce((total, item) => {
+          const provider = String(item.contratista || "").trim().toLowerCase();
+          return total + (provider === "sin adjudicar" ? Number(item.presupuesto || 0) : 0);
+        }, 0)
       ]));
       const snipDisponibilidad = Object.fromEntries(Object.keys(snipGroups).map(code => [
         code,
         Number(snipTotals[code] || 0) - Number(snipAdjudicado[code] || 0) - Number(snipSinAdjudicar[code] || 0)
       ]));
-      const groups = groupRows(rowsWithMoney, p => [displaySnip(p), p.procesoCompra || "Sin proceso"].join("|"));
-      const tableRows = Object.values(groups)
-        .sort((a, b) => displaySnip(a[0]).localeCompare(displaySnip(b[0])) || String(a[0].procesoCompra || "").localeCompare(String(b[0].procesoCompra || "")))
-        .map(items => {
-          const p = items[0];
-          const code = displaySnip(p);
+      const tableRows = Object.entries(snipGroups)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([code]) => {
           return [
             code,
             money.format(snipTotals[code] || 0),
-            money.format(sum(items, "adjudicado")),
-            p.procesoCompra || "Sin proceso",
+            money.format(snipAdjudicado[code] || 0),
+            money.format(snipSinAdjudicar[code] || 0),
             money.format(snipDisponibilidad[code] || 0)
           ];
         });
       const uniqueSnipTotal = Object.values(snipTotals).reduce((total, value) => total + Number(value || 0), 0);
+      const uniqueAdjudicado = Object.values(snipAdjudicado).reduce((total, value) => total + Number(value || 0), 0);
+      const uniqueSinAdjudicar = Object.values(snipSinAdjudicar).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueDisponibilidad = Object.values(snipDisponibilidad).reduce((total, value) => total + Number(value || 0), 0);
       renderTable("reportTable", ["Código SNIP", "Total por Código SNIP", "Monto Adjudicado", "Tipo de Proceso", "Disponibilidad"], tableRows, [
         "TOTAL",
         money.format(uniqueSnipTotal),
-        money.format(sum(rowsWithMoney, "adjudicado")),
-        "",
+        money.format(uniqueAdjudicado),
+        money.format(uniqueSinAdjudicar),
         money.format(uniqueDisponibilidad)
       ]);
     }
