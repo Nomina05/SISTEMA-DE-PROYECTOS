@@ -1385,7 +1385,7 @@
       const uniqueAdjudicado = Object.values(snipAdjudicado).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueSinAdjudicar = Object.values(snipSinAdjudicar).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueDisponibilidad = Object.values(snipDisponibilidad).reduce((total, value) => total + Number(value || 0), 0);
-      renderTable("reportTable", ["Código SNIP", "Total por Código SNIP", "Monto Adjudicado", "Tipo de Proceso", "Disponibilidad"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Total por Código SNIP", "Monto Adjudicado", "Monto sin Adjudicar", "Disponibilidad"], tableRows, [
         "TOTAL",
         money.format(uniqueSnipTotal),
         money.format(uniqueAdjudicado),
