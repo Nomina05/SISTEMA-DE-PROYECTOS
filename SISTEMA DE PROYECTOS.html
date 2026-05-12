@@ -439,6 +439,7 @@
         <div class="panel" data-permission="users-admin">
           <h2>Registro de usuarios</h2>
           <form id="userForm" class="form-grid">
+            <input type="hidden" name="editingUserId" id="editingUserId">
             <label>Nombre<input name="nombre" required></label>
             <label>Usuario<input name="usuario" required></label>
             <label>Área de trabajo<input name="area" id="workAreaInput" placeholder="Ej. Dirección Técnica" required></label>
@@ -447,7 +448,10 @@
             <label>Contraseña temporal<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Contraseña genérica" required></label>
             <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
             <div class="span-4" id="policyPreview"></div>
-            <button class="btn">Guardar usuario</button>
+            <div class="span-4 actions">
+              <button class="btn" id="userSubmitBtn">Guardar usuario</button>
+              <button class="btn secondary" id="cancelUserEditBtn" type="button" hidden>Cancelar modificaciÃ³n</button>
+            </div>
           </form>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
@@ -624,6 +628,7 @@
     let state = loadState();
     let currentReport = "municipio";
     let creatingNewProject = false;
+    let editingUserId = "";
     let currentSessionEmail = "";
     let passwordChangeRequired = false;
     let passwordChangeUser = null;
@@ -824,6 +829,30 @@
       return inserted.data.id;
     }
 
+    async function ensureAreaId(name) {
+      const cleanName = String(name || "").trim();
+      if (!cleanName || !window.supabaseClient) return null;
+      const existing = await window.supabaseClient.from("areas").select("id").eq("nombre", cleanName).maybeSingle();
+      if (existing.error) throw existing.error;
+      if (existing.data?.id) return existing.data.id;
+      const inserted = await window.supabaseClient.from("areas").insert({ nombre: cleanName }).select("id").single();
+      if (inserted.error) throw inserted.error;
+      return inserted.data.id;
+    }
+
+    async function replaceUserPermissions(userId, permissions) {
+      if (!window.supabaseClient || !userId) return;
+      const permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+      if (permissionRows.error) throw permissionRows.error;
+      const deleteResult = await window.supabaseClient.from("usuario_permisos").delete().eq("usuario_id", userId);
+      if (deleteResult.error) throw deleteResult.error;
+      if (permissionRows.data.length) {
+        const links = permissionRows.data.map(permission => ({ usuario_id: userId, permiso_id: permission.id }));
+        const linkResult = await window.supabaseClient.from("usuario_permisos").insert(links);
+        if (linkResult.error) throw linkResult.error;
+      }
+    }
+
     function normalizedUser(user) {
       if (!user) return null;
       const permissions = user.permissions && user.permissions.length ? user.permissions : (permissionPolicies[user.rol] || permissionPolicies.Consulta);
@@ -865,6 +894,41 @@
       const current = [...document.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
       const permissions = usePolicy || !current.length ? (permissionPolicies[role] || []) : current;
       document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(permissions);
+    }
+
+    function resetUserForm() {
+      const form = document.getElementById("userForm");
+      form.reset();
+      editingUserId = "";
+      document.getElementById("editingUserId").value = "";
+      const passwordInput = form.elements.passwordTemporal;
+      passwordInput.required = true;
+      passwordInput.placeholder = "Contraseña genérica";
+      document.getElementById("userSubmitBtn").textContent = "Guardar usuario";
+      document.getElementById("cancelUserEditBtn").hidden = true;
+      renderPolicyPreview(true);
+    }
+
+    function editUser(userId) {
+      if (!can("users-admin")) return alert("El usuario activo no tiene permiso para modificar usuarios.");
+      const user = normalizedUser(state.users.find(item => item.id === userId));
+      if (!user) return alert("No se encontró el usuario seleccionado.");
+      const form = document.getElementById("userForm");
+      editingUserId = user.id;
+      document.getElementById("editingUserId").value = user.id;
+      form.elements.nombre.value = user.nombre || "";
+      form.elements.usuario.value = user.usuario || user.correo || "";
+      form.elements.area.value = user.area || user.rol || "";
+      form.elements.cargo.value = user.cargo || "";
+      form.elements.rol.value = user.rol || "Consulta";
+      form.elements.requiereCambioPassword.checked = Boolean(user.requiereCambioPassword);
+      form.elements.passwordTemporal.value = "";
+      form.elements.passwordTemporal.required = false;
+      form.elements.passwordTemporal.placeholder = "No se requiere para modificar datos";
+      document.getElementById("userSubmitBtn").textContent = "Actualizar usuario";
+      document.getElementById("cancelUserEditBtn").hidden = false;
+      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(user.permissions);
+      document.getElementById("usuarios").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function displaySnip(project) {
@@ -1252,6 +1316,24 @@
       renderTable("usersTable", ["Nombre", "Usuario", "Área", "Cargo", "Perfil base", "Cambio clave", "Permisos", "Creado"], state.users.map(user => {
         const u = normalizedUser(user);
         return [u.nombre, u.usuario, u.area || u.rol || "-", u.cargo || "-", u.rol, u.requiereCambioPassword ? "Pendiente" : "No", permissionBadges(u.permissions), u.creado];
+      }));
+    }
+
+    function renderUsers() {
+      renderTable("usersTable", ["Nombre", "Usuario", "Correo", "Área", "Cargo", "Perfil base", "Cambio clave", "Permisos", "Creado", "Acción"], state.users.map(user => {
+        const u = normalizedUser(user);
+        return [
+          escapeHtml(u.nombre),
+          escapeHtml(u.usuario),
+          escapeHtml(u.correo || u.usuario || "-"),
+          escapeHtml(u.area || u.rol || "-"),
+          escapeHtml(u.cargo || "-"),
+          escapeHtml(u.rol || "-"),
+          u.requiereCambioPassword ? "Pendiente" : "No",
+          permissionBadges(u.permissions),
+          escapeHtml(u.creado || "-"),
+          `<button class="btn secondary edit-user-btn" type="button" data-id="${escapeHtml(u.id)}">Modificar</button>`
+        ];
       }));
     }
 
@@ -2404,6 +2486,10 @@
     });
 
     document.getElementById("closeProjectDetailBtn").addEventListener("click", closeProjectDetail);
+    document.addEventListener("click", event => {
+      const editUserButton = event.target.closest(".edit-user-btn");
+      if (editUserButton) editUser(editUserButton.dataset.id);
+    });
     document.getElementById("projectDetailModal").addEventListener("click", event => {
       if (event.target.id === "projectDetailModal") closeProjectDetail();
     });
@@ -2506,6 +2592,87 @@
         alert(error.message || "No se pudo guardar el usuario en Supabase.");
       }
     });
+
+    document.getElementById("userForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!can("users-admin")) return alert("El usuario activo no tiene permiso para crear o modificar usuarios.");
+      try {
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form));
+        const permissions = [...form.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
+        const mustChangePassword = form.querySelector('input[name="requiereCambioPassword"]').checked;
+        if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
+
+        if (editingUserId) {
+          if (window.supabaseClient) {
+            const areaId = await ensureAreaId(data.area);
+            const updatePayload = {
+              nombre: data.nombre,
+              usuario: data.usuario,
+              correo: data.usuario,
+              cargo: data.cargo,
+              perfil_base: data.rol,
+              requiere_cambio_password: mustChangePassword,
+              activo: true,
+              actualizado_en: new Date().toISOString()
+            };
+            if (areaId) updatePayload.area_id = areaId;
+            const updated = await window.supabaseClient.from("usuarios").update(updatePayload).eq("id", editingUserId);
+            if (updated.error) throw updated.error;
+            await replaceUserPermissions(editingUserId, permissions);
+            await loadSupabaseData();
+          } else {
+            const index = state.users.findIndex(user => user.id === editingUserId);
+            if (index >= 0) state.users[index] = { ...state.users[index], nombre: data.nombre, usuario: data.usuario, correo: data.usuario, area: data.area, cargo: data.cargo, rol: data.rol, requiereCambioPassword: mustChangePassword, permissions };
+          }
+          audit("Usuario modificado", `${data.nombre} (${data.usuario})`);
+          saveState();
+          resetUserForm();
+          renderAll();
+          return;
+        }
+
+        if (!data.passwordTemporal || data.passwordTemporal.length < 6) return alert("Debe colocar una contraseña temporal de al menos 6 caracteres.");
+        if (window.supabaseClient) {
+          const areaId = await ensureAreaId(data.area);
+          const currentSession = await window.supabaseClient.auth.getSession();
+          const authResult = await window.supabaseClient.auth.signUp({
+            email: data.usuario,
+            password: data.passwordTemporal,
+            options: { data: { nombre: data.nombre, requiere_cambio_password: mustChangePassword } }
+          });
+          if (authResult.error) throw authResult.error;
+          if (currentSession.data.session?.access_token && currentSession.data.session?.refresh_token) {
+            await window.supabaseClient.auth.setSession({
+              access_token: currentSession.data.session.access_token,
+              refresh_token: currentSession.data.session.refresh_token
+            });
+          }
+          const inserted = await window.supabaseClient.from("usuarios").insert({
+            nombre: data.nombre,
+            usuario: data.usuario,
+            correo: data.usuario,
+            area_id: areaId,
+            cargo: data.cargo,
+            perfil_base: data.rol,
+            requiere_cambio_password: mustChangePassword,
+            activo: true
+          }).select("*").single();
+          if (inserted.error) throw inserted.error;
+          await replaceUserPermissions(inserted.data.id, permissions);
+          await loadSupabaseData();
+        } else {
+          state.users.push({ ...data, id: makeId(), passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, permissions, creado: new Date().toLocaleDateString("es-DO") });
+        }
+        audit("Usuario creado", `${data.nombre} (${data.usuario})`);
+        saveState();
+        resetUserForm();
+        renderAll();
+      } catch (error) {
+        alert(error.message || "No se pudo guardar el usuario en Supabase.");
+      }
+    }, true);
 
     document.getElementById("projectForm").addEventListener("submit", async event => {
       event.preventDefault();
@@ -2692,6 +2859,7 @@
       }
       renderPolicyPreview(true);
     });
+    document.getElementById("cancelUserEditBtn").addEventListener("click", resetUserForm);
     document.getElementById("activeUserSelect").addEventListener("change", event => {
       state.activeUser = event.target.value;
       saveState();
