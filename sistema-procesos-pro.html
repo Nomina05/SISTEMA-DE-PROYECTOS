@@ -190,7 +190,8 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <script>
 
 let procesos = JSON.parse(localStorage.getItem('data')||'[]');
-let usuariosRegistrados = JSON.parse(localStorage.getItem('usuarios')||'[]');
+let usuariosRegistrados = [];
+const PROJECT_USERS_KEY = 'coraamoca-system-v7-base-datos-1-supabase';
 const ETAPAS = ['Compras','Legal','Dirección'];
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
@@ -199,11 +200,26 @@ if(embeddedMode){
   document.body.classList.add('embedded');
 }
 
+function cargarUsuariosSistema(){
+  try{
+    const projectState = JSON.parse(localStorage.getItem(PROJECT_USERS_KEY) || '{}');
+    usuariosRegistrados = (projectState.users || []).map(u=>({
+      id:u.id,
+      nombre:u.nombre || u.usuario || u.correo,
+      correo:u.correo || u.usuario,
+      rol:u.rol || 'Consulta',
+      departamento:u.area || ''
+    }));
+  }catch(error){
+    usuariosRegistrados = [];
+  }
+}
+
 // ====== VISTA ======
 function vista(v){
   usuarios.style.display='none'; reg.style.display='none'; dash.style.display='none'; proc.style.display='none';
   document.getElementById(v).style.display='block';
-  if(v==='usuarios') renderUsuarios();
+  if(v==='usuarios'){ cargarUsuariosSistema(); renderUsuarios(); }
   if(v==='dash') kpi();
   if(v==='proc') render();
 }
@@ -214,6 +230,8 @@ if(embeddedMode){
 
 // ====== USUARIOS ======
 function crearUsuario(){
+  alert("Los usuarios se administran desde el Sistema de Proyectos.");
+  return;
   let nombre = nombreUsuario.value.trim();
   let correo = correoUsuario.value.trim();
   let rol = rolUsuario.value;
@@ -249,6 +267,8 @@ function crearUsuario(){
 }
 
 function eliminarUsuario(i){
+  alert("Los usuarios se administran desde el Sistema de Proyectos.");
+  return;
   if(!confirm("¿Eliminar usuario?")) return;
   usuariosRegistrados.splice(i,1);
   guardarUsuarios();
@@ -269,6 +289,7 @@ function renderUsuarios(){
 }
 
 function llenarUsuariosProceso(){
+  cargarUsuariosSistema();
   let opciones = '<option value="">Seleccione usuario</option>' +
     usuariosRegistrados.map(u=>
       `<option value="${u.nombre}">${u.nombre} - ${u.rol}</option>`
@@ -554,7 +575,7 @@ function guardar(){
 }
 
 function guardarUsuarios(){
-  localStorage.setItem('usuarios',JSON.stringify(usuariosRegistrados));
+  // Los usuarios se administran desde el Sistema de Proyectos.
 }
 
 // ====== CLOCK ======
@@ -564,6 +585,7 @@ setInterval(()=>{
 
 setInterval(revisarAlertas,60000);
 
+cargarUsuariosSistema();
 renderUsuarios();
 llenarUsuariosProceso();
 render();
