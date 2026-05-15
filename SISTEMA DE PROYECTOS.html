@@ -331,7 +331,7 @@
         </div>
       </div>
 
-      <div class="area-panel" aria-label="Panel institucional">
+      <div class="area-panel" aria-label="Panel institucional" hidden>
         <div class="area-card"><strong>Finanzas</strong><span></span></div>
         <div class="area-card">
           <strong>Compras y Contrataciones</strong>
@@ -343,7 +343,7 @@
         <div class="area-card"><strong>Dirección General</strong><span></span></div>
       </div>
 
-      <div class="embedded-module" id="purchasingModule">
+      <div class="embedded-module" id="purchasingModule" hidden>
         <div class="panel">
           <h2>Compras y Contrataciones</h2>
           <iframe class="embedded-frame" src="sistema-procesos-pro.html" title="Sistema de procesos de compras y contrataciones"></iframe>
@@ -1209,12 +1209,6 @@
       document.getElementById("areaInsights").innerHTML = areaData.map(([title, line1, line2]) =>
         `<div class="area-insight"><h3>${title}</h3><p><strong>${line1}</strong></p><p>${line2}</p></div>`
       ).join("");
-      const cards = document.querySelectorAll(".area-card span");
-      if (cards[0]) cards[0].textContent = `${money.format(sum(rows, "pagado"))} pagado`;
-      if (cards[1]) cards[1].textContent = `${number.format(comprasPendientes)} pendientes`;
-      if (cards[2]) cards[2].textContent = `${money.format(inv.disponible)} disponible`;
-      if (cards[3]) cards[3].textContent = `${number.format(vencidas)} vencidas`;
-      if (cards[4]) cards[4].textContent = `${number.format(alerts.length)} alertas`;
     }
 
     function renderMunicipalMap() {
@@ -2943,12 +2937,6 @@
       state.activeUser = event.target.value;
       saveState();
       renderAll();
-    });
-
-    document.getElementById("togglePurchasingModule").addEventListener("click", event => {
-      const module = document.getElementById("purchasingModule");
-      module.classList.toggle("active");
-      event.currentTarget.textContent = module.classList.contains("active") ? "Cerrar procesos" : "Abrir procesos";
     });
 
     document.getElementById("csvBtn").addEventListener("click", () => {
