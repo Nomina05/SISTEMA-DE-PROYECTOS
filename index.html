@@ -936,6 +936,8 @@
       const passwordInput = form.elements.passwordTemporal;
       passwordInput.required = true;
       passwordInput.placeholder = "Contraseña genérica";
+      form.elements.cargo.required = true;
+      form.elements.cargo.placeholder = "Ej. Supervisor de obras";
       document.getElementById("userSubmitBtn").textContent = "Guardar usuario";
       document.getElementById("cancelUserEditBtn").hidden = true;
       renderPolicyPreview(true);
@@ -952,6 +954,8 @@
       form.elements.usuario.value = user.usuario || user.correo || "";
       form.elements.area.value = user.area || user.rol || "";
       form.elements.cargo.value = user.cargo || "";
+      form.elements.cargo.required = false;
+      form.elements.cargo.placeholder = "Opcional al modificar";
       const isMasterAdmin = String(user.usuario || user.correo || "").toLowerCase() === "registroycontroldenomina@coraamoca.gob.do";
       form.elements.rol.value = isMasterAdmin ? "Administrador" : (user.rol || "Consulta");
       form.elements.requiereCambioPassword.checked = Boolean(user.requiereCambioPassword);
