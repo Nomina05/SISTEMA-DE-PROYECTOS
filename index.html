@@ -160,6 +160,11 @@
     .floating-alert[hidden] { display: none; }
     .permission-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .permission-checks { display: grid; grid-template-columns: repeat(2, minmax(170px, 1fr)); gap: 8px; margin-top: 8px; }
+    .permission-groups { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 12px; margin-top: 8px; }
+    .permission-group { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; }
+    .permission-group h3 { margin: 0 0 8px; font-size: 13px; }
+    .permission-group .permission-checks { grid-template-columns: 1fr; margin-top: 0; }
+    .permission-summary { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 999px; background: #edf3f7; color: var(--ink); font-weight: 800; white-space: nowrap; }
     .permission-check { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #f9fbfc; color: var(--ink); font-weight: 700; }
     .permission-check input { width: 16px; min-height: 16px; accent-color: var(--blue); }
     .hidden-by-permission { display: none !important; }
@@ -226,7 +231,7 @@
       table.snip-detail-report { min-width: 1080px; }
       table.snip-group-report { min-width: 1100px; }
       th, td { font-size: 12px; padding: 8px; }
-      .permission-checks { grid-template-columns: 1fr; }
+      .permission-checks, .permission-groups { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 420px) {
@@ -589,6 +594,12 @@
       "report-estatus": "Reporte estatus de obras",
       "report-snip": "Reporte por código SNIP"
     };
+    const permissionGroups = {
+      "Navegación": ["dashboard", "usuarios", "controles", "registro", "cubicaciones", "reportes"],
+      "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
+      "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-manage", "notifications-admin"],
+      "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
+    };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
       "Dirección Técnica": ["dashboard", "controles", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
@@ -890,11 +901,24 @@
 
     function renderPermissionChecklist(checkedPermissions) {
       const selected = new Set(checkedPermissions || []);
-      return `<small>Permisos del usuario</small><div class="permission-checks">` +
-        Object.entries(permissionLabels).map(([permission, label]) => {
-          const checked = selected.has(permission) ? "checked" : "";
-          return `<label class="permission-check"><input type="checkbox" name="permissions" value="${permission}" ${checked}>${label}</label>`;
-        }).join("") + `</div>`;
+      return `<small>Permisos del usuario</small><div class="permission-groups">` +
+        Object.entries(permissionGroups).map(([group, permissions]) => `
+          <section class="permission-group">
+            <h3>${group}</h3>
+            <div class="permission-checks">
+              ${permissions.map(permission => {
+                const checked = selected.has(permission) ? "checked" : "";
+                return `<label class="permission-check"><input type="checkbox" name="permissions" value="${permission}" ${checked}>${permissionLabels[permission] || permission}</label>`;
+              }).join("")}
+            </div>
+          </section>
+        `).join("") + `</div>`;
+    }
+
+    function permissionSummary(user) {
+      const permissions = normalizedUser(user).permissions;
+      if (user.rol === "Administrador") return `<span class="permission-summary">Acceso total</span>`;
+      return `<span class="permission-summary">${permissions.length} permisos</span>`;
     }
 
     function renderPolicyPreview(usePolicy = false) {
@@ -1350,7 +1374,7 @@
           escapeHtml(u.cargo || "-"),
           escapeHtml(u.rol || "-"),
           u.requiereCambioPassword ? "Pendiente" : "No",
-          permissionBadges(u.permissions),
+          permissionSummary(u),
           escapeHtml(u.creado || "-"),
           `<button class="btn secondary edit-user-btn" type="button" data-id="${escapeHtml(u.id)}">Modificar</button>`
         ];
