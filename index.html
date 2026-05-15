@@ -456,6 +456,9 @@
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
           <h2>Usuarios creados</h2>
+          <div class="actions" style="margin-bottom:12px;">
+            <button class="btn secondary" id="syncAuthUsersBtn" type="button">Sincronizar usuarios de Auth</button>
+          </div>
           <div class="table-wrap"><table id="usersTable"></table></div>
         </div>
       </section>
@@ -853,6 +856,11 @@
       }
     }
 
+    function isExistingAuthUserError(error) {
+      const message = String(error?.message || "").toLowerCase();
+      return message.includes("already registered") || message.includes("already been registered") || message.includes("user already exists");
+    }
+
     function normalizedUser(user) {
       if (!user) return null;
       const permissions = user.permissions && user.permissions.length ? user.permissions : (permissionPolicies[user.rol] || permissionPolicies.Consulta);
@@ -929,6 +937,17 @@
       document.getElementById("cancelUserEditBtn").hidden = false;
       document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(user.permissions);
       document.getElementById("usuarios").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function syncAuthUsers() {
+      if (!can("users-admin")) return alert("El usuario activo no tiene permiso para sincronizar usuarios.");
+      if (!window.supabaseClient) return alert("Supabase no está disponible.");
+      const result = await window.supabaseClient.rpc("sincronizar_usuarios_auth");
+      if (result.error) throw result.error;
+      await loadSupabaseData();
+      saveState();
+      renderAll();
+      alert(`Usuarios sincronizados: ${Number(result.data) || 0}.`);
     }
 
     function displaySnip(project) {
@@ -2642,14 +2661,14 @@
             password: data.passwordTemporal,
             options: { data: { nombre: data.nombre, requiere_cambio_password: mustChangePassword } }
           });
-          if (authResult.error) throw authResult.error;
+          if (authResult.error && !isExistingAuthUserError(authResult.error)) throw authResult.error;
           if (currentSession.data.session?.access_token && currentSession.data.session?.refresh_token) {
             await window.supabaseClient.auth.setSession({
               access_token: currentSession.data.session.access_token,
               refresh_token: currentSession.data.session.refresh_token
             });
           }
-          const inserted = await window.supabaseClient.from("usuarios").insert({
+          const inserted = await window.supabaseClient.from("usuarios").upsert({
             nombre: data.nombre,
             usuario: data.usuario,
             correo: data.usuario,
@@ -2658,7 +2677,7 @@
             perfil_base: data.rol,
             requiere_cambio_password: mustChangePassword,
             activo: true
-          }).select("*").single();
+          }, { onConflict: "usuario" }).select("*").single();
           if (inserted.error) throw inserted.error;
           await replaceUserPermissions(inserted.data.id, permissions);
           await loadSupabaseData();
@@ -2860,6 +2879,9 @@
       renderPolicyPreview(true);
     });
     document.getElementById("cancelUserEditBtn").addEventListener("click", resetUserForm);
+    document.getElementById("syncAuthUsersBtn").addEventListener("click", () => {
+      syncAuthUsers().catch(error => alert(error.message || "No se pudieron sincronizar los usuarios de Auth."));
+    });
     document.getElementById("activeUserSelect").addEventListener("change", event => {
       state.activeUser = event.target.value;
       saveState();
