@@ -103,6 +103,7 @@
     .embedded-module { display: none; margin: -4px 0 16px; }
     .embedded-module.active { display: block; }
     .embedded-frame { width: 100%; height: 680px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: var(--shadow); }
+    .requests-frame { height: min(820px, calc(100vh - 180px)); min-height: 640px; box-shadow: none; }
     .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 18px; background: rgba(15, 23, 42, .42); }
     .modal-backdrop[hidden] { display: none; }
     .modal { width: min(420px, 100%); background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 22px 50px rgba(15, 23, 42, .22); padding: 18px; }
@@ -282,6 +283,7 @@
         <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Inicio</button>
         <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuario</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
+        <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
         <button class="nav-btn" data-view="controles" onclick="showView('controles')">Controles y alertas</button>
@@ -514,6 +516,19 @@
         </div>
       </section>
 
+      <section class="section" id="solicitudes">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">Compras y contrataciones</span>
+            <h1>Solicitudes de Compras</h1>
+            <p class="sub">Registro y seguimiento de solicitudes internas de compras.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <iframe class="embedded-frame requests-frame" src="sistema-procesos-pro.html?embedded=1" title="Solicitudes de Compras"></iframe>
+        </div>
+      </section>
+
       <section class="section" id="cubicaciones">
         <div class="panel">
           <h2>Registro de cubicaciones</h2>
@@ -589,6 +604,7 @@
       usuarios: "Usuario",
       controles: "Controles y alertas",
       registro: "Registro de proyectos",
+      solicitudes: "Solicitudes de Compras",
       cubicaciones: "Registro de cubicaciones",
       reportes: "Reportes",
       "users-admin": "Crear usuarios",
@@ -616,17 +632,17 @@
       "report-snip": "Reporte por código SNIP"
     };
     const permissionGroups = {
-      "Navegación": ["dashboard", "usuarios", "controles", "registro", "cubicaciones", "reportes"],
+      "Navegación": ["dashboard", "usuarios", "controles", "registro", "solicitudes", "cubicaciones", "reportes"],
       "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-manage", "notifications-admin"],
       "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "controles", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Financiera": ["dashboard", "controles", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
-      "Registro": ["dashboard", "controles", "registro", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Consulta": ["dashboard", "controles", "reportes", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
+      "Dirección Técnica": ["dashboard", "controles", "registro", "solicitudes", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Financiera": ["dashboard", "controles", "solicitudes", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
+      "Registro": ["dashboard", "controles", "registro", "solicitudes", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Consulta": ["dashboard", "controles", "solicitudes", "reportes", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
       municipio: "report-municipio",

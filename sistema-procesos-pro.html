@@ -79,13 +79,21 @@ font-size:13px;
 color:#5f3b00;
 }
 .alerta b{display:block;margin-bottom:3px}
+body.embedded{background:transparent}
+body.embedded header,
+body.embedded .nav{display:none}
+body.embedded .layout{display:block}
+body.embedded .main{padding:0}
+body.embedded .card,
+body.embedded .proceso,
+body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 </style>
 </head>
 
 <body>
 
 <header>
-  <b>Sistema de Procesos PRO</b>
+  <b>Solicitudes de Compras</b>
   <span id="clock"></span>
 </header>
 
@@ -186,6 +194,10 @@ let usuariosRegistrados = JSON.parse(localStorage.getItem('usuarios')||'[]');
 const ETAPAS = ['Compras','Legal','Dirección'];
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
+const embeddedMode = new URLSearchParams(location.search).get('embedded') === '1';
+if(embeddedMode){
+  document.body.classList.add('embedded');
+}
 
 // ====== VISTA ======
 function vista(v){
@@ -194,6 +206,10 @@ function vista(v){
   if(v==='usuarios') renderUsuarios();
   if(v==='dash') kpi();
   if(v==='proc') render();
+}
+
+if(embeddedMode){
+  vista('reg');
 }
 
 // ====== USUARIOS ======
