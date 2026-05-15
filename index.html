@@ -928,14 +928,15 @@
       form.elements.usuario.value = user.usuario || user.correo || "";
       form.elements.area.value = user.area || user.rol || "";
       form.elements.cargo.value = user.cargo || "";
-      form.elements.rol.value = user.rol || "Consulta";
+      const isMasterAdmin = String(user.usuario || user.correo || "").toLowerCase() === "registroycontroldenomina@coraamoca.gob.do";
+      form.elements.rol.value = isMasterAdmin ? "Administrador" : (user.rol || "Consulta");
       form.elements.requiereCambioPassword.checked = Boolean(user.requiereCambioPassword);
       form.elements.passwordTemporal.value = "";
       form.elements.passwordTemporal.required = false;
       form.elements.passwordTemporal.placeholder = "No se requiere para modificar datos";
       document.getElementById("userSubmitBtn").textContent = "Actualizar usuario";
       document.getElementById("cancelUserEditBtn").hidden = false;
-      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(user.permissions);
+      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(isMasterAdmin ? Object.keys(permissionLabels) : user.permissions);
       document.getElementById("usuarios").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -2619,7 +2620,11 @@
       try {
         const form = event.currentTarget;
         const data = Object.fromEntries(new FormData(form));
-        const permissions = [...form.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
+        const isMasterAdmin = String(data.usuario || "").toLowerCase() === "registroycontroldenomina@coraamoca.gob.do";
+        if (isMasterAdmin) data.rol = "Administrador";
+        const permissions = isMasterAdmin
+          ? Object.keys(permissionLabels)
+          : [...form.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
         const mustChangePassword = form.querySelector('input[name="requiereCambioPassword"]').checked;
         if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
 
