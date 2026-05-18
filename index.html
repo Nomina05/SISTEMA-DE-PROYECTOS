@@ -478,7 +478,7 @@
             <div class="span-4" id="policyPreview"></div>
             <div class="span-4 actions">
               <button class="btn" id="userSubmitBtn">Guardar usuario</button>
-              <button class="btn secondary" id="cancelUserEditBtn" type="button" hidden>Cancelar modificaciÃ³n</button>
+              <button class="btn secondary" id="cancelUserEditBtn" type="button" hidden>Cancelar modificación</button>
             </div>
           </form>
         </div>
@@ -514,13 +514,13 @@
             </form>
           </div>
         </div>
-        <div class="panel" style="margin-top:14px;" data-permission="documents-manage">
+        <div class="panel" style="margin-top:14px;" data-permission="documents-manage" hidden>
           <h2>Documentos adjuntos</h2>
           <form id="documentFormProject" class="form-grid">
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
-            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>CubicaciÃ³n PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
+            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>Cubicación PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
             <label>Archivo<input name="archivo" id="documentFileInputProject" type="file" required></label>
-            <label class="span-4">DescripciÃ³n<input name="descripcion" placeholder="Detalle del documento"></label>
+            <label class="span-4">Descripción<input name="descripcion" placeholder="Detalle del documento"></label>
             <button class="btn span-2" type="submit">Adjuntar documento</button>
             <span class="file-name span-2" id="documentUploadNoteProject"></span>
           </form>
@@ -558,15 +558,27 @@
           <div class="table-wrap"><table id="paymentsTable"></table></div>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="technical-log">
-          <h2>BitÃ¡cora tÃ©cnica</h2>
+          <h2>Bitácora técnica</h2>
           <form id="technicalLogFormPayments" class="form-grid">
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
             <label>Fecha<input name="fecha" type="date" required></label>
-            <label>Avance fÃ­sico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
-            <label class="span-4">ObservaciÃ³n<textarea name="observacion" required></textarea></label>
-            <button class="btn span-2" type="submit">Guardar bitÃ¡cora</button>
+            <label>Avance físico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
+            <label class="span-4">Observación<textarea name="observacion" required></textarea></label>
+            <button class="btn span-2" type="submit">Guardar bitácora</button>
           </form>
           <div class="table-wrap" style="margin-top:12px;"><table id="technicalLogTablePayments"></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="documents-manage">
+          <h2>Documentos adjuntos</h2>
+          <form id="documentFormPayments" class="form-grid">
+            <label class="span-2">Proyecto<select name="projectKey" required></select></label>
+            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>Cubicación PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
+            <label>Archivo<input name="archivo" id="documentFileInputPayments" type="file" required></label>
+            <label class="span-4">Descripción<input name="descripcion" placeholder="Detalle del documento"></label>
+            <button class="btn span-2" type="submit">Adjuntar documento</button>
+            <span class="file-name span-2" id="documentUploadNotePayments"></span>
+          </form>
+          <div class="table-wrap" style="margin-top:12px;"><table id="documentsTablePayments"></table></div>
         </div>
       </section>
 
@@ -1638,12 +1650,14 @@
 
     function renderDocumentsForProjects() {
       const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
-      renderTable("documentsTableProject", ["Proyecto", "Tipo", "Archivo", "Descripción"], (state.documents || []).map(row => [
+      const rows = (state.documents || []).map(row => [
         projects[row.projectKey]?.comunidad || row.projectKey || "-",
         row.tipo || "-",
         row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
         row.descripcion || "-"
-      ]));
+      ]);
+      renderTable("documentsTableProject", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
+      renderTable("documentsTablePayments", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
     }
 
     function renderNotifications() {
@@ -2963,6 +2977,23 @@
       document.getElementById("documentFileInput").files = transfer.files;
       target.requestSubmit();
       document.getElementById("documentUploadNoteProject").textContent = `Adjuntado: ${file.name}`;
+      source.reset();
+    });
+
+    document.getElementById("documentFormPayments").addEventListener("submit", event => {
+      event.preventDefault();
+      const source = event.currentTarget;
+      const target = document.getElementById("documentForm");
+      target.elements.projectKey.value = source.elements.projectKey.value;
+      target.elements.tipo.value = source.elements.tipo.value;
+      target.elements.descripcion.value = source.elements.descripcion.value;
+      const file = document.getElementById("documentFileInputPayments").files[0];
+      if (!file) return alert("Debe seleccionar un archivo.");
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      document.getElementById("documentFileInput").files = transfer.files;
+      target.requestSubmit();
+      document.getElementById("documentUploadNotePayments").textContent = `Adjuntado: ${file.name}`;
       source.reset();
     });
 
