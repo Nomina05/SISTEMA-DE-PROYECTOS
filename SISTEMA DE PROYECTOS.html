@@ -414,7 +414,7 @@
           <div class="table-wrap"><table id="projectHistoryTable"></table></div>
         </div>
         <div class="quick-panels">
-          <div class="panel" data-permission="technical-log">
+          <div class="panel" data-permission="technical-log" hidden>
             <h2>Bitácora técnica</h2>
             <form id="technicalLogForm" class="form-grid">
               <label class="span-2">Proyecto<select name="projectKey" required></select></label>
@@ -425,7 +425,7 @@
             </form>
             <div class="table-wrap" style="margin-top:12px;"><table id="technicalLogTable"></table></div>
           </div>
-          <div class="panel" data-permission="documents-manage">
+          <div class="panel" data-permission="documents-manage" hidden>
             <h2>Documentos adjuntos</h2>
             <form id="documentForm" class="form-grid">
               <label class="span-2">Proyecto<select name="projectKey" required></select></label>
@@ -514,6 +514,18 @@
             </form>
           </div>
         </div>
+        <div class="panel" style="margin-top:14px;" data-permission="documents-manage">
+          <h2>Documentos adjuntos</h2>
+          <form id="documentFormProject" class="form-grid">
+            <label class="span-2">Proyecto<select name="projectKey" required></select></label>
+            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>CubicaciÃ³n PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
+            <label>Archivo<input name="archivo" id="documentFileInputProject" type="file" required></label>
+            <label class="span-4">DescripciÃ³n<input name="descripcion" placeholder="Detalle del documento"></label>
+            <button class="btn span-2" type="submit">Adjuntar documento</button>
+            <span class="file-name span-2" id="documentUploadNoteProject"></span>
+          </form>
+          <div class="table-wrap" style="margin-top:12px;"><table id="documentsTableProject"></table></div>
+        </div>
       </section>
 
       <section class="section" id="solicitudes">
@@ -544,6 +556,17 @@
         <div class="panel" style="margin-top:14px;">
           <h2>Pagos registrados</h2>
           <div class="table-wrap"><table id="paymentsTable"></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="technical-log">
+          <h2>BitÃ¡cora tÃ©cnica</h2>
+          <form id="technicalLogFormPayments" class="form-grid">
+            <label class="span-2">Proyecto<select name="projectKey" required></select></label>
+            <label>Fecha<input name="fecha" type="date" required></label>
+            <label>Avance fÃ­sico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
+            <label class="span-4">ObservaciÃ³n<textarea name="observacion" required></textarea></label>
+            <button class="btn span-2" type="submit">Guardar bitÃ¡cora</button>
+          </form>
+          <div class="table-wrap" style="margin-top:12px;"><table id="technicalLogTablePayments"></table></div>
         </div>
       </section>
 
@@ -1142,6 +1165,8 @@
       renderAvailability();
       renderUsers();
       renderPayments();
+      renderTechnicalLogsForPayments();
+      renderDocumentsForProjects();
       renderControls();
       renderReport();
       renderPolicyPreview();
@@ -1593,6 +1618,27 @@
     function renderDocuments() {
       const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
       renderTable("documentsTable", ["Proyecto", "Tipo", "Archivo", "Descripción"], (state.documents || []).map(row => [
+        projects[row.projectKey]?.comunidad || row.projectKey || "-",
+        row.tipo || "-",
+        row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
+        row.descripcion || "-"
+      ]));
+    }
+
+    function renderTechnicalLogsForPayments() {
+      const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
+      renderTable("technicalLogTablePayments", ["Fecha", "Proyecto", "Avance físico", "Usuario", "Observación"], (state.technicalLogs || []).map(row => [
+        row.fecha || "-",
+        projects[row.projectKey]?.comunidad || row.projectKey || "-",
+        `${number.format(row.avance || 0)}%`,
+        row.usuario || "-",
+        row.observacion || "-"
+      ]));
+    }
+
+    function renderDocumentsForProjects() {
+      const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
+      renderTable("documentsTableProject", ["Proyecto", "Tipo", "Archivo", "Descripción"], (state.documents || []).map(row => [
         projects[row.projectKey]?.comunidad || row.projectKey || "-",
         row.tipo || "-",
         row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
@@ -2846,6 +2892,18 @@
       renderAll();
     });
 
+    document.getElementById("technicalLogFormPayments").addEventListener("submit", event => {
+      event.preventDefault();
+      const source = event.currentTarget;
+      const target = document.getElementById("technicalLogForm");
+      target.elements.projectKey.value = source.elements.projectKey.value;
+      target.elements.fecha.value = source.elements.fecha.value;
+      target.elements.avance.value = source.elements.avance.value;
+      target.elements.observacion.value = source.elements.observacion.value;
+      target.requestSubmit();
+      source.reset();
+    });
+
     document.getElementById("documentForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("documents-manage")) return alert("El usuario activo no tiene permiso para adjuntar documentos.");
@@ -2889,6 +2947,23 @@
       form.reset();
       saveState();
       renderAll();
+    });
+
+    document.getElementById("documentFormProject").addEventListener("submit", event => {
+      event.preventDefault();
+      const source = event.currentTarget;
+      const target = document.getElementById("documentForm");
+      target.elements.projectKey.value = source.elements.projectKey.value;
+      target.elements.tipo.value = source.elements.tipo.value;
+      target.elements.descripcion.value = source.elements.descripcion.value;
+      const file = document.getElementById("documentFileInputProject").files[0];
+      if (!file) return alert("Debe seleccionar un archivo.");
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      document.getElementById("documentFileInput").files = transfer.files;
+      target.requestSubmit();
+      document.getElementById("documentUploadNoteProject").textContent = `Adjuntado: ${file.name}`;
+      source.reset();
     });
 
     document.getElementById("notificationForm").addEventListener("submit", async event => {
