@@ -93,9 +93,6 @@
     .area-insight p { margin: 5px 0; color: var(--muted); font-size: 12px; }
     .area-insight strong { color: var(--ink); }
     .area-insight.focus { border-left: 4px solid var(--blue); background: #f7fbff; }
-    .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .quick-action { min-height: 34px; padding: 7px 10px; border-radius: 999px; background: #edf3f7; color: var(--ink); font-weight: 800; }
-    .quick-action.active { background: var(--blue); color: #fff; }
     .workload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 10px; }
     .workload-card { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
     .workload-card small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
@@ -324,23 +321,6 @@
         <button class="btn danger" id="logoutBtn" type="button" onclick="logoutSupabase()">Cerrar sesión</button>
         <input type="file" id="restoreFile" accept="application/json" hidden>
       </div>
-      <div class="panel" style="margin-bottom:14px;">
-        <label style="display:block;max-width:520px;">Búsqueda global<input id="globalSearchBox" placeholder="SNIP, proyecto, proveedor, usuario, documento o artículo"></label>
-      </div>
-      <div class="panel" style="margin-bottom:14px;">
-        <div class="panel-head">
-          <div>
-            <h2>Accesos rápidos</h2>
-            <p class="sub">Fije las funciones que usa con mayor frecuencia.</p>
-          </div>
-        </div>
-        <div class="quick-actions" id="quickActions"></div>
-      </div>
-      <div class="panel" id="globalSearchPanel" hidden style="margin-bottom:14px;">
-        <h2>Resultados de búsqueda</h2>
-        <div class="table-wrap"><table id="globalSearchTable"></table></div>
-      </div>
-
       <div class="modal-backdrop" id="passwordModal" hidden>
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
           <h2 id="passwordModalTitle">Cambiar contraseña</h2>
@@ -1467,7 +1447,6 @@
       renderPayments();
       renderWarehouseRequests();
       renderInventory();
-      renderQuickActions();
       renderMyTasks();
       renderNotificationCenter();
       renderCentralDocuments();
@@ -1881,20 +1860,6 @@
       document.getElementById("workloadBoard").innerHTML = workload.map(([label, value]) => `<div class="workload-card"><small>${label}</small><strong>${number.format(value)}</strong></div>`).join("");
     }
 
-    function renderQuickActions() {
-      const available = [
-        ["registro", "Nuevo proyecto"],
-        ["cubicaciones", "Registrar cubicación"],
-        ["solicitudes", "Solicitudes de compras"],
-        ["almacen", "Solicitudes a almacén"],
-        ["reportes", "Reportes"]
-      ].filter(([view]) => can(view));
-      document.getElementById("quickActions").innerHTML = available.map(([view, label]) => {
-        const active = state.favorites.includes(view) ? "active" : "";
-        return `<button class="quick-action ${active}" type="button" data-quick-view="${view}">${label}</button>`;
-      }).join("");
-    }
-
     function renderCatalogs() {
       const rows = Object.entries(state.catalogs || {}).flatMap(([tipo, values]) => (values || []).map(valor => [tipo, valor]));
       renderTable("catalogTable", ["Catálogo", "Valor"], rows);
@@ -1930,31 +1895,6 @@
         row.descripcion || "-"
       ]);
       renderTable("centralDocumentsTable", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
-    }
-
-    function renderGlobalSearch() {
-      const q = String(document.getElementById("globalSearchBox").value || "").trim().toLowerCase();
-      const panel = document.getElementById("globalSearchPanel");
-      if (!q) { panel.hidden = true; return; }
-      const rows = [];
-      enrichedProjects().forEach(project => {
-        const text = `${displaySnip(project)} ${project.comunidad} ${project.municipio} ${project.contratista}`.toLowerCase();
-        if (text.includes(q)) rows.push(["Proyecto", displaySnip(project), project.comunidad || project.tipo, project.municipio || "-"]);
-      });
-      (state.users || []).forEach(user => {
-        const text = `${user.nombre} ${user.usuario} ${user.area}`.toLowerCase();
-        if (text.includes(q)) rows.push(["Usuario", user.usuario, user.nombre, user.area || "-"]);
-      });
-      (state.documents || []).forEach(doc => {
-        const text = `${doc.tipo} ${doc.nombre} ${doc.descripcion}`.toLowerCase();
-        if (text.includes(q)) rows.push(["Documento", doc.tipo || "-", doc.nombre || "-", doc.descripcion || "-"]);
-      });
-      (state.warehouseArticles || []).forEach(article => {
-        const text = `${article.nombre} ${article.unidad} ${article.ubicacion}`.toLowerCase();
-        if (text.includes(q)) rows.push(["Inventario", article.nombre, article.unidad || "-", number.format(article.existencia || 0)]);
-      });
-      panel.hidden = false;
-      renderTable("globalSearchTable", ["Tipo", "Código / referencia", "Nombre", "Detalle"], rows.slice(0, 50));
     }
 
     function renderWorkflowConfig() {
@@ -3316,14 +3256,6 @@
       if (detailButton) openProjectDetail(detailButton.dataset.projectKey);
       const rejectButton = event.target.closest(".reject-payment-btn");
       if (rejectButton) rejectPayment(rejectButton.dataset.id).catch(error => alert(error.message || "No se pudo rechazar la cubicación."));
-      const quickButton = event.target.closest("[data-quick-view]");
-      if (quickButton) {
-        const view = quickButton.dataset.quickView;
-        state.favorites = state.favorites.includes(view) ? state.favorites.filter(item => item !== view) : [...state.favorites, view];
-        saveState();
-        renderQuickActions();
-        showView(view);
-      }
       const noticeReadButton = event.target.closest(".notice-read-btn");
       const noticeResolveButton = event.target.closest(".notice-resolve-btn");
       if (noticeReadButton || noticeResolveButton) {
@@ -3755,7 +3687,6 @@
       if (file) importInventoryFile(file);
       event.target.value = "";
     });
-    document.getElementById("globalSearchBox").addEventListener("input", renderGlobalSearch);
     document.getElementById("documentSearchBox").addEventListener("input", renderCentralDocuments);
     document.getElementById("workflowConfigForm").addEventListener("submit", event => {
       event.preventDefault();
