@@ -307,14 +307,17 @@ function esAdministradorActivo(){
   return usuarioActivoSistema()?.rol === 'Administrador';
 }
 
+function tienePermisoSistema(codigo){
+  const user = usuarioActivoSistema();
+  return Boolean(user && (user.rol === 'Administrador' || (user.permissions || []).includes(codigo)));
+}
+
 function puedeEditarCompras(){
-  const area = textoAreaUsuario(usuarioActivoSistema());
-  return esAdministradorActivo() || area.includes('compra');
+  return esAdministradorActivo() || tienePermisoSistema('compras-datos');
 }
 
 function puedeEditarFinanzas(){
-  const area = textoAreaUsuario(usuarioActivoSistema());
-  return esAdministradorActivo() || area.includes('finanza');
+  return esAdministradorActivo() || tienePermisoSistema('finanzas-pagos-compras');
 }
 
 async function cargarProcesosSql(){
