@@ -554,7 +554,7 @@
         <div class="panel">
           <h2>Nueva solicitud</h2>
           <form id="warehouseRequestForm" class="form-grid">
-            <label class="span-2">Solicitante<input id="warehouseRequester" name="solicitante" readonly></label>
+            <label class="span-2">Solicitante<select id="warehouseRequester" name="solicitanteUsuarioId" required></select></label>
             <label>Fecha y hora<input name="fechaHora" type="datetime-local" required></label>
             <label>Nivel de urgencia<select name="prioridad"><option>Normal</option><option>Alta</option><option>Urgente</option></select></label>
             <label class="span-2">Buscar artículo<input id="warehouseArticleSearch" placeholder="Escriba para buscar"></label>
@@ -890,6 +890,7 @@
       }));
       state.warehouseRequests = (warehouseResult.data || []).map(row => ({
         id: row.id,
+        solicitanteUsuarioId: row.solicitante_usuario_id || "",
         fechaHora: row.fecha_hora || row.fecha || "",
         articulo: row.articulo || "",
         cantidad: Number(row.cantidad || 0),
@@ -1016,6 +1017,11 @@
       if (!user) return true;
       if (user.rol === "Administrador") return true;
       return user.permissions.includes(permission);
+    }
+
+    function userCan(user, permission) {
+      const normalized = normalizedUser(user);
+      return Boolean(normalized && (normalized.rol === "Administrador" || normalized.permissions.includes(permission)));
     }
 
     const paymentApprovalFlow = [
@@ -1587,7 +1593,15 @@
     function prepareWarehouseForm() {
       const form = document.getElementById("warehouseRequestForm");
       if (!form) return;
-      document.getElementById("warehouseRequester").value = activeUser()?.nombre || currentSessionEmail || "";
+      const requesterSelect = document.getElementById("warehouseRequester");
+      const selectedRequester = requesterSelect.value;
+      const authorizedUsers = (state.users || []).filter(user => userCan(user, "almacen"));
+      requesterSelect.innerHTML = `<option value="">Seleccione solicitante</option>` + authorizedUsers.map(user => {
+        const normalized = normalizedUser(user);
+        return `<option value="${escapeHtml(normalized.id)}">${escapeHtml(normalized.nombre)} - ${escapeHtml(normalized.area || normalized.rol || "")}</option>`;
+      }).join("");
+      const preferredRequester = selectedRequester || activeUser()?.id || "";
+      if (preferredRequester && authorizedUsers.some(user => String(user.id) === String(preferredRequester))) requesterSelect.value = preferredRequester;
       if (!form.elements.fechaHora.value) {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -3032,19 +3046,21 @@
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const row = {
         id: makeId(),
+        solicitanteUsuarioId: data.solicitanteUsuarioId || "",
         fechaHora: data.fechaHora,
         articulo: data.articulo || "",
         cantidad: Number(data.cantidad || 0),
         unidad: data.unidad || "",
         prioridad: data.prioridad || "Normal",
         observacion: data.observacion || "",
-        solicitante: activeUser()?.nombre || currentSessionEmail || ""
+        solicitante: normalizedUser(state.users.find(user => String(user.id) === String(data.solicitanteUsuarioId)))?.nombre || ""
       };
       try {
         if (window.supabaseClient) {
           const inserted = await window.supabaseClient.from("solicitudes_almacen").insert({
             fecha: row.fechaHora.slice(0, 10),
             fecha_hora: row.fechaHora,
+            solicitante_usuario_id: row.solicitanteUsuarioId || null,
             articulo: row.articulo,
             cantidad: row.cantidad,
             unidad: row.unidad,
