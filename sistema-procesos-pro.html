@@ -42,8 +42,8 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 .kanban-columna h4{margin:0 0 8px}
 .kanban-tarjeta{background:#fff;border:1px solid var(--borde);border-left:4px solid var(--azul);border-radius:8px;padding:8px;margin-top:8px;font-size:13px}
 .kanban-tarjeta small{display:block;color:#64748b;margin-top:4px}
-.timeline{display:flex;gap:8px;margin-top:10px}
-.etapa{text-align:center;flex:1}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
+.etapa{text-align:center}
 .circle{width:25px;height:25px;border-radius:50%;margin:auto}
 .completado{background:var(--verde)}
 .activo{background:#3498db}
@@ -152,7 +152,13 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <select id="user">
   <option value="">Seleccione usuario</option>
 </select>
+<select id="tipoSolicitud">
+  <option value="Compra">Compra</option>
+  <option value="Servicio">Servicio</option>
+</select>
 <input id="desc" placeholder="Descripción">
+<input id="montoTotal" type="number" min="0" step="0.01" placeholder="Monto total">
+<input id="montoPagado" type="number" min="0" step="0.01" placeholder="Monto pagado">
 <button class="btn-primary" onclick="crear().catch(error=>alert(error.message||'No se pudo guardar la solicitud'))">Crear</button>
 </div>
 </div>
@@ -198,7 +204,30 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 let procesos = JSON.parse(localStorage.getItem('data')||'[]');
 let usuariosRegistrados = [];
 const PROJECT_USERS_KEY = 'coraamoca-system-v7-base-datos-1-supabase';
-const ETAPAS = ['Compras','Legal','Dirección'];
+const ETAPAS = [
+  'Solicitud de compra o servicio',
+  'Revisión y firma de Administración',
+  'Validación en PAC',
+  'Recepción en Finanzas',
+  'Firma de Dirección General',
+  'Carga en portal SECP - En proceso',
+  'Apertura de sobre',
+  'Evaluación de ofertas',
+  'Adjudicación',
+  'Orden de compra o servicio',
+  'Contrato legal',
+  'Registro y control interno',
+  'Certificación remitida a Compras',
+  'Notificación a oferentes',
+  'Registro de factura en almacén',
+  'Validación de entrada e inicio de pago',
+  'Revisión y análisis',
+  'Remisión a Financiero',
+  'Pago financiero',
+  'Tesorería y certificación',
+  'Cierre del proceso'
+];
+const GRUPOS_KANBAN = ['Solicitud','Validaciones','SECP','Contrato','Recepción','Pago','Cierre'];
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
 const embeddedMode = new URLSearchParams(location.search).get('embedded') === '1';
@@ -265,6 +294,9 @@ async function cargarProcesosSql(){
       usuario:solicitante?.nombre || 'Usuario',
       usuarioId:row.solicitante_id,
       descripcion:row.descripcion,
+      tipoSolicitud:row.tipo_solicitud || 'Compra',
+      montoTotal:Number(row.monto_total || 0),
+      montoPagado:Number(row.monto_pagado || 0),
       creado:row.creado_en ? new Date(row.creado_en).getTime() : Date.now(),
       ultimoCambio:row.ultimo_cambio ? new Date(row.ultimo_cambio).getTime() : Date.now(),
       etapas,
@@ -398,12 +430,15 @@ async function crear(){
   let usuario = usuarioPorId(usuarioId);
   let u=usuario?.nombre || '';
   let d=desc.value.trim();
+  let tipo=tipoSolicitud.value;
+  let total=Number(montoTotal.value || 0);
+  let pagado=Number(montoPagado.value || 0);
   if(!u||!d){ alert("Seleccione un usuario y complete la descripción"); return; }
   if(procesos.some(p=>p.descripcion===d)){ alert("Ya existe"); return; }
 
   let id = 'EXP-'+new Date().getFullYear()+'-'+(procesos.length+1).toString().padStart(4,'0');
   let etapas = ETAPAS.map((e,i)=>({ nombre:e, estado:i==0?'activo':'pendiente', inicio:i==0?Date.now():null, fin:null }));
-  let nuevoProceso = { id, usuario:u, usuarioId, descripcion:d, creado:Date.now(), ultimoCambio:Date.now(), etapas, historial:[{txt:`${u} creó`, fecha:Date.now()}], notas:[] };
+  let nuevoProceso = { id, usuario:u, usuarioId, descripcion:d, tipoSolicitud:tipo, montoTotal:total, montoPagado:pagado, creado:Date.now(), ultimoCambio:Date.now(), etapas, historial:[{txt:`${u} creó`, fecha:Date.now()}], notas:[] };
 
   const supabase = clienteSupabase();
   if(supabase){
@@ -411,6 +446,9 @@ async function crear(){
       expediente:id,
       descripcion:d,
       solicitante_id:usuarioId || null,
+      tipo_solicitud:tipo,
+      monto_total:total,
+      monto_pagado:pagado,
       estatus:'Pendiente'
     }).select('*').single();
     if(inserted.error) throw inserted.error;
@@ -653,6 +691,8 @@ function render(){
     lista.innerHTML+=`
     <div class="proceso">
       <b>${p.id}</b><br>${p.descripcion}<br>
+      <small>${p.tipoSolicitud || 'Compra'} | Total: RD$${Number(p.montoTotal||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | Pagado: RD$${Number(p.montoPagado||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</small>
+      ${p.tipoSolicitud==='Compra' && Number(p.montoTotal||0)>0 && Number(p.montoPagado||0)<Number(p.montoTotal||0) ? `<div class="historial"><b>Avance pagado:</b> ${((Number(p.montoPagado||0)/Number(p.montoTotal||0))*100).toFixed(2)}%</div>` : ''}
       <div class="timeline">${etapas}</div>
 
       <button class="btn-success" ${fin?'disabled':''} onclick="avanzar(${i})">Avanzar</button>
@@ -675,12 +715,19 @@ function render(){
 
 function etapaKanban(proceso){
   if(proceso.etapas.every(e=>e.estado==='completado')) return 'Completado';
-  return proceso.etapas.find(e=>e.estado==='activo')?.nombre || 'Solicitud';
+  const activa = proceso.etapas.find(e=>e.estado==='activo')?.nombre || '';
+  if(activa.includes('Solicitud')) return 'Solicitud';
+  if(['Revisión','Validación','Recepción','Firma'].some(txt=>activa.includes(txt))) return 'Validaciones';
+  if(['SECP','Apertura','Evaluación','Adjudicación','Orden'].some(txt=>activa.includes(txt))) return 'SECP';
+  if(['Contrato','Registro y control','Certificación'].some(txt=>activa.includes(txt))) return 'Contrato';
+  if(['Notificación','factura','entrada'].some(txt=>activa.includes(txt))) return 'Recepción';
+  if(['Revisión y análisis','Financiero','Pago financiero','Tesorería'].some(txt=>activa.includes(txt))) return 'Pago';
+  return 'Cierre';
 }
 
 function renderKanban(){
   if(!document.getElementById('kanban')) return;
-  const columnas = ['Solicitud', ...ETAPAS, 'Completado'];
+  const columnas = [...GRUPOS_KANBAN, 'Completado'];
   kanban.innerHTML = columnas.map(columna=>{
     const items = procesos.filter(proceso=>etapaKanban(proceso)===columna);
     return `
