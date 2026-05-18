@@ -501,9 +501,10 @@
             <form id="projectForm" class="form-grid">
               <div class="span-4 actions">
                 <button class="btn secondary" type="button" id="newProjectBtn">Nuevo proyecto</button>
-                <button class="btn secondary" type="button" id="cancelNewProjectBtn" hidden>Cancelar nuevo</button>
+                <button class="btn secondary" type="button" id="editProjectBtn">Modificar proyecto</button>
+                <button class="btn secondary" type="button" id="cancelNewProjectBtn" hidden>Cancelar</button>
               </div>
-              <label class="span-2" id="existingProjectField">Proyecto<select name="projectKey" required></select></label>
+              <label class="span-2" id="existingProjectField" hidden>Proyecto<select name="projectKey"></select></label>
               <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. Construcción de pozo tubular"></label>
               <label class="span-2 new-project-field" hidden>Municipio<input name="municipioNuevo" placeholder="Ej. Municipio de Moca"></label>
               <label class="span-2 new-project-field" hidden>Comunidad / proyecto<input name="comunidadNuevo" placeholder="Nombre del proyecto o comunidad"></label>
@@ -512,8 +513,8 @@
               <label>Contratista<input name="contratista" placeholder="Nombre o razón social"></label>
               <label>Presupuesto RD$<input name="presupuesto" type="number" min="0" step="0.01"></label>
               <label>Monto adjudicado RD$<input name="adjudicado" type="number" min="0" step="0.01"></label>
-              <label>Estatus<select name="estatus"><option>Publicado</option><option>Sin Publicar</option><option>20% Ejecutado</option><option>30% Ejecutado</option><option>60% Ejecutado</option><option>85% Ejecutado</option><option>En proceso</option><option>Contratado</option><option>En ejecución</option><option>Terminado</option><option>Paralizado</option></select></label>
-              <button class="btn" id="projectSubmitBtn">Actualizar proyecto</button>
+              <label>Estatus<select name="estatus"><option value=""></option><option>Publicado</option><option>Sin Publicar</option><option>20% Ejecutado</option><option>30% Ejecutado</option><option>60% Ejecutado</option><option>85% Ejecutado</option><option>En proceso</option><option>Contratado</option><option>En ejecución</option><option>Terminado</option><option>Paralizado</option></select></label>
+              <button class="btn" id="projectSubmitBtn" hidden>Guardar proyecto</button>
             </form>
           </div>
         </div>
@@ -787,6 +788,7 @@
     let state = loadState();
     let currentReport = "municipio";
     let creatingNewProject = false;
+    let projectFormMode = "idle";
     let editingUserId = "";
     let currentSessionEmail = "";
     let passwordChangeRequired = false;
@@ -2729,17 +2731,45 @@
       });
     }
 
-    function setProjectMode(isNew) {
-      creatingNewProject = isNew;
-      document.getElementById("existingProjectField").hidden = isNew;
-      document.querySelectorAll(".new-project-field").forEach(field => field.hidden = !isNew);
-      document.querySelector('#projectForm select[name="projectKey"]').required = !isNew;
-      document.querySelector('#projectForm input[name="tipoNuevo"]').required = isNew;
-      document.querySelector('#projectForm input[name="municipioNuevo"]').required = isNew;
-      document.querySelector('#projectForm input[name="comunidadNuevo"]').required = isNew;
-      document.getElementById("newProjectBtn").hidden = isNew;
-      document.getElementById("cancelNewProjectBtn").hidden = !isNew;
+    function setProjectMode(mode) {
+      projectFormMode = mode;
+      creatingNewProject = mode === "new";
+      const form = document.getElementById("projectForm");
+      const isNew = mode === "new";
+      const isEdit = mode === "edit";
+      document.getElementById("existingProjectField").hidden = !isEdit;
+      document.querySelectorAll(".new-project-field").forEach(field => field.hidden = !(isNew || isEdit));
+      form.elements.projectKey.required = isEdit;
+      form.elements.tipoNuevo.required = isNew;
+      form.elements.municipioNuevo.required = isNew;
+      form.elements.comunidadNuevo.required = isNew;
+      document.getElementById("newProjectBtn").hidden = isNew || isEdit;
+      document.getElementById("editProjectBtn").hidden = isNew || isEdit;
+      document.getElementById("cancelNewProjectBtn").hidden = mode === "idle";
+      document.getElementById("projectSubmitBtn").hidden = mode === "idle";
       document.getElementById("projectSubmitBtn").textContent = isNew ? "Guardar nuevo proyecto" : "Actualizar proyecto";
+    }
+
+    function clearProjectFormForNew() {
+      const form = document.getElementById("projectForm");
+      form.reset();
+      form.elements.projectKey.value = "";
+      form.elements.estatus.value = "";
+    }
+
+    function loadProjectIntoForm(projectKey) {
+      const project = state.projects.find(item => item.key === projectKey);
+      if (!project) return;
+      const form = document.getElementById("projectForm");
+      form.elements.tipoNuevo.value = project.tipo || "";
+      form.elements.municipioNuevo.value = project.municipio || "";
+      form.elements.comunidadNuevo.value = project.comunidad || "";
+      form.elements.poblacionNuevo.value = project.poblacion || "";
+      form.elements.codigo.value = project.codigo || "";
+      form.elements.contratista.value = project.contratista || "";
+      form.elements.presupuesto.value = project.presupuesto || "";
+      form.elements.adjudicado.value = project.adjudicado || "";
+      form.elements.estatus.value = project.estatus || "";
     }
 
     function nextProjectKey() {
@@ -2819,7 +2849,7 @@
       saveState();
       audit("Proyecto creado", `${data.get("comunidadNuevo")} | SNIP ${data.get("codigo") || "sin código"} | Presupuesto ${money.format(presupuesto)}`);
       form.reset();
-      setProjectMode(false);
+      setProjectMode("idle");
       renderAll();
     }
 
@@ -2837,6 +2867,10 @@
         const value = Number(data.get(field));
         if (!Number.isNaN(value) && value > 0) project[field] = value;
       });
+      project.tipo = data.get("tipoNuevo") || project.tipo;
+      project.municipio = data.get("municipioNuevo") || project.municipio;
+      project.comunidad = data.get("comunidadNuevo") || project.comunidad;
+      project.poblacion = Number(data.get("poblacionNuevo")) || project.poblacion || 0;
       project.actualizadoEn = new Date().toISOString();
       project.tipoProceso = Number(project.adjudicado || 0) > 0 ? "Adjudicado" : "Sin Adjudicar";
       project.montoSinAdjudicar = Number(project.adjudicado || 0) > 0 ? 0 : Number(project.presupuesto || 0);
@@ -3129,13 +3163,22 @@
     });
 
     document.getElementById("newProjectBtn").addEventListener("click", () => {
+      clearProjectFormForNew();
+      setProjectMode("new");
+    });
+
+    document.getElementById("editProjectBtn").addEventListener("click", () => {
       document.getElementById("projectForm").reset();
-      setProjectMode(true);
+      setProjectMode("edit");
     });
 
     document.getElementById("cancelNewProjectBtn").addEventListener("click", () => {
       document.getElementById("projectForm").reset();
-      setProjectMode(false);
+      setProjectMode("idle");
+    });
+
+    document.querySelector('#projectForm select[name="projectKey"]').addEventListener("change", event => {
+      if (projectFormMode === "edit") loadProjectIntoForm(event.target.value);
     });
 
     document.getElementById("paymentForm").addEventListener("submit", async event => {
