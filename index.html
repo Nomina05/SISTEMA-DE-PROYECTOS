@@ -93,6 +93,18 @@
     .area-insight p { margin: 5px 0; color: var(--muted); font-size: 12px; }
     .area-insight strong { color: var(--ink); }
     .area-insight.focus { border-left: 4px solid var(--blue); background: #f7fbff; }
+    .quick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .quick-action { min-height: 34px; padding: 7px 10px; border-radius: 999px; background: #edf3f7; color: var(--ink); font-weight: 800; }
+    .quick-action.active { background: var(--blue); color: #fff; }
+    .workload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 10px; }
+    .workload-card { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .workload-card small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .workload-card strong { display: block; margin-top: 6px; font-size: 20px; }
+    .notice-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mini-btn { min-height: 28px; padding: 4px 8px; border-radius: 6px; background: #e7edf0; color: var(--ink); font-size: 12px; font-weight: 800; }
+    .mobile-records { display: none; gap: 10px; }
+    .mobile-record { padding: 12px; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; }
+    .mobile-record strong { display: block; margin-bottom: 6px; }
     .municipal-map { display: grid; gap: 9px; }
     .map-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(160px, 2fr) auto; gap: 10px; align-items: center; }
     .map-bar { height: 10px; border-radius: 999px; background: #e7edf0; overflow: hidden; }
@@ -244,6 +256,8 @@
       table.snip-group-report { min-width: 1100px; }
       th, td { font-size: 12px; padding: 8px; }
       .permission-checks, .permission-groups { grid-template-columns: 1fr; }
+      .desktop-table-only { display: none; }
+      .mobile-records { display: grid; }
     }
 
     @media (max-width: 420px) {
@@ -312,6 +326,15 @@
       </div>
       <div class="panel" style="margin-bottom:14px;">
         <label style="display:block;max-width:520px;">Búsqueda global<input id="globalSearchBox" placeholder="SNIP, proyecto, proveedor, usuario, documento o artículo"></label>
+      </div>
+      <div class="panel" style="margin-bottom:14px;">
+        <div class="panel-head">
+          <div>
+            <h2>Accesos rápidos</h2>
+            <p class="sub">Fije las funciones que usa con mayor frecuencia.</p>
+          </div>
+        </div>
+        <div class="quick-actions" id="quickActions"></div>
       </div>
       <div class="panel" id="globalSearchPanel" hidden style="margin-bottom:14px;">
         <h2>Resultados de búsqueda</h2>
@@ -408,7 +431,14 @@
 
       <section class="section" id="tareas">
         <div class="page-heading"><div><span class="eyebrow">Trabajo pendiente</span><h1>Mis tareas</h1></div></div>
-        <div class="panel"><div class="table-wrap"><table id="myTasksTable"></table></div></div>
+        <div class="panel">
+          <div class="workload-grid" id="workloadBoard"></div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <h2>Bandeja unificada de aprobaciones</h2>
+          <div class="table-wrap desktop-table-only"><table id="myTasksTable"></table></div>
+          <div class="mobile-records" id="myTasksCards"></div>
+        </div>
       </section>
 
       <section class="section" id="notificaciones">
@@ -447,6 +477,16 @@
             <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente presupuesto">Aprobación de presupuesto</label>
             <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente finanzas">Aprobación de finanzas</label>
             <button class="btn" type="submit">Guardar flujo</button>
+          </form>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="users-admin">
+          <h2>Parámetros de alertas</h2>
+          <form id="alertConfigForm" class="form-grid">
+            <label>Días sin movimiento<input name="diasSinMovimiento" type="number" min="1" step="1" value="10"></label>
+            <label>Disponibilidad baja %<input name="porcentajeDisponibilidadBaja" type="number" min="1" max="100" step="1" value="5"></label>
+            <label>Horas máximas por etapa de compra<input name="horasEtapaCompra" type="number" min="1" step="1" value="96"></label>
+            <label>Días de vencimiento documental<input name="diasDocumento" type="number" min="1" step="1" value="7"></label>
+            <button class="btn" type="submit">Guardar parámetros</button>
           </form>
         </div>
         <div class="quick-panels">
@@ -489,6 +529,15 @@
         <div class="panel" style="margin-top:14px;">
           <h2>Control de cambios</h2>
           <div class="table-wrap"><table id="auditTable"></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="users-admin">
+          <h2>Catálogos normalizados</h2>
+          <form id="catalogForm" class="form-grid">
+            <label>Tipo de catálogo<select name="tipo"><option>estatus_obra</option><option>urgencia</option><option>unidad</option><option>tipo_obra</option><option>area</option></select></label>
+            <label class="span-2">Valor<input name="valor" required placeholder="Ej. En ejecución"></label>
+            <button class="btn" type="submit">Agregar valor</button>
+          </form>
+          <div class="table-wrap" style="margin-top:12px;"><table id="catalogTable"></table></div>
         </div>
       </section>
 
@@ -639,7 +688,8 @@
         </div>
         <div class="panel" style="margin-top:14px;">
           <h2>Artículos registrados</h2>
-          <div class="table-wrap"><table id="inventoryTable"></table></div>
+          <div class="table-wrap desktop-table-only"><table id="inventoryTable"></table></div>
+          <div class="mobile-records" id="inventoryCards"></div>
         </div>
       </section>
 
@@ -847,9 +897,23 @@
     const inactivityLimitMs = 20 * 60 * 1000;
     let inactivityTimer = null;
 
+    function defaultAlertConfig() {
+      return { diasSinMovimiento: 10, porcentajeDisponibilidadBaja: 5, horasEtapaCompra: 96, diasDocumento: 7 };
+    }
+
+    function defaultCatalogs() {
+      return {
+        estatus_obra: ["Publicado", "Sin Publicar", "En proceso", "Contratado", "En ejecución", "Terminado", "Paralizado"],
+        urgencia: ["Normal", "Alta", "Urgente"],
+        unidad: ["Unidad"],
+        tipo_obra: [],
+        area: []
+      };
+    }
+
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], notificationSettings: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, activeUser: "" };
+      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: mergeProjects(parsed.projects || []),
@@ -861,7 +925,11 @@
         technicalLogs: parsed.technicalLogs || [],
         documents: parsed.documents || [],
         notificationSettings: parsed.notificationSettings || [],
+        internalNotifications: parsed.internalNotifications || [],
         workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] },
+        alertConfig: { ...defaultAlertConfig(), ...(parsed.alertConfig || {}) },
+        catalogs: { ...defaultCatalogs(), ...(parsed.catalogs || {}) },
+        favorites: parsed.favorites || [],
         activeUser: parsed.activeUser || ""
       };
     }
@@ -944,18 +1012,22 @@
 
     async function loadSupabaseData() {
       if (!window.supabaseClient) return;
-      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult] = await Promise.all([
+      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult] = await Promise.all([
         window.supabaseClient.from("proyectos").select("*, contratistas(nombre)").order("municipio", { ascending: true }),
         window.supabaseClient.from("usuarios").select("*, areas(nombre)").order("nombre", { ascending: true }),
         window.supabaseClient.from("usuario_permisos").select("usuario_id, permisos(codigo)"),
         window.supabaseClient.from("cubicaciones").select("*").order("fecha", { ascending: false }),
         window.supabaseClient.from("solicitudes_almacen").select("*").order("fecha_hora", { ascending: false }),
-        window.supabaseClient.from("articulos_almacen").select("*").order("nombre", { ascending: true })
+        window.supabaseClient.from("articulos_almacen").select("*").order("nombre", { ascending: true }),
+        window.supabaseClient.from("configuracion_alertas").select("*").eq("id", "principal").maybeSingle(),
+        window.supabaseClient.from("catalogos_sistema").select("*").order("tipo", { ascending: true }).order("valor", { ascending: true })
       ]);
       if (projectsResult.error) throw projectsResult.error;
       if (usersResult.error) throw usersResult.error;
       if (warehouseResult.error && !String(warehouseResult.error.message || "").toLowerCase().includes("relation")) throw warehouseResult.error;
       if (warehouseArticlesResult.error && !String(warehouseArticlesResult.error.message || "").toLowerCase().includes("relation")) throw warehouseArticlesResult.error;
+      if (alertConfigResult.error && !String(alertConfigResult.error.message || "").toLowerCase().includes("relation")) throw alertConfigResult.error;
+      if (catalogsResult.error && !String(catalogsResult.error.message || "").toLowerCase().includes("relation")) throw catalogsResult.error;
       const permissionMap = {};
       (permissionsResult.data || []).forEach(row => {
         permissionMap[row.usuario_id] = permissionMap[row.usuario_id] || [];
@@ -964,6 +1036,22 @@
       state.projects = (projectsResult.data || []).map(mapProjectFromDb);
       if (!state.projects.length) state.projects = baseProjects;
       state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
+      if (alertConfigResult.data) {
+        state.alertConfig = {
+          diasSinMovimiento: Number(alertConfigResult.data.dias_sin_movimiento || 10),
+          porcentajeDisponibilidadBaja: Number(alertConfigResult.data.porcentaje_disponibilidad_baja || 5),
+          horasEtapaCompra: Number(alertConfigResult.data.horas_etapa_compra || 96),
+          diasDocumento: Number(alertConfigResult.data.dias_documento || 7)
+        };
+      }
+      if (catalogsResult.data?.length) {
+        const catalogs = defaultCatalogs();
+        catalogsResult.data.forEach(row => {
+          catalogs[row.tipo] = catalogs[row.tipo] || [];
+          catalogs[row.tipo].push(row.valor);
+        });
+        state.catalogs = catalogs;
+      }
       state.audit = state.audit || [];
       state.payments = (cubicacionesResult.data || []).map(payment => ({
         id: payment.id,
@@ -1312,7 +1400,7 @@
         const withoutExecution = Number(project.comprometido || 0) <= 0 && Number(project.cubicaciones || 0) <= 0;
         if (!withoutExecution) return false;
         const startDate = parseDateOnly(project.actualizadoEn || project.creadoEn);
-        return businessDaysBetween(startDate) >= 10;
+        return businessDaysBetween(startDate) >= Number(state.alertConfig?.diasSinMovimiento || 10);
       });
     }
 
@@ -1322,7 +1410,7 @@
       const total = noMovementProjects().length;
       if (!total) return;
       const alertBox = document.getElementById("movementAlert");
-      alertBox.innerHTML = `<strong>Alerta de seguimiento</strong>${number.format(total)} obras no tienen movimientos de ejecución o cubicación después de 10 días laborables.`;
+      alertBox.innerHTML = `<strong>Alerta de seguimiento</strong>${number.format(total)} obras no tienen movimientos de ejecución o cubicación después de ${number.format(state.alertConfig?.diasSinMovimiento || 10)} días laborables.`;
       alertBox.hidden = false;
       sessionStorage.setItem(key, "1");
       setTimeout(() => {
@@ -1368,6 +1456,7 @@
 
     function renderAll() {
       populateSelects();
+      syncCatalogOptions();
       renderMetrics();
       renderExecutiveDashboard();
       renderAreaInsights();
@@ -1378,6 +1467,7 @@
       renderPayments();
       renderWarehouseRequests();
       renderInventory();
+      renderQuickActions();
       renderMyTasks();
       renderNotificationCenter();
       renderCentralDocuments();
@@ -1386,6 +1476,7 @@
       renderTechnicalLogsForPayments();
       renderDocumentsForProjects();
       renderControls();
+      renderCatalogs();
       renderReport();
       renderPolicyPreview();
       renderAccess();
@@ -1445,7 +1536,8 @@
       ).join("");
       const critical = alerts.filter(alert => alert.level === "Crítico").length;
       const warning = alerts.filter(alert => alert.level === "Alerta").length;
-      const availabilityLevel = inv.disponible < 0 ? "bad" : inv.disponible < inv.totalSnip * 0.05 ? "warn" : "ok";
+      const lowAvailabilityRatio = Number(state.alertConfig?.porcentajeDisponibilidadBaja || 5) / 100;
+      const availabilityLevel = inv.disponible < 0 ? "bad" : inv.disponible < inv.totalSnip * lowAvailabilityRatio ? "warn" : "ok";
       document.getElementById("semaphoreGrid").innerHTML = [
         ["Disponibilidad presupuestaria", availabilityLevel, availabilityLevel === "bad" ? "Sobregiro o disponibilidad negativa" : availabilityLevel === "warn" ? "Disponibilidad baja" : "Dentro del margen"],
         ["Alertas críticas", critical ? "bad" : "ok", critical ? `${number.format(critical)} controles críticos` : "Sin alertas críticas"],
@@ -1589,7 +1681,7 @@
       });
       const municipalities = [...new Set(state.projects.map(p => p.municipio))].sort();
       document.getElementById("municipalityFilter").innerHTML = `<option value="">Todos los municipios</option>` + municipalities.map(m => `<option>${m}</option>`).join("");
-      const statuses = [...new Set(["Publicado", "Sin Publicar", "20% Ejecutado", "30% Ejecutado", "60% Ejecutado", "85% Ejecutado", "En proceso", "Contratado", "En ejecución", "Terminado", "Paralizado", ...state.projects.map(p => p.estatus)])];
+      const statuses = [...new Set([...(state.catalogs?.estatus_obra || []), "20% Ejecutado", "30% Ejecutado", "60% Ejecutado", "85% Ejecutado", ...state.projects.map(p => p.estatus)])];
       document.getElementById("statusFilter").innerHTML = `<option value="">Todos los estatus</option>` + statuses.map(s => `<option>${s}</option>`).join("");
       const selectedSnip = document.getElementById("snipFilter").value;
       const snips = [...new Set(state.projects.map(displaySnip))].sort((a, b) => a.localeCompare(b));
@@ -1714,6 +1806,16 @@
           status
         ];
       }));
+      document.getElementById("inventoryCards").innerHTML = (state.warehouseArticles || []).map(article => {
+        const stock = Number(article.existencia || 0);
+        const minimum = Number(article.existenciaMinima || 0);
+        return `<div class="mobile-record">
+          <strong>${escapeHtml(article.nombre || "-")}</strong>
+          <div>${number.format(stock)} ${escapeHtml(article.unidad || "")}</div>
+          <div>Mínimo: ${number.format(minimum)}</div>
+          <div>${stock <= minimum ? "Inventario bajo" : "Inventario correcto"}</div>
+        </div>`;
+      }).join("");
     }
 
     function purchasingProcessesFromCache() {
@@ -1721,20 +1823,39 @@
     }
 
     function notificationRows() {
-      const projectRows = projectAlerts().map(alert => [alert.level, alert.type, alert.proyecto, alert.detail]);
+      const projectRows = projectAlerts().map(alert => ({ level: alert.level, type: alert.type, reference: alert.proyecto, detail: alert.detail }));
       const stockRows = (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0))
-        .map(article => ["Alerta", "Inventario bajo", article.nombre, `${number.format(article.existencia || 0)} ${article.unidad || ""}`]);
+        .map(article => ({ level: "Alerta", type: "Inventario bajo", reference: article.nombre, detail: `${number.format(article.existencia || 0)} ${article.unidad || ""}` }));
       const purchaseRows = purchasingProcessesFromCache().filter(p => !(p.etapas || []).every(e => e.estado === "completado"))
-        .map(p => ["Alerta", "Compra en proceso", p.id || "-", p.descripcion || "-"]);
-      return [...projectRows, ...stockRows, ...purchaseRows];
+        .map(p => ({ level: "Alerta", type: "Compra en proceso", reference: p.id || "-", detail: p.descripcion || "-" }));
+      const merged = new Map();
+      [...projectRows, ...stockRows, ...purchaseRows].forEach(row => merged.set(`${row.type}|${row.reference}|${row.detail}`, row));
+      (state.internalNotifications || []).forEach(row => {
+        const key = `${row.type}|${row.reference}|${row.detail}`;
+        if (row.estado === "Resuelta") {
+          merged.delete(key);
+        } else {
+          merged.set(key, { ...merged.get(key), ...row });
+        }
+      });
+      return [...merged.values()];
     }
 
     function renderNotificationCenter() {
-      renderTable("notificationCenterTable", ["Nivel", "Tipo", "Referencia", "Detalle"], notificationRows());
+      renderTable("notificationCenterTable", ["Nivel", "Tipo", "Referencia", "Detalle", "Estado", "Acción"], notificationRows().map((row, index) => [
+        row.level,
+        row.type,
+        row.reference,
+        row.detail,
+        row.estado || "Pendiente",
+        `<div class="notice-actions">
+          <button class="mini-btn notice-read-btn" type="button" data-index="${index}">Leída</button>
+          <button class="mini-btn notice-resolve-btn" type="button" data-index="${index}">Resolver</button>
+        </div>`
+      ]));
     }
 
     function renderMyTasks() {
-      const user = activeUser();
       const tasks = [];
       state.payments.filter(payment => currentApprovalStep(payment) && canApproveCurrentStep(payment)).forEach(payment => {
         tasks.push(["Cubicación", payment.numero || "-", currentApprovalStep(payment).label, payment.fecha || "-"]);
@@ -1745,7 +1866,55 @@
       if (can("documents-manage")) projectAlerts().filter(alert => alert.type === "Expediente sin documentos").forEach(alert => {
         tasks.push(["Documento", alert.proyecto, "Completar expediente", alert.codigo]);
       });
+      purchasingProcessesFromCache().filter(p => !(p.etapas || []).every(e => e.estado === "completado")).forEach(process => {
+        const activeStage = (process.etapas || []).find(stage => stage.estado === "activo");
+        if (activeStage) tasks.push(["Compras", process.id || "-", activeStage.nombre || "Continuar proceso", process.descripcion || "-"]);
+      });
       renderTable("myTasksTable", ["Módulo", "Referencia", "Tarea", "Dato"], tasks);
+      document.getElementById("myTasksCards").innerHTML = tasks.map(task => `<div class="mobile-record"><strong>${escapeHtml(task[0])}: ${escapeHtml(task[1])}</strong><div>${escapeHtml(task[2])}</div><div>${escapeHtml(task[3])}</div></div>`).join("");
+      const workload = [
+        ["Cubicaciones", state.payments.filter(payment => currentApprovalStep(payment)).length],
+        ["Documentos", projectAlerts().filter(alert => alert.type === "Expediente sin documentos").length],
+        ["Inventario", (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0)).length],
+        ["Compras", purchasingProcessesFromCache().filter(p => !(p.etapas || []).every(e => e.estado === "completado")).length]
+      ];
+      document.getElementById("workloadBoard").innerHTML = workload.map(([label, value]) => `<div class="workload-card"><small>${label}</small><strong>${number.format(value)}</strong></div>`).join("");
+    }
+
+    function renderQuickActions() {
+      const available = [
+        ["registro", "Nuevo proyecto"],
+        ["cubicaciones", "Registrar cubicación"],
+        ["solicitudes", "Solicitudes de compras"],
+        ["almacen", "Solicitudes a almacén"],
+        ["reportes", "Reportes"]
+      ].filter(([view]) => can(view));
+      document.getElementById("quickActions").innerHTML = available.map(([view, label]) => {
+        const active = state.favorites.includes(view) ? "active" : "";
+        return `<button class="quick-action ${active}" type="button" data-quick-view="${view}">${label}</button>`;
+      }).join("");
+    }
+
+    function renderCatalogs() {
+      const rows = Object.entries(state.catalogs || {}).flatMap(([tipo, values]) => (values || []).map(valor => [tipo, valor]));
+      renderTable("catalogTable", ["Catálogo", "Valor"], rows);
+    }
+
+    function syncCatalogOptions() {
+      const statusSelect = document.querySelector('#projectForm select[name="estatus"]');
+      if (statusSelect) {
+        const selected = statusSelect.value;
+        const values = [...new Set([...(state.catalogs?.estatus_obra || []), ...[...statusSelect.options].map(option => option.value).filter(Boolean)])];
+        statusSelect.innerHTML = `<option value=""></option>` + values.map(value => `<option>${escapeHtml(value)}</option>`).join("");
+        if (selected && values.includes(selected)) statusSelect.value = selected;
+      }
+      const prioritySelect = document.querySelector('#warehouseRequestForm select[name="prioridad"]');
+      if (prioritySelect) {
+        const selected = prioritySelect.value;
+        const values = state.catalogs?.urgencia || ["Normal", "Alta", "Urgente"];
+        prioritySelect.innerHTML = values.map(value => `<option>${escapeHtml(value)}</option>`).join("");
+        if (selected && values.includes(selected)) prioritySelect.value = selected;
+      }
     }
 
     function renderCentralDocuments() {
@@ -1961,7 +2130,7 @@
           const created = parseDateOnly(project.actualizadoEn || project.creadoEn);
           const days = businessDaysBetween(created, today);
           const hasMovement = Number(project.comprometido || 0) > 0 || Number(project.cubicaciones || 0) > Number(project.totalCubicadoBase || 0);
-          const status = hasMovement ? "Con movimiento" : days > 10 ? "Vencido" : "En seguimiento";
+          const status = hasMovement ? "Con movimiento" : days > Number(state.alertConfig?.diasSinMovimiento || 10) ? "Vencido" : "En seguimiento";
           return { project, days, status };
         })
         .filter(row => row.status !== "Con movimiento")
@@ -2154,7 +2323,12 @@
       const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
       const projects = rows.map(normalizeExcelProject).filter(project => project.comunidad || project.tipo);
       if (!projects.length) return alert("No se encontraron proyectos válidos en el Excel.");
-      if (!confirm(`Se cargarán ${projects.length} proyectos desde Excel. ¿Desea continuar?`)) return;
+      const issues = validateExcelProjects(projects);
+      if (issues.length) {
+        const preview = issues.slice(0, 8).map(issue => `- ${issue}`).join("\n");
+        const extra = issues.length > 8 ? `\n- y ${issues.length - 8} observaciones adicionales` : "";
+        if (!confirm(`Se detectaron observaciones antes de cargar:\n${preview}${extra}\n\n¿Desea continuar de todos modos?`)) return;
+      } else if (!confirm(`Se cargarán ${projects.length} proyectos desde Excel. ¿Desea continuar?`)) return;
       if (window.supabaseClient) {
         const payload = [];
         for (const project of projects) {
@@ -2190,6 +2364,22 @@
       alert("Carga masiva completada.");
     }
 
+    function validateExcelProjects(projects) {
+      const issues = [];
+      const seen = new Set();
+      projects.forEach((project, index) => {
+        const row = index + 2;
+        const key = `${project.codigo}|${project.municipio}|${project.comunidad}|${project.tipo}`.toLowerCase();
+        if (seen.has(key)) issues.push(`Fila ${row}: posible duplicado de SNIP, municipio, sector y tipo.`);
+        seen.add(key);
+        if (!String(project.codigo || "").trim()) issues.push(`Fila ${row}: falta código SNIP.`);
+        if (!String(project.municipio || "").trim() || project.municipio === "Sin municipio") issues.push(`Fila ${row}: falta municipio.`);
+        if (!Number(project.presupuesto || 0)) issues.push(`Fila ${row}: presupuesto vacío o en cero.`);
+        if (Number(project.adjudicado || 0) > Number(project.presupuesto || 0) && Number(project.presupuesto || 0) > 0) issues.push(`Fila ${row}: adjudicado mayor al presupuesto.`);
+      });
+      return issues;
+    }
+
     function renderControls() {
       const alerts = projectAlerts();
       const critical = alerts.filter(alert => alert.level === "Crítico").length;
@@ -2211,6 +2401,13 @@
         row.fecha, row.usuario, row.accion, row.detalle,
         row.anterior || row.nuevo ? `${row.anterior ? "Antes registrado" : ""}${row.anterior && row.nuevo ? " / " : ""}${row.nuevo ? "Después registrado" : ""}` : "-"
       ]));
+      const alertForm = document.getElementById("alertConfigForm");
+      if (alertForm) {
+        alertForm.elements.diasSinMovimiento.value = state.alertConfig.diasSinMovimiento;
+        alertForm.elements.porcentajeDisponibilidadBaja.value = state.alertConfig.porcentajeDisponibilidadBaja;
+        alertForm.elements.horasEtapaCompra.value = state.alertConfig.horasEtapaCompra;
+        alertForm.elements.diasDocumento.value = state.alertConfig.diasDocumento;
+      }
     }
 
     function filteredProjects() {
@@ -2652,6 +2849,7 @@
       const lastPayment = [...payments].sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")))[0];
       const lastLog = [...logs].sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")))[0];
       const lastDoc = docs[docs.length - 1];
+      const auditRows = (state.audit || []).filter(row => String(row.detalle || "").includes(project.comunidad || project.tipo || key)).slice(0, 12);
       document.getElementById("projectDetailContent").innerHTML = `
         <div class="detail-grid">
           <div class="detail-item"><small>Presupuesto</small><strong>${money.format(project.presupuesto || 0)}</strong></div>
@@ -2691,6 +2889,12 @@
           <h2>Alertas del proyecto</h2>
           <div class="table-wrap"><table><thead><tr><th>Nivel</th><th>Control</th><th>Detalle</th><th>Acción sugerida</th></tr></thead><tbody>
             ${alerts.length ? alerts.map(alert => `<tr><td>${alertLevelBadge(alert.level)}</td><td>${escapeHtml(alert.type)}</td><td>${escapeHtml(alert.detail)}</td><td>${escapeHtml(alert.action)}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin alertas activas.</td></tr>`}
+          </tbody></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px; box-shadow:none;">
+          <h2>Historial</h2>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
+            ${auditRows.length ? auditRows.map(row => `<tr><td>${escapeHtml(row.fecha || "-")}</td><td>${escapeHtml(row.usuario || "-")}</td><td>${escapeHtml(row.accion || "-")}</td><td>${escapeHtml(row.detalle || "-")}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin historial adicional registrado.</td></tr>`}
           </tbody></table></div>
         </div>`;
       document.getElementById("projectDetailModal").hidden = false;
@@ -3112,6 +3316,23 @@
       if (detailButton) openProjectDetail(detailButton.dataset.projectKey);
       const rejectButton = event.target.closest(".reject-payment-btn");
       if (rejectButton) rejectPayment(rejectButton.dataset.id).catch(error => alert(error.message || "No se pudo rechazar la cubicación."));
+      const quickButton = event.target.closest("[data-quick-view]");
+      if (quickButton) {
+        const view = quickButton.dataset.quickView;
+        state.favorites = state.favorites.includes(view) ? state.favorites.filter(item => item !== view) : [...state.favorites, view];
+        saveState();
+        renderQuickActions();
+        showView(view);
+      }
+      const noticeReadButton = event.target.closest(".notice-read-btn");
+      const noticeResolveButton = event.target.closest(".notice-resolve-btn");
+      if (noticeReadButton || noticeResolveButton) {
+        const row = notificationRows()[Number((noticeReadButton || noticeResolveButton).dataset.index)];
+        if (row) {
+          upsertInternalNotification(row, noticeResolveButton ? "Resuelta" : "Leída");
+          renderNotificationCenter();
+        }
+      }
     });
 
     document.getElementById("closeProjectDetailBtn").addEventListener("click", closeProjectDetail);
@@ -3122,6 +3343,19 @@
     document.getElementById("projectDetailModal").addEventListener("click", event => {
       if (event.target.id === "projectDetailModal") closeProjectDetail();
     });
+
+    function upsertInternalNotification(row, estado) {
+      const key = `${row.type}|${row.reference}|${row.detail}`;
+      const existing = (state.internalNotifications || []).find(item => `${item.type}|${item.reference}|${item.detail}` === key);
+      if (existing) {
+        existing.estado = estado;
+        existing.actualizadoEn = new Date().toISOString();
+      } else {
+        state.internalNotifications = state.internalNotifications || [];
+        state.internalNotifications.push({ ...row, estado, actualizadoEn: new Date().toISOString() });
+      }
+      saveState();
+    }
 
     async function handleLogin(event) {
       if (event) event.preventDefault();
@@ -3437,6 +3671,49 @@
       if (unit) document.getElementById("warehouseUnit").value = unit;
     });
 
+    document.getElementById("alertConfigForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!can("users-admin")) return alert("Solo un administrador puede modificar los parámetros de alertas.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      state.alertConfig = {
+        diasSinMovimiento: Number(data.diasSinMovimiento || 10),
+        porcentajeDisponibilidadBaja: Number(data.porcentajeDisponibilidadBaja || 5),
+        horasEtapaCompra: Number(data.horasEtapaCompra || 96),
+        diasDocumento: Number(data.diasDocumento || 7)
+      };
+      if (window.supabaseClient) {
+        const result = await window.supabaseClient.from("configuracion_alertas").upsert({
+          id: "principal",
+          dias_sin_movimiento: state.alertConfig.diasSinMovimiento,
+          porcentaje_disponibilidad_baja: state.alertConfig.porcentajeDisponibilidadBaja,
+          horas_etapa_compra: state.alertConfig.horasEtapaCompra,
+          dias_documento: state.alertConfig.diasDocumento
+        }, { onConflict: "id" });
+        if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
+      }
+      audit("Parámetros de alertas actualizados", JSON.stringify(state.alertConfig));
+      saveState();
+      renderAll();
+    });
+
+    document.getElementById("catalogForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!can("users-admin")) return alert("Solo un administrador puede modificar catálogos.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const tipo = String(data.tipo || "").trim();
+      const valor = String(data.valor || "").trim();
+      if (!tipo || !valor) return;
+      state.catalogs[tipo] = [...new Set([...(state.catalogs[tipo] || []), valor])].sort((a, b) => a.localeCompare(b));
+      if (window.supabaseClient) {
+        const result = await window.supabaseClient.from("catalogos_sistema").upsert({ tipo, valor }, { onConflict: "tipo,valor" });
+        if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
+      }
+      audit("Catálogo actualizado", `${tipo}: ${valor}`);
+      saveState();
+      event.currentTarget.reset();
+      renderCatalogs();
+    });
+
     document.getElementById("inventoryForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("inventory-edit")) return alert("El usuario activo no tiene permiso para administrar inventario.");
@@ -3689,6 +3966,7 @@
       const table = document.getElementById("reportTable").cloneNode(true);
       const title = currentReportTitle();
       const printedAt = new Date().toLocaleString("es-DO");
+      const issuedBy = currentSessionEmail || activeUser()?.usuario || "Usuario";
       const fileName = `reporte-${currentReport}`;
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
@@ -3731,9 +4009,10 @@
             <div><h1>CORAAMOCA - ${title}</h1><div class="meta">Sistema de control presupuestario</div></div>
             <div class="logo">CA</div>
           </div>
-          <div class="meta">Impreso: ${printedAt}${filters ? " | " + filters : ""}</div>
+          <div class="meta">Impreso: ${printedAt} | Emitido por: ${escapeHtml(issuedBy)}${filters ? " | " + filters : ""}</div>
           ${mode === "pdf" ? `<div class="meta">Seleccione "Guardar como PDF" en el destino de impresión.</div>` : ""}
           ${table.outerHTML}
+          <div class="meta" style="margin-top:12px;border-top:1px solid #cfd9de;padding-top:8px;">CORAAMOCA | Reporte generado por el sistema institucional</div>
         </body>
         </html>`);
       printWindow.document.close();

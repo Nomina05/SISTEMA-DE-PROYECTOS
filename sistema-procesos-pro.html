@@ -292,9 +292,10 @@ const DOCUMENTOS_REQUERIDOS = {
   'Registro de factura en almacén':['Factura'],
   'Pago financiero':['Expediente auditado']
 };
-const PLAZO_ETAPA_HORAS = {
-  'Adjudicación':96
-};
+function plazoEtapaHoras(nombre){
+  const configured = Number(window.parent?.state?.alertConfig?.horasEtapaCompra || 96);
+  return nombre === 'Adjudicación' ? configured : 48;
+}
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
 const embeddedMode = new URLSearchParams(location.search).get('embedded') === '1';
@@ -991,7 +992,7 @@ function revisarAlertas(){
     let inicioActivo = activa ? activa.inicio : null;
     let fechaBase = inicioActivo || p.ultimoCambio || p.creado;
 
-    const limiteEtapa = (PLAZO_ETAPA_HORAS[activa?.nombre] || 48) * 60 * 60 * 1000;
+    const limiteEtapa = plazoEtapaHoras(activa?.nombre) * 60 * 60 * 1000;
     return !finalizado && fechaBase && (Date.now() - fechaBase) > limiteEtapa;
   });
 
