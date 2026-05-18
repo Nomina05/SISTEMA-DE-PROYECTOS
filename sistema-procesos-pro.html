@@ -42,8 +42,12 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 .kanban-columna h4{margin:0 0 8px}
 .kanban-tarjeta{background:#fff;border:1px solid var(--borde);border-left:4px solid var(--azul);border-radius:8px;padding:8px;margin-top:8px;font-size:13px}
 .kanban-tarjeta small{display:block;color:#64748b;margin-top:4px}
+.embedded-tabs{display:none;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.embedded-tabs button{margin-top:0;background:#e8eef8;color:#17324d;font-weight:700}
+.embedded-tabs button.activo{background:var(--azul);color:#fff}
 .timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
 .etapa{text-align:center}
+.rol-etapa{display:block;color:#64748b;font-size:11px;margin-top:4px}
 .circle{width:25px;height:25px;border-radius:50%;margin:auto}
 .completado{background:var(--verde)}
 .activo{background:#3498db}
@@ -89,6 +93,7 @@ body.embedded header,
 body.embedded .nav{display:none}
 body.embedded .layout{display:block}
 body.embedded .main{padding:0}
+body.embedded .embedded-tabs{display:flex}
 body.embedded .card,
 body.embedded .proceso,
 body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
@@ -112,6 +117,11 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 </div>
 
 <div class="main">
+<div class="embedded-tabs" aria-label="Vistas de solicitudes de compras">
+  <button type="button" data-vista="reg" onclick="vista('reg')">Nueva solicitud</button>
+  <button type="button" data-vista="dash" onclick="vista('dash')">Dashboard</button>
+  <button type="button" data-vista="proc" onclick="vista('proc')">Procesos</button>
+</div>
 
 <!-- USUARIOS -->
 <div id="usuarios">
@@ -188,6 +198,7 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <div class="modal" id="modal">
 <div class="modal-box">
 <h4>Confirmar avance</h4>
+<p id="rolResponsableActual"></p>
 <select id="actor">
   <option value="">Seleccione usuario</option>
 </select>
@@ -226,6 +237,29 @@ const ETAPAS = [
   'Cierre del proceso'
 ];
 const GRUPOS_KANBAN = ['Solicitud','Validaciones','SECP','Contrato','Recepción','Pago','Cierre'];
+const ROLES_ETAPA = {
+  'Solicitud de compra o servicio':'Encargado de área',
+  'Revisión y firma de Administración':'Administración',
+  'Validación en PAC':'Compras y Contrataciones',
+  'Recepción en Finanzas':'Finanzas',
+  'Firma de Dirección General':'Dirección General',
+  'Carga en portal SECP - En proceso':'Compras y Contrataciones',
+  'Apertura de sobre':'Compras y Contrataciones',
+  'Evaluación de ofertas':'Compras y Contrataciones',
+  'Adjudicación':'Compras y Finanzas',
+  'Orden de compra o servicio':'Compras y Contrataciones',
+  'Contrato legal':'Legal',
+  'Registro y control interno':'Unidad Interna de Registro y Control Interno de Contratos',
+  'Certificación remitida a Compras':'Unidad Interna de Registro y Control Interno de Contratos',
+  'Notificación a oferentes':'Compras y Contrataciones',
+  'Registro de factura en almacén':'Almacén',
+  'Validación de entrada e inicio de pago':'Compras y Contrataciones',
+  'Revisión y análisis':'Revisión y Análisis',
+  'Remisión a Financiero':'Revisión y Análisis',
+  'Pago financiero':'Finanzas',
+  'Tesorería y certificación':'Tesorería',
+  'Cierre del proceso':'Compras y Contrataciones'
+};
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
 const embeddedMode = new URLSearchParams(location.search).get('embedded') === '1';
@@ -339,13 +373,14 @@ async function cargarProcesosSql(){
 function vista(v){
   usuarios.style.display='none'; reg.style.display='none'; dash.style.display='none'; proc.style.display='none';
   document.getElementById(v).style.display='block';
+  document.querySelectorAll('.embedded-tabs button').forEach(btn=>btn.classList.toggle('activo', btn.dataset.vista===v));
   if(v==='usuarios'){ cargarUsuariosSistema(); renderUsuarios(); }
   if(v==='dash') kpi();
   if(v==='proc') render();
 }
 
 if(embeddedMode){
-  vista('reg');
+  vista('proc');
 }
 
 // ====== USUARIOS ======
@@ -503,6 +538,8 @@ async function crear(){
 // ====== AVANZAR ======
 function avanzar(i){
   idxGlobal=i;
+  const etapaActiva = procesos[i].etapas.find(etapa=>etapa.estado==='activo');
+  document.getElementById('rolResponsableActual').innerHTML = `<b>Rol responsable:</b> ${ROLES_ETAPA[etapaActiva?.nombre] || '-'}`;
   document.getElementById('actor').value='';
   document.getElementById('avanceNota').value='';
   modal.style.display='flex';
@@ -742,6 +779,7 @@ function render(){
       <div class="etapa">
         <div class="circle ${e.estado}"></div>
         <small>${e.nombre}</small>
+        <span class="rol-etapa">${ROLES_ETAPA[e.nombre] || '-'}</span>
       </div>
     `).join('');
 
@@ -824,6 +862,7 @@ function renderKanban(){
             <b>${proceso.id}</b>
             <small>${proceso.descripcion}</small>
             <small>${proceso.usuario || 'Sin solicitante'}</small>
+            <small>${ROLES_ETAPA[proceso.etapas.find(etapa=>etapa.estado==='activo')?.nombre] || 'Proceso cerrado'}</small>
           </article>
         `).join('') : '<small>Sin solicitudes</small>'}
       </section>
