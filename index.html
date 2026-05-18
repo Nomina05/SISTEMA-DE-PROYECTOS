@@ -486,7 +486,7 @@
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
           <h2>Usuarios creados</h2>
           <div class="actions" style="margin-bottom:12px;">
-            <button class="btn secondary" id="syncAuthUsersBtn" type="button">Sincronizar usuarios de Auth</button>
+            <button class="btn secondary" id="syncAuthUsersBtn" type="button">Importar usuarios nuevos de Auth</button>
           </div>
           <div class="table-wrap"><table id="usersTable"></table></div>
         </div>
@@ -1075,7 +1075,7 @@
       await loadSupabaseData();
       saveState();
       renderAll();
-      alert(`Usuarios sincronizados: ${Number(result.data) || 0}.`);
+      alert(`Usuarios nuevos importados desde Auth: ${Number(result.data) || 0}.`);
     }
 
     function displaySnip(project) {
