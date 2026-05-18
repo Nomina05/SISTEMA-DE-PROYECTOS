@@ -1085,11 +1085,26 @@
 
     async function replaceUserPermissions(userId, permissions) {
       if (!window.supabaseClient || !userId) return;
-      const permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+      let permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
       if (permissionRows.error) throw permissionRows.error;
+      const foundCodes = new Set((permissionRows.data || []).map(permission => permission.codigo));
+      const missingCodes = permissions.filter(code => !foundCodes.has(code));
+      if (missingCodes.length) {
+        const insertedPermissions = await window.supabaseClient.from("permisos").insert(
+          missingCodes.map(codigo => ({
+            codigo,
+            nombre: permissionLabels[codigo] || codigo
+          }))
+        );
+        if (insertedPermissions.error && !String(insertedPermissions.error.message || "").toLowerCase().includes("duplicate")) {
+          throw insertedPermissions.error;
+        }
+        permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+        if (permissionRows.error) throw permissionRows.error;
+      }
       const deleteResult = await window.supabaseClient.from("usuario_permisos").delete().eq("usuario_id", userId);
       if (deleteResult.error) throw deleteResult.error;
-      if (permissionRows.data.length) {
+      if ((permissionRows.data || []).length) {
         const links = permissionRows.data.map(permission => ({ usuario_id: userId, permiso_id: permission.id }));
         const linkResult = await window.supabaseClient.from("usuario_permisos").insert(links);
         if (linkResult.error) throw linkResult.error;
@@ -1206,7 +1221,8 @@
 
     function editUser(userId) {
       if (!can("users-admin")) return alert("El usuario activo no tiene permiso para modificar usuarios.");
-      const user = normalizedUser(state.users.find(item => item.id === userId));
+      const rawUser = state.users.find(item => item.id === userId);
+      const user = normalizedUser(rawUser);
       if (!user) return alert("No se encontró el usuario seleccionado.");
       const form = document.getElementById("userForm");
       editingUserId = user.id;
@@ -1225,7 +1241,7 @@
       form.elements.passwordTemporal.placeholder = "No se requiere para modificar datos";
       document.getElementById("userSubmitBtn").textContent = "Actualizar usuario";
       document.getElementById("cancelUserEditBtn").hidden = false;
-      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(isMasterAdmin ? Object.keys(permissionLabels) : user.permissions);
+      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(isMasterAdmin ? Object.keys(permissionLabels) : (rawUser.permissions || []));
       document.getElementById("usuarios").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -3250,6 +3266,8 @@
             if (updated.error) throw updated.error;
             await replaceUserPermissions(editingUserId, permissions);
             await loadSupabaseData();
+            const refreshedUser = state.users.find(user => user.id === editingUserId);
+            if (refreshedUser) refreshedUser.permissions = [...permissions];
           } else {
             const index = state.users.findIndex(user => user.id === editingUserId);
             if (index >= 0) state.users[index] = { ...state.users[index], nombre: data.nombre, usuario: data.usuario, correo: data.usuario, area: data.area, cargo: data.cargo, rol: data.rol, requiereCambioPassword: mustChangePassword, permissions };
@@ -3290,6 +3308,8 @@
           if (inserted.error) throw inserted.error;
           await replaceUserPermissions(inserted.data.id, permissions);
           await loadSupabaseData();
+          const refreshedUser = state.users.find(user => user.id === inserted.data.id);
+          if (refreshedUser) refreshedUser.permissions = [...permissions];
         } else {
           state.users.push({ ...data, id: makeId(), passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, permissions, creado: new Date().toLocaleDateString("es-DO") });
         }
