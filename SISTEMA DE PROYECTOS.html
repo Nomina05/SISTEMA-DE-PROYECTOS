@@ -22,6 +22,9 @@
       --shadow: 0 10px 28px rgba(23, 32, 38, .07);
       font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
     }
+    body.high-contrast {
+      --bg:#fff; --panel:#fff; --ink:#000; --muted:#222; --line:#000; --blue:#000; --green:#000; --amber:#000; --red:#000;
+    }
 
     * { box-sizing: border-box; }
     html { width: 100%; overflow-x: hidden; }
@@ -282,11 +285,14 @@
       <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
       <nav>
         <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Inicio</button>
+        <button class="nav-btn" data-view="tareas" onclick="showView('tareas')">Mis tareas</button>
+        <button class="nav-btn" data-view="notificaciones" onclick="showView('notificaciones')">Notificaciones</button>
         <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuario</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
         <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a Almacén</button>
         <button class="nav-btn" data-view="inventario" onclick="showView('inventario')">Inventario</button>
+        <button class="nav-btn" data-view="documentos" onclick="showView('documentos')">Documentos</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
         <button class="nav-btn" data-view="controles" onclick="showView('controles')">Controles y alertas</button>
@@ -299,9 +305,17 @@
         <select id="activeUserSelect"><option value="">Sin usuario activo</option></select>
         <button class="btn secondary" id="backupBtn" type="button">Exportar respaldo</button>
         <button class="btn secondary" id="restoreBtn" type="button">Importar respaldo</button>
+        <button class="btn secondary" id="contrastBtn" type="button">Alto contraste</button>
         <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseña</button>
         <button class="btn danger" id="logoutBtn" type="button" onclick="logoutSupabase()">Cerrar sesión</button>
         <input type="file" id="restoreFile" accept="application/json" hidden>
+      </div>
+      <div class="panel" style="margin-bottom:14px;">
+        <label style="display:block;max-width:520px;">Búsqueda global<input id="globalSearchBox" placeholder="SNIP, proyecto, proveedor, usuario, documento o artículo"></label>
+      </div>
+      <div class="panel" id="globalSearchPanel" hidden style="margin-bottom:14px;">
+        <h2>Resultados de búsqueda</h2>
+        <div class="table-wrap"><table id="globalSearchTable"></table></div>
       </div>
 
       <div class="modal-backdrop" id="passwordModal" hidden>
@@ -392,6 +406,16 @@
         </div>
       </section>
 
+      <section class="section" id="tareas">
+        <div class="page-heading"><div><span class="eyebrow">Trabajo pendiente</span><h1>Mis tareas</h1></div></div>
+        <div class="panel"><div class="table-wrap"><table id="myTasksTable"></table></div></div>
+      </section>
+
+      <section class="section" id="notificaciones">
+        <div class="page-heading"><div><span class="eyebrow">Seguimiento</span><h1>Centro de notificaciones</h1></div></div>
+        <div class="panel"><div class="table-wrap"><table id="notificationCenterTable"></table></div></div>
+      </section>
+
       <section class="section" id="controles">
         <div class="panel">
           <h2>Controles y alertas</h2>
@@ -415,6 +439,15 @@
             </div>
           </div>
           <div class="table-wrap"><table id="projectHistoryTable"></table></div>
+        </div>
+        <div class="panel" style="margin-top:14px;" data-permission="users-admin">
+          <h2>Configuración de flujo</h2>
+          <form id="workflowConfigForm" class="form-grid">
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente técnica">Aprobación técnica</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente presupuesto">Aprobación de presupuesto</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente finanzas">Aprobación de finanzas</label>
+            <button class="btn" type="submit">Guardar flujo</button>
+          </form>
         </div>
         <div class="quick-panels">
           <div class="panel" data-permission="technical-log" hidden>
@@ -610,6 +643,16 @@
         </div>
       </section>
 
+      <section class="section" id="documentos">
+        <div class="page-heading"><div><span class="eyebrow">Expedientes</span><h1>Gestión documental</h1></div></div>
+        <div class="panel">
+          <div class="table-tools">
+            <div class="filters"><input id="documentSearchBox" placeholder="Buscar por proyecto, tipo o archivo"></div>
+          </div>
+          <div class="table-wrap"><table id="centralDocumentsTable"></table></div>
+        </div>
+      </section>
+
       <section class="section" id="cubicaciones">
         <div class="panel">
           <h2>Registro de cubicaciones</h2>
@@ -705,12 +748,15 @@
     const makeId = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const permissionLabels = {
       dashboard: "Dashboard",
+      tareas: "Mis tareas",
+      notificaciones: "Notificaciones",
       usuarios: "Usuario",
       controles: "Controles y alertas",
       registro: "Registro de proyectos",
       solicitudes: "Solicitudes de Compras",
       almacen: "Solicitudes a Almacén",
       inventario: "Inventario",
+      documentos: "Documentos",
       cubicaciones: "Registro de cubicaciones",
       reportes: "Reportes",
       "users-admin": "Crear usuarios",
@@ -723,6 +769,9 @@
       "finanzas-pagos-compras": "Registrar pagos de Compras",
       "technical-log": "Bitácora técnica",
       "documents-manage": "Adjuntar documentos",
+      "documents-view": "Ver documentos",
+      "warehouse-create": "Crear solicitudes a almacén",
+      "inventory-edit": "Editar inventario",
       "notifications-admin": "Configurar notificaciones",
       "mass-upload": "Carga masiva desde Excel",
       "export-reports": "Exportar reportes",
@@ -740,18 +789,19 @@
       "report-snip": "Reporte por código SNIP"
     };
     const permissionGroups = {
-      "Navegación": ["dashboard", "usuarios", "controles", "registro", "solicitudes", "almacen", "inventario", "cubicaciones", "reportes"],
+      "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
       "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Solicitudes de Compras": ["compras-datos", "finanzas-pagos-compras"],
-      "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-manage", "notifications-admin"],
+      "Almacén e inventario": ["warehouse-create", "inventory-edit"],
+      "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-view", "documents-manage", "notifications-admin"],
       "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "controles", "registro", "solicitudes", "almacen", "inventario", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Financiera": ["dashboard", "controles", "solicitudes", "almacen", "inventario", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
-      "Registro": ["dashboard", "controles", "registro", "solicitudes", "almacen", "inventario", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Consulta": ["dashboard", "controles", "solicitudes", "almacen", "inventario", "reportes", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
+      "Dirección Técnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
+      "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
       municipio: "report-municipio",
@@ -799,7 +849,7 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], notificationSettings: [], activeUser: "" };
+      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], notificationSettings: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: mergeProjects(parsed.projects || []),
@@ -811,6 +861,7 @@
         technicalLogs: parsed.technicalLogs || [],
         documents: parsed.documents || [],
         notificationSettings: parsed.notificationSettings || [],
+        workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] },
         activeUser: parsed.activeUser || ""
       };
     }
@@ -973,6 +1024,8 @@
           usuario: row.usuario || "",
           accion: row.accion || "",
           detalle: row.detalle || "",
+          anterior: row.dato_anterior || null,
+          nuevo: row.dato_nuevo || null,
           proyectoId: row.proyecto_id || ""
         }));
       }
@@ -1071,7 +1124,7 @@
       return Boolean(normalized && (normalized.rol === "Administrador" || normalized.permissions.includes(permission)));
     }
 
-    const paymentApprovalFlow = [
+    const defaultPaymentApprovalFlow = [
       { estado: "Pendiente técnica", area: "Dirección Técnica", label: "Aprobar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
       { estado: "Pendiente presupuesto", area: "Presupuesto", label: "Aprobar presupuesto", actorKey: "aprobacionPresupuestoPor", dateKey: "aprobacionPresupuestoEn", dbActor: "aprobacion_presupuesto_por", dbDate: "aprobacion_presupuesto_en" },
       { estado: "Pendiente finanzas", area: "Finanzas", label: "Aprobar finanzas", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en" }
@@ -1081,9 +1134,14 @@
       return String(value || "").trim().toLowerCase();
     }
 
+    function paymentApprovalFlow() {
+      const enabled = new Set(state.workflowConfig?.approvalStages || defaultPaymentApprovalFlow.map(step => step.estado));
+      return defaultPaymentApprovalFlow.filter(step => enabled.has(step.estado));
+    }
+
     function currentApprovalStep(payment) {
       const estado = payment.estado === "Pendiente" ? "Pendiente técnica" : payment.estado;
-      return paymentApprovalFlow.find(step => step.estado === estado) || null;
+      return paymentApprovalFlow().find(step => step.estado === estado) || null;
     }
 
     function canApproveCurrentStep(payment) {
@@ -1190,14 +1248,16 @@
       return rows.reduce((total, item) => total + (Number(item[field]) || 0), 0);
     }
 
-    function audit(action, detail) {
+    function audit(action, detail, previous = null, next = null) {
       state.audit = state.audit || [];
       const row = {
         id: makeId(),
         fecha: new Date().toLocaleString("es-DO"),
         usuario: currentSessionEmail || state.activeUser || "Sistema",
         accion: action,
-        detalle: detail
+        detalle: detail,
+        anterior: previous,
+        nuevo: next
       };
       state.audit.unshift(row);
       state.audit = state.audit.slice(0, 250);
@@ -1205,7 +1265,9 @@
         window.supabaseClient.from("auditoria").insert({
           usuario: row.usuario,
           accion: action,
-          detalle: detail
+          detalle: detail,
+          dato_anterior: previous,
+          dato_nuevo: next
         }).then(result => {
           if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) {
             console.warn("Auditoría no guardada en Supabase:", result.error.message);
@@ -1310,6 +1372,10 @@
       renderPayments();
       renderWarehouseRequests();
       renderInventory();
+      renderMyTasks();
+      renderNotificationCenter();
+      renderCentralDocuments();
+      renderWorkflowConfig();
       prepareWarehouseForm();
       renderTechnicalLogsForPayments();
       renderDocumentsForProjects();
@@ -1354,6 +1420,8 @@
       const alerts = projectAlerts(rows);
       const unawarded = rows.filter(project => String(project.tipoProceso || "").trim().toLowerCase() === "sin adjudicar" || Number(project.adjudicado || 0) <= 0).length;
       const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
+      const lowStock = (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0)).length;
+      const documentsCount = (state.documents || []).length;
       const cards = [
         ["Total Código SNIP", inv.totalSnip, "ok"],
         ["Monto adjudicado", inv.adjudicado, "ok"],
@@ -1362,6 +1430,8 @@
         ["Obras adjudicadas", rows.length - unawarded, "ok", "count"],
         ["Obras sin adjudicar", unawarded, unawarded ? "warn" : "ok", "count"],
         ["Cubicaciones pendientes", pendingPayments, pendingPayments ? "warn" : "ok", "count"],
+        ["Documentos cargados", documentsCount, "ok", "count"],
+        ["Inventario crítico", lowStock, lowStock ? "warn" : "ok", "count"],
         ["Alertas críticas", alerts.filter(alert => alert.level === "Crítico").length, alerts.some(alert => alert.level === "Crítico") ? "bad" : "ok", "count"]
       ];
       document.getElementById("executiveMetrics").innerHTML = cards.map(([label, value, cls, type]) =>
@@ -1640,6 +1710,85 @@
       }));
     }
 
+    function purchasingProcessesFromCache() {
+      try { return JSON.parse(localStorage.getItem("data") || "[]"); } catch { return []; }
+    }
+
+    function notificationRows() {
+      const projectRows = projectAlerts().map(alert => [alert.level, alert.type, alert.proyecto, alert.detail]);
+      const stockRows = (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0))
+        .map(article => ["Alerta", "Inventario bajo", article.nombre, `${number.format(article.existencia || 0)} ${article.unidad || ""}`]);
+      const purchaseRows = purchasingProcessesFromCache().filter(p => !(p.etapas || []).every(e => e.estado === "completado"))
+        .map(p => ["Alerta", "Compra en proceso", p.id || "-", p.descripcion || "-"]);
+      return [...projectRows, ...stockRows, ...purchaseRows];
+    }
+
+    function renderNotificationCenter() {
+      renderTable("notificationCenterTable", ["Nivel", "Tipo", "Referencia", "Detalle"], notificationRows());
+    }
+
+    function renderMyTasks() {
+      const user = activeUser();
+      const tasks = [];
+      state.payments.filter(payment => currentApprovalStep(payment) && canApproveCurrentStep(payment)).forEach(payment => {
+        tasks.push(["Cubicación", payment.numero || "-", currentApprovalStep(payment).label, payment.fecha || "-"]);
+      });
+      if (can("inventory-edit")) (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0)).forEach(article => {
+        tasks.push(["Inventario", article.nombre, "Revisar stock bajo", "-"]);
+      });
+      if (can("documents-manage")) projectAlerts().filter(alert => alert.type === "Expediente sin documentos").forEach(alert => {
+        tasks.push(["Documento", alert.proyecto, "Completar expediente", alert.codigo]);
+      });
+      renderTable("myTasksTable", ["Módulo", "Referencia", "Tarea", "Dato"], tasks);
+    }
+
+    function renderCentralDocuments() {
+      const q = String(document.getElementById("documentSearchBox")?.value || "").toLowerCase();
+      const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
+      const rows = (state.documents || []).filter(row => {
+        const text = `${projects[row.projectKey]?.comunidad || ""} ${row.tipo || ""} ${row.nombre || ""}`.toLowerCase();
+        return !q || text.includes(q);
+      }).map(row => [
+        projects[row.projectKey]?.comunidad || row.projectKey || "-",
+        row.tipo || "-",
+        row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
+        row.descripcion || "-"
+      ]);
+      renderTable("centralDocumentsTable", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
+    }
+
+    function renderGlobalSearch() {
+      const q = String(document.getElementById("globalSearchBox").value || "").trim().toLowerCase();
+      const panel = document.getElementById("globalSearchPanel");
+      if (!q) { panel.hidden = true; return; }
+      const rows = [];
+      enrichedProjects().forEach(project => {
+        const text = `${displaySnip(project)} ${project.comunidad} ${project.municipio} ${project.contratista}`.toLowerCase();
+        if (text.includes(q)) rows.push(["Proyecto", displaySnip(project), project.comunidad || project.tipo, project.municipio || "-"]);
+      });
+      (state.users || []).forEach(user => {
+        const text = `${user.nombre} ${user.usuario} ${user.area}`.toLowerCase();
+        if (text.includes(q)) rows.push(["Usuario", user.usuario, user.nombre, user.area || "-"]);
+      });
+      (state.documents || []).forEach(doc => {
+        const text = `${doc.tipo} ${doc.nombre} ${doc.descripcion}`.toLowerCase();
+        if (text.includes(q)) rows.push(["Documento", doc.tipo || "-", doc.nombre || "-", doc.descripcion || "-"]);
+      });
+      (state.warehouseArticles || []).forEach(article => {
+        const text = `${article.nombre} ${article.unidad} ${article.ubicacion}`.toLowerCase();
+        if (text.includes(q)) rows.push(["Inventario", article.nombre, article.unidad || "-", number.format(article.existencia || 0)]);
+      });
+      panel.hidden = false;
+      renderTable("globalSearchTable", ["Tipo", "Código / referencia", "Nombre", "Detalle"], rows.slice(0, 50));
+    }
+
+    function renderWorkflowConfig() {
+      const enabled = new Set(state.workflowConfig?.approvalStages || []);
+      document.querySelectorAll('#workflowConfigForm input[name="approvalStages"]').forEach(input => {
+        input.checked = enabled.has(input.value);
+      });
+    }
+
     function downloadInventoryTemplate() {
       const rows = [
         {
@@ -1858,8 +2007,9 @@
       if (!step) return;
       if (!canApproveCurrentStep(payment)) return alert(`La siguiente aprobación corresponde a ${step.area}.`);
       const approvedAt = new Date().toISOString();
-      const currentIndex = paymentApprovalFlow.findIndex(item => item.estado === step.estado);
-      const nextStep = paymentApprovalFlow[currentIndex + 1];
+      const flow = paymentApprovalFlow();
+      const currentIndex = flow.findIndex(item => item.estado === step.estado);
+      const nextStep = flow[currentIndex + 1];
       const nextEstado = nextStep ? nextStep.estado : "Aprobada";
       const updatePayload = {
         estado: nextEstado,
@@ -2051,8 +2201,9 @@
       renderTechnicalLogs();
       renderDocuments();
       renderNotifications();
-      renderTable("auditTable", ["Fecha", "Usuario", "Acción", "Detalle"], (state.audit || []).map(row => [
-        row.fecha, row.usuario, row.accion, row.detalle
+      renderTable("auditTable", ["Fecha", "Usuario", "Acción", "Detalle", "Antes / después"], (state.audit || []).map(row => [
+        row.fecha, row.usuario, row.accion, row.detalle,
+        row.anterior || row.nuevo ? `${row.anterior ? "Antes registrado" : ""}${row.anterior && row.nuevo ? " / " : ""}${row.nuevo ? "Después registrado" : ""}` : "-"
       ]));
     }
 
@@ -2574,6 +2725,7 @@
         state.activeUser = matchedUser.usuario;
         saveState();
       }
+      if (email) audit("Inicio de sesión", email);
       return matchedUser || null;
     }
 
@@ -2857,6 +3009,7 @@
       const data = new FormData(form);
       const project = state.projects.find(p => p.key === data.get("projectKey"));
       if (!project) return;
+      const previousProject = { ...project };
       const contratistaValue = data.get("contratista");
       const contratistaId = contratistaValue ? await findOrCreateContractor(contratistaValue) : project.contratistaId || null;
       ["codigo", "contratista", "estatus"].forEach(field => {
@@ -2892,7 +3045,7 @@
         Object.assign(project, mapProjectFromDb(updated.data));
       }
       saveState();
-      audit("Proyecto actualizado", `${project.comunidad || project.tipo} | SNIP ${displaySnip(project)} | Presupuesto ${money.format(project.presupuesto || 0)} | Adjudicado ${money.format(project.adjudicado || 0)}`);
+      audit("Proyecto actualizado", `${project.comunidad || project.tipo} | SNIP ${displaySnip(project)} | Presupuesto ${money.format(project.presupuesto || 0)} | Adjudicado ${money.format(project.adjudicado || 0)}`, previousProject, { ...project });
       form.reset();
       renderAll();
     }
@@ -2993,6 +3146,7 @@
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
+      audit("Cierre de sesión", currentSessionEmail || state.activeUser || "Usuario");
       await window.supabaseClient.auth.signOut();
     });
 
@@ -3217,7 +3371,7 @@
 
     document.getElementById("warehouseRequestForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("almacen")) return alert("El usuario activo no tiene permiso para registrar solicitudes a almacén.");
+      if (!can("warehouse-create")) return alert("El usuario activo no tiene permiso para registrar solicitudes a almacén.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const row = {
         id: makeId(),
@@ -3230,6 +3384,12 @@
         observacion: data.observacion || "",
         solicitante: normalizedUser(state.users.find(user => String(user.id) === String(data.solicitanteUsuarioId)))?.nombre || ""
       };
+      const duplicateWarehouseRequest = (state.warehouseRequests || []).some(item =>
+        item.solicitanteUsuarioId === row.solicitanteUsuarioId &&
+        item.articulo === row.articulo &&
+        String(item.fechaHora || "").slice(0, 10) === String(row.fechaHora || "").slice(0, 10)
+      );
+      if (duplicateWarehouseRequest && !confirm("Ya existe una solicitud similar de este artículo para el mismo solicitante en esta fecha. ¿Desea continuar?")) return;
       try {
         if (window.supabaseClient) {
           const inserted = await window.supabaseClient.from("solicitudes_almacen").insert({
@@ -3269,7 +3429,7 @@
 
     document.getElementById("inventoryForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("inventario")) return alert("El usuario activo no tiene permiso para administrar inventario.");
+      if (!can("inventory-edit")) return alert("El usuario activo no tiene permiso para administrar inventario.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const article = {
         id: makeId(),
@@ -3307,6 +3467,18 @@
       const file = event.target.files?.[0];
       if (file) importInventoryFile(file);
       event.target.value = "";
+    });
+    document.getElementById("globalSearchBox").addEventListener("input", renderGlobalSearch);
+    document.getElementById("documentSearchBox").addEventListener("input", renderCentralDocuments);
+    document.getElementById("workflowConfigForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("users-admin")) return alert("Solo un administrador puede modificar el flujo.");
+      const stages = [...event.currentTarget.querySelectorAll('input[name="approvalStages"]:checked')].map(input => input.value);
+      if (!stages.length) return alert("Debe conservar al menos una etapa de aprobación.");
+      state.workflowConfig = { approvalStages: stages };
+      saveState();
+      audit("Flujo actualizado", stages.join(", "));
+      renderAll();
     });
 
     document.getElementById("technicalLogForm").addEventListener("submit", async event => {
@@ -3570,9 +3742,13 @@
     }
 
     document.getElementById("printReportBtn").addEventListener("click", () => openReportPrintWindow("print"));
-    document.getElementById("pdfReportBtn").addEventListener("click", () => openReportPrintWindow("pdf"));
+    document.getElementById("pdfReportBtn").addEventListener("click", () => {
+      audit("Reporte exportado", currentReportTitle());
+      openReportPrintWindow("pdf");
+    });
 
     document.getElementById("backupBtn").addEventListener("click", () => {
+      audit("Respaldo exportado", "Respaldo JSON generado");
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -3582,19 +3758,34 @@
       URL.revokeObjectURL(url);
     });
 
-    document.getElementById("restoreBtn").addEventListener("click", () => document.getElementById("restoreFile").click());
+    document.getElementById("restoreBtn").addEventListener("click", () => {
+      if (confirm("Confirme que el archivo corresponde a este sistema. La restauración reemplazará los datos locales visibles.")) {
+        document.getElementById("restoreFile").click();
+      }
+    });
     document.getElementById("restoreFile").addEventListener("change", event => {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        state = JSON.parse(reader.result);
+        const restored = JSON.parse(reader.result);
+        if (!restored || !Array.isArray(restored.projects) || !Array.isArray(restored.users)) {
+          alert("El archivo no parece ser un respaldo válido del sistema.");
+          return;
+        }
+        state = restored;
         saveState();
         state = loadState();
+        audit("Respaldo importado", file.name);
         renderAll();
       };
       reader.readAsText(file);
     });
+    document.getElementById("contrastBtn").addEventListener("click", () => {
+      document.body.classList.toggle("high-contrast");
+      localStorage.setItem("coraamoca-high-contrast", document.body.classList.contains("high-contrast") ? "1" : "0");
+    });
+    if (localStorage.getItem("coraamoca-high-contrast") === "1") document.body.classList.add("high-contrast");
 
     startInactivityWatcher();
     if (sessionStorage.getItem("coraamocaSessionExpired") === "1") {
