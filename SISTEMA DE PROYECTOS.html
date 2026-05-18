@@ -592,6 +592,18 @@
           </form>
         </div>
         <div class="panel" style="margin-top:14px;">
+          <div class="panel-head">
+            <div>
+              <h2>Carga masiva de inventario</h2>
+              <p class="sub">Use la plantilla para importar varios artículos de una vez.</p>
+            </div>
+            <div class="actions">
+              <button class="btn secondary" id="downloadInventoryTemplateBtn" type="button">Descargar plantilla</button>
+              <label class="btn secondary file-btn">Importar plantilla<input id="inventoryImportInput" type="file" accept=".xlsx,.xls,.csv" hidden></label>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px;">
           <h2>Artículos registrados</h2>
           <div class="table-wrap"><table id="inventoryTable"></table></div>
         </div>
@@ -1621,6 +1633,76 @@
           status
         ];
       }));
+    }
+
+    function downloadInventoryTemplate() {
+      const rows = [
+        {
+          Articulo: "Ej. Cemento gris",
+          Unidad: "Fundas",
+          Existencia: 0,
+          "Existencia minima": 0,
+          Ubicacion: "Almacen principal"
+        }
+      ];
+      const sheet = XLSX.utils.json_to_sheet(rows);
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "Inventario");
+      XLSX.writeFile(book, "plantilla-inventario.xlsx");
+    }
+
+    function normalizeInventoryImportRow(row) {
+      const findValue = (...keys) => {
+        const key = Object.keys(row).find(column => keys.includes(normalizeSearch(column)));
+        return key ? row[key] : "";
+      };
+      return {
+        nombre: String(findValue("articulo", "artículo", "nombre") || "").trim(),
+        unidad: String(findValue("unidad") || "").trim(),
+        existencia: Number(findValue("existencia", "stock") || 0),
+        existenciaMinima: Number(findValue("existencia minima", "existencia mínima", "minimo", "mínimo") || 0),
+        ubicacion: String(findValue("ubicacion", "ubicación") || "").trim()
+      };
+    }
+
+    async function importInventoryFile(file) {
+      if (!can("inventario")) return alert("El usuario activo no tiene permiso para importar inventario.");
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet).map(normalizeInventoryImportRow).filter(row => row.nombre && row.unidad);
+      if (!rows.length) return alert("La plantilla no contiene artículos válidos.");
+      try {
+        if (window.supabaseClient) {
+          const payload = rows.map(row => ({
+            nombre: row.nombre,
+            unidad: row.unidad,
+            existencia: row.existencia,
+            existencia_minima: row.existenciaMinima,
+            ubicacion: row.ubicacion
+          }));
+          const result = await window.supabaseClient.from("articulos_almacen").upsert(payload, { onConflict: "nombre" }).select("*");
+          if (result.error) throw result.error;
+          state.warehouseArticles = (result.data || []).map(row => ({
+            id: row.id,
+            nombre: row.nombre || "",
+            unidad: row.unidad || "",
+            existencia: Number(row.existencia || 0),
+            existenciaMinima: Number(row.existencia_minima || 0),
+            ubicacion: row.ubicacion || ""
+          }));
+          await loadSupabaseData();
+        } else {
+          const articleMap = new Map((state.warehouseArticles || []).map(article => [normalizeSearch(article.nombre), article]));
+          rows.forEach(row => articleMap.set(normalizeSearch(row.nombre), { ...articleMap.get(normalizeSearch(row.nombre)), ...row, id: articleMap.get(normalizeSearch(row.nombre))?.id || makeId() }));
+          state.warehouseArticles = [...articleMap.values()];
+          saveState();
+        }
+        renderInventory();
+        renderWarehouseArticleOptions(document.getElementById("warehouseArticleSearch").value);
+        alert(`Artículos procesados: ${number.format(rows.length)}.`);
+      } catch (error) {
+        alert(error.message || "No se pudo importar la plantilla de inventario.");
+      }
     }
 
     function normalizeSearch(value) {
@@ -3172,6 +3254,13 @@
       } catch (error) {
         alert(error.message || "No se pudo guardar el artículo en inventario.");
       }
+    });
+
+    document.getElementById("downloadInventoryTemplateBtn").addEventListener("click", downloadInventoryTemplate);
+    document.getElementById("inventoryImportInput").addEventListener("change", event => {
+      const file = event.target.files?.[0];
+      if (file) importInventoryFile(file);
+      event.target.value = "";
     });
 
     document.getElementById("technicalLogForm").addEventListener("submit", async event => {
