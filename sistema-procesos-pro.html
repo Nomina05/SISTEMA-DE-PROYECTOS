@@ -48,6 +48,12 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 .embedded-tabs{display:none;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .embedded-tabs button{margin-top:0;background:#e8eef8;color:#17324d;font-weight:700}
 .embedded-tabs button.activo{background:var(--azul);color:#fff}
+.messages{position:relative;display:inline-flex;margin-bottom:12px}
+.messages button{margin-top:0;background:#e8eef8;color:#17324d;font-weight:700}
+.messages-count{min-width:20px;min-height:20px;margin-left:6px;border-radius:999px;background:#e74c3c;color:#fff;display:inline-grid;place-items:center;font-size:11px}
+.messages-panel{position:absolute;left:0;top:calc(100% + 6px);z-index:40;width:min(430px,calc(100vw - 30px));padding:12px;border:1px solid var(--borde);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,.14)}
+.messages-item{padding:9px 0;border-bottom:1px solid var(--borde)}
+.messages-item:last-child{border-bottom:0}
 .timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
 .etapa{text-align:center}
 .rol-etapa{display:block;color:#64748b;font-size:11px;margin-top:4px}
@@ -132,6 +138,10 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 </div>
 
 <div class="main">
+<div class="messages">
+  <button type="button" id="purchaseMessagesBtn">Mensajes <span class="messages-count" id="purchaseMessagesCount">0</span></button>
+  <div class="messages-panel" id="purchaseMessagesPanel" hidden></div>
+</div>
 <div class="embedded-tabs" aria-label="Vistas de solicitudes de compras">
   <button type="button" data-vista="reg" onclick="vista('reg')">Nueva solicitud</button>
   <button type="button" data-vista="dash" onclick="vista('dash')">Dashboard</button>
@@ -353,6 +363,36 @@ function tienePermisoSistema(codigo){
   return Boolean(user && (user.rol === 'Administrador' || (user.permissions || []).includes(codigo)));
 }
 
+function purchaseReadKey(){
+  return `purchase-read-${usuarioActivoSistema()?.usuario || 'anon'}`;
+}
+
+function purchaseReadIds(){
+  try{return JSON.parse(localStorage.getItem(purchaseReadKey()) || '[]')}catch{return []}
+}
+
+function unreadPurchases(){
+  const read = new Set(purchaseReadIds());
+  return procesos.filter(p=>!read.has(String(p.id)));
+}
+
+function renderPurchaseMessages(){
+  const unread = unreadPurchases();
+  purchaseMessagesCount.textContent = unread.length;
+  purchaseMessagesPanel.innerHTML = unread.length ? unread.map(p=>`
+    <div class="messages-item">
+      <b>${p.usuario || 'Sin solicitante'}</b>
+      <div>${p.descripcion || '-'}</div>
+      <small>${p.id || '-'}</small>
+    </div>
+  `).join('') : '<div>No hay solicitudes nuevas sin leer.</div>';
+}
+
+function markPurchaseMessagesRead(){
+  localStorage.setItem(purchaseReadKey(), JSON.stringify(procesos.map(p=>String(p.id))));
+  renderPurchaseMessages();
+}
+
 function puedeEditarCompras(){
   return esAdministradorActivo() || tienePermisoSistema('compras-datos');
 }
@@ -444,6 +484,11 @@ function vista(v){
 if(embeddedMode){
   vista('proc');
 }
+
+purchaseMessagesBtn.addEventListener('click',()=>{
+  purchaseMessagesPanel.hidden = !purchaseMessagesPanel.hidden;
+  if(!purchaseMessagesPanel.hidden) markPurchaseMessagesRead();
+});
 
 // ====== USUARIOS ======
 function crearUsuario(){
@@ -909,6 +954,7 @@ async function actualizarPagoMontoAcumulado(p){
 function render(){
   lista.innerHTML='';
   renderKanban();
+  renderPurchaseMessages();
   procesos.forEach((p,i)=>{
     const activa = p.etapas.find(etapa=>etapa.estado==='activo');
     const horas = horasDesde(activa?.inicio || p.ultimoCambio || p.creado);
