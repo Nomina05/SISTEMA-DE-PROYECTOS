@@ -903,7 +903,7 @@ function render(){
       <div class="proceso-resumen">
         <div><b>${p.id}</b><small>${p.descripcion}</small></div>
         <div><small>Estado actual</small><span class="estado-compacto">${activa?.nombre || 'Completado'}</span></div>
-        <div><small>Responsable</small>${ROLES_ETAPA[activa?.nombre] || 'Proceso cerrado'}</div>
+        <div><small>Responsable</small>${p.usuario || 'Sin solicitante'}</div>
         <div><small>Sin movimiento</small>${horas} h</div>
         <div><small>Documentos</small>${faltantes.length ? `${faltantes.length} faltantes` : 'Completo'}</div>
         <div><button onclick="mostrarDetalle(${i})">Mostrar detalles</button></div>
