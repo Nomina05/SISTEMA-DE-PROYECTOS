@@ -286,6 +286,7 @@
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
         <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a Almacén</button>
+        <button class="nav-btn" data-view="inventario" onclick="showView('inventario')">Inventario</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
         <button class="nav-btn" data-view="controles" onclick="showView('controles')">Controles y alertas</button>
@@ -571,6 +572,31 @@
         </div>
       </section>
 
+      <section class="section" id="inventario">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">Almacén</span>
+            <h1>Inventario</h1>
+            <p class="sub">Catálogo de artículos disponibles para las solicitudes a almacén.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Registrar artículo</h2>
+          <form id="inventoryForm" class="form-grid">
+            <label class="span-2">Artículo<input name="nombre" required placeholder="Ej. Cemento gris"></label>
+            <label>Unidad<input name="unidad" required placeholder="Ej. Fundas"></label>
+            <label>Existencia inicial<input name="existencia" type="number" min="0" step="0.01" required></label>
+            <label>Existencia mínima<input name="existenciaMinima" type="number" min="0" step="0.01" value="0"></label>
+            <label class="span-2">Ubicación<input name="ubicacion" placeholder="Ej. Almacén principal"></label>
+            <button class="btn span-2" type="submit">Guardar artículo</button>
+          </form>
+        </div>
+        <div class="panel" style="margin-top:14px;">
+          <h2>Artículos registrados</h2>
+          <div class="table-wrap"><table id="inventoryTable"></table></div>
+        </div>
+      </section>
+
       <section class="section" id="cubicaciones">
         <div class="panel">
           <h2>Registro de cubicaciones</h2>
@@ -671,6 +697,7 @@
       registro: "Registro de proyectos",
       solicitudes: "Solicitudes de Compras",
       almacen: "Solicitudes a Almacén",
+      inventario: "Inventario",
       cubicaciones: "Registro de cubicaciones",
       reportes: "Reportes",
       "users-admin": "Crear usuarios",
@@ -698,17 +725,17 @@
       "report-snip": "Reporte por código SNIP"
     };
     const permissionGroups = {
-      "Navegación": ["dashboard", "usuarios", "controles", "registro", "solicitudes", "almacen", "cubicaciones", "reportes"],
+      "Navegación": ["dashboard", "usuarios", "controles", "registro", "solicitudes", "almacen", "inventario", "cubicaciones", "reportes"],
       "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-manage", "notifications-admin"],
       "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "controles", "registro", "solicitudes", "almacen", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Financiera": ["dashboard", "controles", "solicitudes", "almacen", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
-      "Registro": ["dashboard", "controles", "registro", "solicitudes", "almacen", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Consulta": ["dashboard", "controles", "solicitudes", "almacen", "reportes", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
+      "Dirección Técnica": ["dashboard", "controles", "registro", "solicitudes", "almacen", "inventario", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Financiera": ["dashboard", "controles", "solicitudes", "almacen", "inventario", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
+      "Registro": ["dashboard", "controles", "registro", "solicitudes", "almacen", "inventario", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-manage", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Consulta": ["dashboard", "controles", "solicitudes", "almacen", "inventario", "reportes", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
       municipio: "report-municipio",
@@ -902,7 +929,10 @@
       state.warehouseArticles = (warehouseArticlesResult.data || []).map(row => ({
         id: row.id,
         nombre: row.nombre || "",
-        unidad: row.unidad || ""
+        unidad: row.unidad || "",
+        existencia: Number(row.existencia || 0),
+        existenciaMinima: Number(row.existencia_minima || 0),
+        ubicacion: row.ubicacion || ""
       }));
       await loadOptionalSupabaseData();
       saveState();
@@ -1262,6 +1292,7 @@
       renderUsers();
       renderPayments();
       renderWarehouseRequests();
+      renderInventory();
       prepareWarehouseForm();
       renderTechnicalLogsForPayments();
       renderDocumentsForProjects();
@@ -1574,6 +1605,22 @@
         escapeHtml(row.prioridad || "Normal"),
         escapeHtml(row.observacion || "-")
       ]));
+    }
+
+    function renderInventory() {
+      renderTable("inventoryTable", ["Artículo", "Unidad", "Existencia", "Existencia mínima", "Ubicación", "Estado"], (state.warehouseArticles || []).map(article => {
+        const stock = Number(article.existencia || 0);
+        const minimum = Number(article.existenciaMinima || 0);
+        const status = stock <= minimum ? alertLevelBadge("Alerta") : alertLevelBadge("Correcto");
+        return [
+          escapeHtml(article.nombre || "-"),
+          escapeHtml(article.unidad || "-"),
+          number.format(stock),
+          number.format(minimum),
+          escapeHtml(article.ubicacion || "-"),
+          status
+        ];
+      }));
     }
 
     function normalizeSearch(value) {
@@ -3090,6 +3137,41 @@
     document.getElementById("warehouseArticleSelect").addEventListener("change", event => {
       const unit = event.target.selectedOptions[0]?.dataset.unit || "";
       if (unit) document.getElementById("warehouseUnit").value = unit;
+    });
+
+    document.getElementById("inventoryForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!can("inventario")) return alert("El usuario activo no tiene permiso para administrar inventario.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const article = {
+        id: makeId(),
+        nombre: data.nombre || "",
+        unidad: data.unidad || "",
+        existencia: Number(data.existencia || 0),
+        existenciaMinima: Number(data.existenciaMinima || 0),
+        ubicacion: data.ubicacion || ""
+      };
+      try {
+        if (window.supabaseClient) {
+          const inserted = await window.supabaseClient.from("articulos_almacen").insert({
+            nombre: article.nombre,
+            unidad: article.unidad,
+            existencia: article.existencia,
+            existencia_minima: article.existenciaMinima,
+            ubicacion: article.ubicacion
+          }).select("*").single();
+          if (inserted.error) throw inserted.error;
+          article.id = inserted.data.id;
+        }
+        state.warehouseArticles = state.warehouseArticles || [];
+        state.warehouseArticles.push(article);
+        saveState();
+        event.currentTarget.reset();
+        renderInventory();
+        renderWarehouseArticleOptions(document.getElementById("warehouseArticleSearch").value);
+      } catch (error) {
+        alert(error.message || "No se pudo guardar el artículo en inventario.");
+      }
     });
 
     document.getElementById("technicalLogForm").addEventListener("submit", async event => {
