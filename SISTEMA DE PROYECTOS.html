@@ -1085,22 +1085,12 @@
 
     async function replaceUserPermissions(userId, permissions) {
       if (!window.supabaseClient || !userId) return;
-      let permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+      const permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
       if (permissionRows.error) throw permissionRows.error;
       const foundCodes = new Set((permissionRows.data || []).map(permission => permission.codigo));
       const missingCodes = permissions.filter(code => !foundCodes.has(code));
       if (missingCodes.length) {
-        const insertedPermissions = await window.supabaseClient.from("permisos").insert(
-          missingCodes.map(codigo => ({
-            codigo,
-            nombre: permissionLabels[codigo] || codigo
-          }))
-        );
-        if (insertedPermissions.error && !String(insertedPermissions.error.message || "").toLowerCase().includes("duplicate")) {
-          throw insertedPermissions.error;
-        }
-        permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
-        if (permissionRows.error) throw permissionRows.error;
+        throw new Error(`Faltan permisos en Supabase: ${missingCodes.join(", ")}. Ejecute la migración de permisos antes de asignarlos.`);
       }
       const deleteResult = await window.supabaseClient.from("usuario_permisos").delete().eq("usuario_id", userId);
       if (deleteResult.error) throw deleteResult.error;
