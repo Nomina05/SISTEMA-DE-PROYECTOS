@@ -37,6 +37,9 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 .kpi{text-align:center;background:#fff;padding:10px;border-radius:10px}
 
 .proceso{background:#fff;padding:12px;border-radius:10px;margin-top:10px}
+.proceso-resumen{display:grid;grid-template-columns:minmax(180px,1.4fr) repeat(4,minmax(120px,1fr)) auto;gap:10px;align-items:center}
+.proceso-resumen small{display:block;color:#64748b}
+.estado-compacto{font-weight:700}
 .kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:12px 0}
 .kanban-columna{background:#f8fafc;border:1px solid var(--borde);border-radius:10px;padding:10px;min-height:120px}
 .kanban-columna h4{margin:0 0 8px}
@@ -59,6 +62,13 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 position:fixed;top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;
 }
+.drawer{
+position:fixed;top:0;right:0;width:min(720px,100%);height:100%;background:#fff;
+box-shadow:-12px 0 30px rgba(0,0,0,.18);z-index:30;transform:translateX(100%);
+transition:transform .2s ease;padding:18px;box-sizing:border-box;overflow:auto;
+}
+.drawer.abierto{transform:translateX(0)}
+.drawer-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
 .modal-box{background:#fff;padding:20px;border-radius:10px;width:330px}
 
 .nota{
@@ -101,6 +111,7 @@ body.embedded .embedded-tabs{display:flex}
 body.embedded .card,
 body.embedded .proceso,
 body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
+@media(max-width:900px){.proceso-resumen{grid-template-columns:1fr}.drawer{width:100%}}
 </style>
 </head>
 
@@ -212,6 +223,16 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <button onclick="cerrarModal()">Cancelar</button>
 </div>
 </div>
+<aside class="drawer" id="detalleDrawer">
+  <div class="drawer-head">
+    <div>
+      <h3 id="detalleTitulo"></h3>
+      <small id="detalleSubtitulo"></small>
+    </div>
+    <button onclick="cerrarDetalle()">Cerrar</button>
+  </div>
+  <div id="detalleContenido"></div>
+</aside>
 
 <script>
 
@@ -872,85 +893,48 @@ async function actualizarPagoMontoAcumulado(p){
 function render(){
   lista.innerHTML='';
   renderKanban();
-
   procesos.forEach((p,i)=>{
-
-    let fin = p.etapas.every(e=>e.estado==='completado');
-
-    let etapas = p.etapas.map(e=>`
-      <div class="etapa">
-        <div class="circle ${e.estado}"></div>
-        <small>${e.nombre}</small>
-        <span class="rol-etapa">${ROLES_ETAPA[e.nombre] || '-'}</span>
-      </div>
-    `).join('');
-
-    let hist = p.historial.map(h=>
-      `<div>&bull; ${h.txt} (${new Date(h.fecha).toLocaleString()})</div>`
-    ).join('');
-
-    let notasHTML = (p.notas||[]).map((n,ni)=>`
-      <div class="nota">
-        ${n.texto}<br>
-        <small>${n.autor||'Usuario'} - ${n.etapa||'Nota'} - ${new Date(n.fecha).toLocaleString()}</small>
-        <button onclick="eliminarNota(${i},${ni})">Eliminar</button>
-      </div>
-    `).join('');
+    const activa = p.etapas.find(etapa=>etapa.estado==='activo');
+    const horas = horasDesde(activa?.inicio || p.ultimoCambio || p.creado);
     const faltantes = documentosFaltantes(p);
-    const docsHTML = (p.documentos||[]).map(doc=>`<div>${doc.tipo}: ${doc.url ? `<a href="${doc.url}" target="_blank">${doc.nombre}</a>` : doc.nombre}</div>`).join('') || 'Sin documentos';
-    const pagosHTML = (p.pagos||[]).map(pago=>`<div>${pago.fecha} | RD$${Number(pago.monto||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | ${pago.referencia||'-'}</div>`).join('') || 'Sin pagos parciales';
-
     lista.innerHTML+=`
     <div class="proceso">
-      <b>${p.id}</b><br>${p.descripcion}<br>
-      <small>${p.tipoSolicitud || 'Compra'}${p.numeroProceso ? ` | Proceso: ${p.numeroProceso}` : ''}</small>
-      ${Number(p.montoAdjudicado||0)>0 ? `<div class="historial"><b>Monto adjudicado:</b> RD$${Number(p.montoAdjudicado||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | <b>Pagado:</b> RD$${Number(p.montoPagado||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>` : ''}
-      ${p.tipoSolicitud==='Compra' && Number(p.montoAdjudicado||0)>0 && Number(p.montoPagado||0)<Number(p.montoAdjudicado||0) ? `<div class="historial"><b>Avance pagado:</b> ${((Number(p.montoPagado||0)/Number(p.montoAdjudicado||0))*100).toFixed(2)}%</div>` : ''}
-      <div class="historial">
-        <b>Checklist documental</b>
-        <div class="checklist">${faltantes.length ? faltantes.map(doc=>`<span class="falta">Falta: ${doc}</span>`).join('') : '<span class="ok">Documentación requerida completa para avanzar</span>'}</div>
-      </div>
-      ${puedeEditarCompras() ? `
-        <div class="historial">
-          <b>Datos de Compras y Contrataciones</b><br>
-          <input id="montoEstimado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoEstimado||0)}" placeholder="Monto estimado">
-          <input id="tipoProceso-${i}" value="${p.tipoProceso||''}" placeholder="Tipo de proceso">
-          <input id="numeroProceso-${i}" value="${p.numeroProceso||''}" placeholder="Número de proceso">
-          <input id="montoAdjudicado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoAdjudicado||0)}" placeholder="Monto adjudicado">
-          <input id="oferenteAdjudicado-${i}" value="${p.oferenteAdjudicado||''}" placeholder="Oferente adjudicado">
-          <button onclick="actualizarDatosCompras(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Guardar datos de Compras</button>
-        </div>` : ''}
-      ${puedeEditarFinanzas() ? `
-        <div class="historial">
-          <b>Pagos de Finanzas</b><br>
-          <input id="montoPagado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoPagado||0)}" placeholder="Monto pagado">
-          <button onclick="actualizarPagoFinanzas(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Guardar pago</button>
-          <button onclick="agregarPagoParcial(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Agregar pago parcial</button>
-          <div>${pagosHTML}</div>
-        </div>` : ''}
-      <div class="historial"><b>Documentos</b><div>${docsHTML}</div><button onclick="agregarDocumento(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Adjuntar documento</button></div>
-      <div class="timeline">${etapas}</div>
-
-      <div class="acciones-secundarias">
-      <button class="btn-success" ${fin?'disabled':''} onclick="avanzar(${i})">Avanzar</button>
-      <button onclick="devolverProceso(${i}).catch(error=>alert(error.message||'No se pudo devolver'))">Devolver</button>
-      </div>
-      <button onclick="excel(${i})">Excel</button>
-      <button onclick="pdf(${i})">PDF</button>
-
-      <div class="historial">
-        <b>Histórico</b>
-        ${hist}
-        <hr>
-        <b>Notas</b>
-        ${notasHTML}
-        <button onclick="agregarNota(${i})">Agregar nota</button>
+      <div class="proceso-resumen">
+        <div><b>${p.id}</b><small>${p.descripcion}</small></div>
+        <div><small>Estado actual</small><span class="estado-compacto">${activa?.nombre || 'Completado'}</span></div>
+        <div><small>Responsable</small>${ROLES_ETAPA[activa?.nombre] || 'Proceso cerrado'}</div>
+        <div><small>Sin movimiento</small>${horas} h</div>
+        <div><small>Documentos</small>${faltantes.length ? `${faltantes.length} faltantes` : 'Completo'}</div>
+        <div><button onclick="mostrarDetalle(${i})">Mostrar detalles</button></div>
       </div>
     </div>`;
   });
-
   revisarAlertas();
 }
+
+function mostrarDetalle(i){
+  const p = procesos[i], fin = p.etapas.every(e=>e.estado==='completado');
+  const etapas = p.etapas.map(e=>`<div class="etapa"><div class="circle ${e.estado}"></div><small>${e.nombre}</small><span class="rol-etapa">${ROLES_ETAPA[e.nombre] || '-'}</span></div>`).join('');
+  const hist = p.historial.map(h=>`<div>&bull; ${h.txt} (${new Date(h.fecha).toLocaleString()})</div>`).join('');
+  const notasHTML = (p.notas||[]).map((n,ni)=>`<div class="nota">${n.texto}<br><small>${n.autor||'Usuario'} - ${n.etapa||'Nota'} - ${new Date(n.fecha).toLocaleString()}</small><button onclick="eliminarNota(${i},${ni})">Eliminar</button></div>`).join('');
+  const faltantes = documentosFaltantes(p);
+  const docsHTML = (p.documentos||[]).map(doc=>`<div>${doc.tipo}: ${doc.url ? `<a href="${doc.url}" target="_blank">${doc.nombre}</a>` : doc.nombre}</div>`).join('') || 'Sin documentos';
+  const pagosHTML = (p.pagos||[]).map(pago=>`<div>${pago.fecha} | RD$${Number(pago.monto||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | ${pago.referencia||'-'}</div>`).join('') || 'Sin pagos parciales';
+  detalleTitulo.textContent = p.id;
+  detalleSubtitulo.textContent = p.descripcion;
+  detalleContenido.innerHTML = `
+    ${Number(p.montoAdjudicado||0)>0 ? `<div class="historial"><b>Monto adjudicado:</b> RD$${Number(p.montoAdjudicado||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | <b>Pagado:</b> RD$${Number(p.montoPagado||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>` : ''}
+    <div class="historial"><b>Checklist documental</b><div class="checklist">${faltantes.length ? faltantes.map(doc=>`<span class="falta">Falta: ${doc}</span>`).join('') : '<span class="ok">Documentación requerida completa para avanzar</span>'}</div></div>
+    ${puedeEditarCompras() ? `<div class="historial"><b>Datos de Compras y Contrataciones</b><br><input id="montoEstimado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoEstimado||0)}" placeholder="Monto estimado"><input id="tipoProceso-${i}" value="${p.tipoProceso||''}" placeholder="Tipo de proceso"><input id="numeroProceso-${i}" value="${p.numeroProceso||''}" placeholder="Número de proceso"><input id="montoAdjudicado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoAdjudicado||0)}" placeholder="Monto adjudicado"><input id="oferenteAdjudicado-${i}" value="${p.oferenteAdjudicado||''}" placeholder="Oferente adjudicado"><button onclick="actualizarDatosCompras(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Guardar datos de Compras</button></div>` : ''}
+    ${puedeEditarFinanzas() ? `<div class="historial"><b>Pagos de Finanzas</b><br><input id="montoPagado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoPagado||0)}" placeholder="Monto pagado"><button onclick="actualizarPagoFinanzas(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Guardar pago</button><button onclick="agregarPagoParcial(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Agregar pago parcial</button><div>${pagosHTML}</div></div>` : ''}
+    <div class="historial"><b>Documentos</b><div>${docsHTML}</div><button onclick="agregarDocumento(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Adjuntar documento</button></div>
+    <div class="timeline">${etapas}</div>
+    <div class="acciones-secundarias"><button class="btn-success" ${fin?'disabled':''} onclick="avanzar(${i})">Avanzar</button><button onclick="devolverProceso(${i}).catch(error=>alert(error.message||'No se pudo devolver'))">Devolver</button><button onclick="excel(${i})">Excel</button><button onclick="pdf(${i})">PDF</button></div>
+    <div class="historial"><b>Histórico</b>${hist}<hr><b>Notas</b>${notasHTML}<button onclick="agregarNota(${i})">Agregar nota</button></div>`;
+  detalleDrawer.classList.add('abierto');
+}
+
+function cerrarDetalle(){ detalleDrawer.classList.remove('abierto'); }
 
 function etapaKanban(proceso){
   if(proceso.etapas.every(e=>e.estado==='completado')) return 'Completado';
