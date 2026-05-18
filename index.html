@@ -89,6 +89,7 @@
     .area-insight h3 { margin: 0 0 10px; font-size: 14px; }
     .area-insight p { margin: 5px 0; color: var(--muted); font-size: 12px; }
     .area-insight strong { color: var(--ink); }
+    .area-insight.focus { border-left: 4px solid var(--blue); background: #f7fbff; }
     .municipal-map { display: grid; gap: 9px; }
     .map-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(160px, 2fr) auto; gap: 10px; align-items: center; }
     .map-bar { height: 10px; border-radius: 999px; background: #e7edf0; overflow: hidden; }
@@ -841,6 +842,10 @@
         numero: payment.numero || "",
         observacion: payment.observacion || "",
         estado: payment.estado || "Aprobada",
+        aprobacionTecnicaPor: payment.aprobacion_tecnica_por || "",
+        aprobacionTecnicaEn: payment.aprobacion_tecnica_en || "",
+        aprobacionPresupuestoPor: payment.aprobacion_presupuesto_por || "",
+        aprobacionPresupuestoEn: payment.aprobacion_presupuesto_en || "",
         aprobadoPor: payment.aprobado_por || "",
         aprobadoEn: payment.aprobado_en || "",
         rechazadoPor: payment.rechazado_por || "",
@@ -960,6 +965,28 @@
       if (!user) return true;
       if (user.rol === "Administrador") return true;
       return user.permissions.includes(permission);
+    }
+
+    const paymentApprovalFlow = [
+      { estado: "Pendiente técnica", area: "Dirección Técnica", label: "Aprobar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
+      { estado: "Pendiente presupuesto", area: "Presupuesto", label: "Aprobar presupuesto", actorKey: "aprobacionPresupuestoPor", dateKey: "aprobacionPresupuestoEn", dbActor: "aprobacion_presupuesto_por", dbDate: "aprobacion_presupuesto_en" },
+      { estado: "Pendiente finanzas", area: "Finanzas", label: "Aprobar finanzas", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en" }
+    ];
+
+    function normalizedArea(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function currentApprovalStep(payment) {
+      const estado = payment.estado === "Pendiente" ? "Pendiente técnica" : payment.estado;
+      return paymentApprovalFlow.find(step => step.estado === estado) || null;
+    }
+
+    function canApproveCurrentStep(payment) {
+      const step = currentApprovalStep(payment);
+      if (!step || !can("payment-approve")) return false;
+      if (activeUser()?.rol === "Administrador") return true;
+      return normalizedArea(activeUser()?.area || activeUser()?.rol) === normalizedArea(step.area);
     }
 
     function policyBadges(role) {
@@ -1250,15 +1277,25 @@
       const inv = investmentTotals(rows);
       const comprasPendientes = rows.filter(project => String(project.tipoProceso || "").toLowerCase() === "sin adjudicar" || Number(project.adjudicado || 0) <= 0).length;
       const vencidas = projectDeadlineRows().filter(row => row.status === "Vencido").length;
+      const pendientesPorAprobar = state.payments.filter(payment => currentApprovalStep(payment)).length;
       const areaData = [
-        ["Finanzas", `${money.format(sum(rows, "pagado"))} pagado`, `${number.format(state.payments.filter(payment => payment.estado === "Pendiente").length)} cubicaciones pendientes`],
+        ["Finanzas", `${money.format(sum(rows, "pagado"))} pagado`, `${number.format(pendientesPorAprobar)} cubicaciones en aprobación`],
         ["Compras", `${money.format(inv.sinAdjudicar)} sin adjudicar`, `${number.format(comprasPendientes)} obras pendientes`],
         ["Presupuesto", `${money.format(inv.disponible)} disponible`, `${money.format(sum(rows, "presupuesto"))} presupuesto`],
         ["Dirección Técnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`]
       ];
-      document.getElementById("areaInsights").innerHTML = areaData.map(([title, line1, line2]) =>
+      const area = activeUser()?.area || activeUser()?.rol || "General";
+      const myDashboard = (() => {
+        const key = normalizedArea(area);
+        if (key.includes("finanza")) return ["Mi tablero: Finanzas", `${number.format(pendientesPorAprobar)} aprobaciones en flujo`, `${money.format(sum(rows, "pagado"))} pagado`];
+        if (key.includes("presupuesto")) return ["Mi tablero: Presupuesto", `${money.format(inv.disponible)} disponible`, `${number.format(comprasPendientes)} obras por adjudicar`];
+        if (key.includes("técnica") || key.includes("tecnica")) return ["Mi tablero: Dirección Técnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`];
+        if (key.includes("compra")) return ["Mi tablero: Compras", `${money.format(inv.sinAdjudicar)} sin adjudicar`, `${number.format(comprasPendientes)} procesos pendientes`];
+        return ["Mi tablero", `${number.format(alerts.length)} alertas activas`, `${number.format(pendientesPorAprobar)} aprobaciones en flujo`];
+      })();
+      document.getElementById("areaInsights").innerHTML = [myDashboard, ...areaData].map(([title, line1, line2], index) =>
         `<div class="area-insight"><h3>${title}</h3><p><strong>${line1}</strong></p><p>${line2}</p></div>`
-      ).join("");
+      ).join("").replace('<div class="area-insight">', '<div class="area-insight focus">');
     }
 
     function renderMunicipalMap() {
@@ -1462,8 +1499,8 @@
         money.format(p.monto),
         p.estado || "Aprobada",
         p.estado === "Rechazada" ? `${p.observacion || "-"}<br><small>Motivo: ${escapeHtml(p.motivoRechazo || "-")}</small>` : p.observacion || "-",
-        p.estado === "Pendiente" && can("payment-approve")
-          ? `<button class="btn secondary approve-payment-btn" type="button" data-id="${escapeHtml(p.id)}">Aprobar</button> <button class="btn secondary reject-payment-btn" type="button" data-id="${escapeHtml(p.id)}">Rechazar</button>`
+        currentApprovalStep(p) && canApproveCurrentStep(p)
+          ? `<button class="btn secondary approve-payment-btn" type="button" data-id="${escapeHtml(p.id)}">${escapeHtml(currentApprovalStep(p).label)}</button> <button class="btn secondary reject-payment-btn" type="button" data-id="${escapeHtml(p.id)}">Rechazar</button>`
           : "-"
       ]));
     }
@@ -1492,12 +1529,16 @@
         if ((project.estatus === "Publicado" || String(project.procesoCompra || "").trim()) && Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Proceso sin adjudicación", project, "Proceso publicado o cargado sin adjudicación.", "Dar seguimiento a Compras y Contrataciones.");
         if (Number(project.adjudicado || 0) > 0 && Number(project.comprometido || 0) <= 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Adjudicado sin avance", project, "Existe adjudicación sin avance de obra ni cubicaciones.", "Verificar estatus físico y financiero.");
         if (Number(project.pagado || 0) > 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Pagos sin cubicaciones", project, "Existe pago o avance registrado sin cubicación asociada.", "Registrar cubicación o corregir avance inicial.");
+        const docs = (state.documents || []).filter(row => row.projectKey === project.key);
+        const logs = (state.technicalLogs || []).filter(row => row.projectKey === project.key);
+        if (Number(project.adjudicado || 0) > 0 && !docs.length) push("Alerta", "Expediente sin documentos", project, "El proyecto adjudicado no tiene documentos adjuntos.", "Adjuntar contrato, acta o soporte disponible.");
+        if (Number(project.adjudicado || 0) > 0 && !logs.length) push("Alerta", "Sin bitácora técnica", project, "El proyecto adjudicado no tiene movimientos técnicos registrados.", "Registrar una actualización de avance físico.");
       });
       const seen = new Set();
       state.payments.forEach(payment => {
         const numberKey = String(payment.numero || "").trim().toLowerCase();
         const project = rows.find(item => item.key === payment.projectKey);
-        if (payment.estado === "Pendiente") push("Alerta", "Cubicación pendiente de aprobación", project, `La cubicación ${payment.numero || "sin número"} está registrada, pero todavía no impacta el total pagado.`, "Aprobar o rechazar la cubicación desde Finanzas.");
+        if (currentApprovalStep(payment)) push("Alerta", "Cubicación pendiente de aprobación", project, `La cubicación ${payment.numero || "sin número"} está en ${payment.estado || "flujo de aprobación"} y todavía no impacta el total pagado.`, "Completar el siguiente nivel de aprobación.");
         if (!numberKey) return;
         const key = `${payment.projectKey}|${numberKey}`;
         if (seen.has(key)) push("Crítico", "Cubicación duplicada", project, `La cubicación ${payment.numero} está repetida para el mismo proyecto.`, "Unificar o corregir el número de cubicación.");
@@ -1574,19 +1615,26 @@
       if (!can("payment-approve")) return alert("El usuario activo no tiene permiso para aprobar cubicaciones.");
       const payment = state.payments.find(item => String(item.id) === String(id));
       if (!payment) return;
+      const step = currentApprovalStep(payment);
+      if (!step) return;
+      if (!canApproveCurrentStep(payment)) return alert(`La siguiente aprobación corresponde a ${step.area}.`);
       const approvedAt = new Date().toISOString();
+      const currentIndex = paymentApprovalFlow.findIndex(item => item.estado === step.estado);
+      const nextStep = paymentApprovalFlow[currentIndex + 1];
+      const nextEstado = nextStep ? nextStep.estado : "Aprobada";
+      const updatePayload = {
+        estado: nextEstado,
+        [step.dbActor]: currentSessionEmail || activeUser().usuario || "",
+        [step.dbDate]: approvedAt
+      };
       if (window.supabaseClient) {
-        const updated = await window.supabaseClient.from("cubicaciones").update({
-          estado: "Aprobada",
-          aprobado_por: currentSessionEmail || activeUser().usuario || "",
-          aprobado_en: approvedAt
-        }).eq("id", id).select("*").single();
+        const updated = await window.supabaseClient.from("cubicaciones").update(updatePayload).eq("id", id).select("*").single();
         if (updated.error && !String(updated.error.message || "").toLowerCase().includes("column")) throw updated.error;
       }
-      payment.estado = "Aprobada";
-      payment.aprobadoPor = currentSessionEmail || activeUser().usuario || "";
-      payment.aprobadoEn = approvedAt;
-      audit("Cubicación aprobada", `${payment.numero || "sin número"} | ${money.format(payment.monto || 0)}`);
+      payment.estado = nextEstado;
+      payment[step.actorKey] = currentSessionEmail || activeUser().usuario || "";
+      payment[step.dateKey] = approvedAt;
+      audit(nextEstado === "Aprobada" ? "Cubicación aprobada" : "Cubicación enviada al siguiente nivel", `${payment.numero || "sin número"} | ${step.area} | ${money.format(payment.monto || 0)}`);
       saveState();
       renderAll();
     }
@@ -1595,6 +1643,8 @@
       if (!can("payment-reject") && !can("payment-approve")) return alert("El usuario activo no tiene permiso para rechazar cubicaciones.");
       const payment = state.payments.find(item => String(item.id) === String(id));
       if (!payment) return;
+      const step = currentApprovalStep(payment);
+      if (step && !canApproveCurrentStep(payment)) return alert(`El rechazo de esta cubicación corresponde a ${step.area}.`);
       const reason = prompt("Indique el motivo del rechazo:");
       if (!reason || !reason.trim()) return alert("Debe indicar un motivo para rechazar la cubicación.");
       const rejectedAt = new Date().toISOString();
@@ -2203,6 +2253,9 @@
       const logs = (state.technicalLogs || []).filter(row => row.projectKey === key);
       const docs = (state.documents || []).filter(row => row.projectKey === key);
       const alerts = projectAlerts([project]).filter(alert => alert.proyecto === (project.comunidad || project.tipo || "-"));
+      const lastPayment = [...payments].sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")))[0];
+      const lastLog = [...logs].sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")))[0];
+      const lastDoc = docs[docs.length - 1];
       document.getElementById("projectDetailContent").innerHTML = `
         <div class="detail-grid">
           <div class="detail-item"><small>Presupuesto</small><strong>${money.format(project.presupuesto || 0)}</strong></div>
@@ -2213,6 +2266,12 @@
           <div class="detail-item"><small>Tipo de proceso</small><strong>${escapeHtml(project.tipoProceso || "Sin asignar")}</strong></div>
           <div class="detail-item"><small>Proceso de compras</small><strong>${escapeHtml(project.procesoCompra || "Sin proceso")}</strong></div>
           <div class="detail-item"><small>Estatus</small><strong>${statusBadge(project)}</strong></div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item"><small>Cubicaciones</small><strong>${number.format(payments.length)}</strong></div>
+          <div class="detail-item"><small>Bitácoras técnicas</small><strong>${number.format(logs.length)}</strong></div>
+          <div class="detail-item"><small>Documentos</small><strong>${number.format(docs.length)}</strong></div>
+          <div class="detail-item"><small>Última actividad</small><strong>${escapeHtml(lastPayment?.fecha || lastLog?.fecha || lastDoc?.fecha || project.actualizadoEn || project.creadoEn || "Sin actividad")}</strong></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
           <h2>Bitácora técnica</h2>
@@ -2854,7 +2913,7 @@
           fecha: data.fecha,
           monto: Number(data.monto),
           observacion: data.observacion || "",
-          estado: "Pendiente"
+          estado: "Pendiente técnica"
         };
         let inserted = await window.supabaseClient.from("cubicaciones").insert(payload).select("*").single();
         if (inserted.error && String(inserted.error.message || "").includes("estado")) {
@@ -2862,9 +2921,9 @@
           inserted = await window.supabaseClient.from("cubicaciones").insert(fallbackPayload).select("*").single();
         }
         if (inserted.error) throw inserted.error;
-        state.payments.push({ projectKey: inserted.data.proyecto_id, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", estado: inserted.data.estado || "Pendiente", id: inserted.data.id });
+        state.payments.push({ projectKey: inserted.data.proyecto_id, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", estado: inserted.data.estado || "Pendiente técnica", id: inserted.data.id });
       } else {
-        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente", id: makeId() });
+        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente técnica", id: makeId() });
       }
       saveState();
       audit("Cubicación registrada", `${project.comunidad || project.tipo} | ${data.numero || "sin número"} | ${money.format(Number(data.monto || 0))}`);

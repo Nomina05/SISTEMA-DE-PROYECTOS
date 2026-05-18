@@ -37,6 +37,11 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 .kpi{text-align:center;background:#fff;padding:10px;border-radius:10px}
 
 .proceso{background:#fff;padding:12px;border-radius:10px;margin-top:10px}
+.kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:12px 0}
+.kanban-columna{background:#f8fafc;border:1px solid var(--borde);border-radius:10px;padding:10px;min-height:120px}
+.kanban-columna h4{margin:0 0 8px}
+.kanban-tarjeta{background:#fff;border:1px solid var(--borde);border-left:4px solid var(--azul);border-radius:8px;padding:8px;margin-top:8px;font-size:13px}
+.kanban-tarjeta small{display:block;color:#64748b;margin-top:4px}
 .timeline{display:flex;gap:8px;margin-top:10px}
 .etapa{text-align:center;flex:1}
 .circle{width:25px;height:25px;border-radius:50%;margin:auto}
@@ -166,6 +171,7 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <!-- PROCESOS -->
 <div id="proc" style="display:none">
 <input placeholder="Buscar..." oninput="buscar(this.value)">
+<div class="kanban" id="kanban"></div>
 <div id="lista"></div>
 </div>
 
@@ -619,6 +625,7 @@ async function eliminarNota(idx,nIdx){
 // ====== RENDER ======
 function render(){
   lista.innerHTML='';
+  renderKanban();
 
   procesos.forEach((p,i)=>{
 
@@ -664,6 +671,31 @@ function render(){
   });
 
   revisarAlertas();
+}
+
+function etapaKanban(proceso){
+  if(proceso.etapas.every(e=>e.estado==='completado')) return 'Completado';
+  return proceso.etapas.find(e=>e.estado==='activo')?.nombre || 'Solicitud';
+}
+
+function renderKanban(){
+  if(!document.getElementById('kanban')) return;
+  const columnas = ['Solicitud', ...ETAPAS, 'Completado'];
+  kanban.innerHTML = columnas.map(columna=>{
+    const items = procesos.filter(proceso=>etapaKanban(proceso)===columna);
+    return `
+      <section class="kanban-columna">
+        <h4>${columna} (${items.length})</h4>
+        ${items.length ? items.map(proceso=>`
+          <article class="kanban-tarjeta">
+            <b>${proceso.id}</b>
+            <small>${proceso.descripcion}</small>
+            <small>${proceso.usuario || 'Sin solicitante'}</small>
+          </article>
+        `).join('') : '<small>Sin solicitudes</small>'}
+      </section>
+    `;
+  }).join('');
 }
 
 // ====== BUSCAR ======
