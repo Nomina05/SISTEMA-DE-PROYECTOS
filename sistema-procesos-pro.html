@@ -181,6 +181,10 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
   <option value="Compra">Compra</option>
   <option value="Servicio">Servicio</option>
 </select>
+<select id="esActivo">
+  <option value="false">No es activo</option>
+  <option value="true">Es activo</option>
+</select>
 <input id="desc" placeholder="Descripción">
 <button class="btn-primary" onclick="crear().catch(error=>alert(error.message||'No se pudo guardar la solicitud'))">Crear</button>
 </div>
@@ -262,6 +266,7 @@ const ETAPAS = [
   'Tesorería y certificación',
   'Cierre del proceso'
 ];
+const ETAPA_FACTURA_ALMACEN = 'Registro de factura en almacén';
 const GRUPOS_KANBAN = ['Solicitud','Validaciones','SECP','Contrato','Recepción','Pago','Cierre'];
 const ROLES_ETAPA = {
   'Solicitud de compra o servicio':'Encargado de área',
@@ -356,6 +361,10 @@ function puedeEditarFinanzas(){
   return esAdministradorActivo() || tienePermisoSistema('finanzas-pagos-compras');
 }
 
+function etapasParaProceso(esActivo){
+  return ETAPAS.filter(etapa=>esActivo || etapa !== ETAPA_FACTURA_ALMACEN);
+}
+
 async function cargarProcesosSql(){
   const supabase = clienteSupabase();
   if(!supabase) return;
@@ -368,6 +377,7 @@ async function cargarProcesosSql(){
     const solicitante = usuarioPorId(row.solicitante_id);
     const etapas = (row.proceso_etapas || [])
       .sort((a,b)=>a.orden-b.orden)
+      .filter(etapa=>Boolean(row.es_activo) || etapa.nombre !== ETAPA_FACTURA_ALMACEN)
       .map(etapa=>({
         dbId:etapa.id,
         nombre:etapa.nombre,
@@ -402,6 +412,7 @@ async function cargarProcesosSql(){
       usuarioId:row.solicitante_id,
       descripcion:row.descripcion,
       tipoSolicitud:row.tipo_solicitud || 'Compra',
+      esActivo:Boolean(row.es_activo),
       montoEstimado:Number(row.monto_estimado || 0),
       tipoProceso:row.tipo_proceso || '',
       numeroProceso:row.numero_proceso || '',
@@ -509,6 +520,7 @@ function llenarUsuariosProceso(){
 function crear(){
   let u=user.value;
   let d=desc.value.trim();
+  let activo=esActivo.value === 'true';
 
   if(!u||!d){ alert("Seleccione un usuario y complete la descripción"); return; }
 
@@ -519,7 +531,7 @@ function crear(){
 
   let id = 'EXP-'+new Date().getFullYear()+'-'+(procesos.length+1).toString().padStart(4,'0');
 
-  let etapas = ETAPAS.map((e,i)=>({
+  let etapas = etapasParaProceso(activo).map((e,i)=>({
     nombre:e,
     estado:i==0?'activo':'pendiente',
     inicio:i==0?Date.now():null,
@@ -528,6 +540,7 @@ function crear(){
 
   procesos.unshift({
     id, usuario:u, descripcion:d,
+    esActivo:activo,
     creado:Date.now(),
     ultimoCambio:Date.now(),
     etapas,
@@ -546,12 +559,13 @@ async function crear(){
   let u=usuario?.nombre || '';
   let d=desc.value.trim();
   let tipo=tipoSolicitud.value;
+  let activo=esActivo.value === 'true';
   if(!u||!d){ alert("Seleccione un usuario y complete la descripción"); return; }
   if(procesos.some(p=>p.descripcion===d)){ alert("Ya existe"); return; }
 
   let id = 'EXP-'+new Date().getFullYear()+'-'+(procesos.length+1).toString().padStart(4,'0');
-  let etapas = ETAPAS.map((e,i)=>({ nombre:e, estado:i==0?'activo':'pendiente', inicio:i==0?Date.now():null, fin:null }));
-  let nuevoProceso = { id, usuario:u, usuarioId, descripcion:d, tipoSolicitud:tipo, montoEstimado:0, tipoProceso:'', numeroProceso:'', montoAdjudicado:0, oferenteAdjudicado:'', montoPagado:0, creado:Date.now(), ultimoCambio:Date.now(), etapas, historial:[{txt:`${u} creó`, fecha:Date.now()}], notas:[] };
+  let etapas = etapasParaProceso(activo).map((e,i)=>({ nombre:e, estado:i==0?'activo':'pendiente', inicio:i==0?Date.now():null, fin:null }));
+  let nuevoProceso = { id, usuario:u, usuarioId, descripcion:d, tipoSolicitud:tipo, esActivo:activo, montoEstimado:0, tipoProceso:'', numeroProceso:'', montoAdjudicado:0, oferenteAdjudicado:'', montoPagado:0, creado:Date.now(), ultimoCambio:Date.now(), etapas, historial:[{txt:`${u} creó`, fecha:Date.now()}], notas:[] };
 
   const supabase = clienteSupabase();
   if(supabase){
@@ -560,6 +574,7 @@ async function crear(){
       descripcion:d,
       solicitante_id:usuarioId || null,
       tipo_solicitud:tipo,
+      es_activo:activo,
       estatus:'Pendiente'
     }).select('*').single();
     if(inserted.error) throw inserted.error;
@@ -924,6 +939,7 @@ function mostrarDetalle(i){
   detalleTitulo.textContent = p.id;
   detalleSubtitulo.textContent = p.descripcion;
   detalleContenido.innerHTML = `
+    <div class="historial"><b>Clasificación:</b> ${p.esActivo ? 'Activo' : 'No activo'}</div>
     ${Number(p.montoAdjudicado||0)>0 ? `<div class="historial"><b>Monto adjudicado:</b> RD$${Number(p.montoAdjudicado||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | <b>Pagado:</b> RD$${Number(p.montoPagado||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>` : ''}
     <div class="historial"><b>Checklist documental</b><div class="checklist">${faltantes.length ? faltantes.map(doc=>`<span class="falta">Falta: ${doc}</span>`).join('') : '<span class="ok">Documentación requerida completa para avanzar</span>'}</div></div>
     ${puedeEditarCompras() ? `<div class="historial"><b>Datos de Compras y Contrataciones</b><br><input id="montoEstimado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoEstimado||0)}" placeholder="Monto estimado"><input id="tipoProceso-${i}" value="${p.tipoProceso||''}" placeholder="Tipo de proceso"><input id="numeroProceso-${i}" value="${p.numeroProceso||''}" placeholder="Número de proceso"><input id="montoAdjudicado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoAdjudicado||0)}" placeholder="Monto adjudicado"><input id="oferenteAdjudicado-${i}" value="${p.oferenteAdjudicado||''}" placeholder="Oferente adjudicado"><button onclick="actualizarDatosCompras(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Guardar datos de Compras</button></div>` : ''}
