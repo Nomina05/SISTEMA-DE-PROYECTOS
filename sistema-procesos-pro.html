@@ -67,6 +67,10 @@ padding:6px;
 border-radius:6px;
 margin:4px 0;
 }
+.checklist{display:grid;gap:5px;margin-top:8px}
+.checklist span.ok{color:#15803d}
+.checklist span.falta{color:#b91c1c}
+.acciones-secundarias{display:flex;gap:6px;flex-wrap:wrap}
 
 .alertas{
 position:fixed;
@@ -180,6 +184,7 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <div class="kpi"><b id="avg"></b><br>Promedio</div>
 </div>
 <canvas id="chart"></canvas>
+<div class="card" id="dashboardCompras"></div>
 </div>
 
 <!-- PROCESOS -->
@@ -260,6 +265,15 @@ const ROLES_ETAPA = {
   'Tesorería y certificación':'Tesorería',
   'Cierre del proceso':'Compras y Contrataciones'
 };
+const DOCUMENTOS_REQUERIDOS = {
+  'Validación en PAC':['Solicitud firmada'],
+  'Contrato legal':['Adjudicación','Orden de compra o servicio'],
+  'Registro de factura en almacén':['Factura'],
+  'Pago financiero':['Expediente auditado']
+};
+const PLAZO_ETAPA_HORAS = {
+  'Adjudicación':96
+};
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
 const embeddedMode = new URLSearchParams(location.search).get('embedded') === '1';
@@ -325,7 +339,7 @@ async function cargarProcesosSql(){
   if(!supabase) return;
   const result = await supabase
     .from('procesos_compras')
-    .select('*, proceso_etapas(*), proceso_notas(*)')
+    .select('*, proceso_etapas(*), proceso_notas(*), proceso_documentos(*), proceso_pagos(*), proceso_devoluciones(*)')
     .order('creado_en', { ascending:false });
   if(result.error) throw result.error;
   procesos = (result.data || []).map(row=>{
@@ -350,6 +364,15 @@ async function cargarProcesosSql(){
         fecha:nota.creado_en ? new Date(nota.creado_en).getTime() : Date.now()
       };
     });
+    const documentos = (row.proceso_documentos || []).map(doc=>({
+      dbId:doc.id,tipo:doc.tipo,nombre:doc.nombre_archivo,url:doc.url,fecha:doc.creado_en
+    }));
+    const pagos = (row.proceso_pagos || []).map(pago=>({
+      dbId:pago.id,fecha:pago.fecha,monto:Number(pago.monto||0),referencia:pago.referencia||''
+    }));
+    const devoluciones = (row.proceso_devoluciones || []).map(dev=>({
+      dbId:dev.id,etapa:dev.etapa,motivo:dev.motivo,fecha:dev.creado_en
+    }));
     return {
       dbId:row.id,
       id:row.expediente,
@@ -367,7 +390,10 @@ async function cargarProcesosSql(){
       ultimoCambio:row.ultimo_cambio ? new Date(row.ultimo_cambio).getTime() : Date.now(),
       etapas,
       historial:[],
-      notas
+      notas,
+      documentos,
+      pagos,
+      devoluciones
     };
   });
 }
@@ -612,6 +638,8 @@ async function confirmar(){
   let p = procesos[idxGlobal];
   if(!actor){ alert("Seleccione el usuario que realiza el avance"); return; }
   if(!nota){ alert("Escriba una descripción o nota del proceso"); return; }
+  const faltantes = documentosFaltantes(p);
+  if(faltantes.length) return alert(`No puede avanzar. Faltan documentos: ${faltantes.join(', ')}`);
 
   for(let i=0;i<p.etapas.length;i++){
     let e = p.etapas[i];
@@ -769,6 +797,77 @@ async function actualizarPagoFinanzas(idx){
   render();
 }
 
+function documentosFaltantes(p){
+  const activa = p.etapas.find(etapa=>etapa.estado==='activo')?.nombre;
+  const requeridos = DOCUMENTOS_REQUERIDOS[activa] || [];
+  const cargados = new Set((p.documentos||[]).map(doc=>doc.tipo));
+  return requeridos.filter(tipo=>!cargados.has(tipo));
+}
+
+async function agregarDocumento(idx){
+  const tipo = prompt('Tipo de documento:');
+  if(!tipo) return;
+  const nombre = prompt('Nombre del archivo o referencia:') || tipo;
+  const url = prompt('URL del documento (opcional):') || '';
+  const p = procesos[idx];
+  const doc = {tipo,nombre,url,fecha:new Date().toISOString()};
+  const supabase = clienteSupabase();
+  if(supabase && p.dbId){
+    const inserted = await supabase.from('proceso_documentos').insert({proceso_id:p.dbId,tipo,nombre_archivo:nombre,url}).select('*').single();
+    if(inserted.error) throw inserted.error;
+    doc.dbId = inserted.data.id;
+  }
+  p.documentos = p.documentos || [];
+  p.documentos.push(doc);
+  guardar(); render();
+}
+
+async function devolverProceso(idx){
+  const p = procesos[idx];
+  const activa = p.etapas.find(etapa=>etapa.estado==='activo');
+  const motivo = prompt('Motivo de la devolución:');
+  if(!motivo) return;
+  const dev = {etapa:activa?.nombre || '', motivo, fecha:new Date().toISOString()};
+  const supabase = clienteSupabase();
+  if(supabase && p.dbId){
+    const inserted = await supabase.from('proceso_devoluciones').insert({proceso_id:p.dbId,etapa:dev.etapa,motivo}).select('*').single();
+    if(inserted.error) throw inserted.error;
+    dev.dbId = inserted.data.id;
+  }
+  p.devoluciones = p.devoluciones || [];
+  p.devoluciones.push(dev);
+  p.historial.push({txt:`Proceso devuelto en ${dev.etapa}. Motivo: ${motivo}`, fecha:Date.now()});
+  guardar(); render();
+}
+
+async function agregarPagoParcial(idx){
+  if(!puedeEditarFinanzas()) return alert('Solo Finanzas puede registrar pagos.');
+  const p = procesos[idx];
+  const monto = Number(prompt('Monto del pago parcial:') || 0);
+  if(!monto) return;
+  const referencia = prompt('Referencia o comprobante:') || '';
+  const pago = {fecha:new Date().toISOString().slice(0,10),monto,referencia};
+  const supabase = clienteSupabase();
+  if(supabase && p.dbId){
+    const inserted = await supabase.from('proceso_pagos').insert({proceso_id:p.dbId,fecha:pago.fecha,monto,referencia}).select('*').single();
+    if(inserted.error) throw inserted.error;
+    pago.dbId = inserted.data.id;
+  }
+  p.pagos = p.pagos || [];
+  p.pagos.push(pago);
+  p.montoPagado = p.pagos.reduce((total,item)=>total+Number(item.monto||0),0);
+  await actualizarPagoMontoAcumulado(p);
+  guardar(); render();
+}
+
+async function actualizarPagoMontoAcumulado(p){
+  const supabase = clienteSupabase();
+  if(supabase && p.dbId){
+    const updated = await supabase.from('procesos_compras').update({monto_pagado:p.montoPagado,ultimo_cambio:new Date().toISOString()}).eq('id',p.dbId);
+    if(updated.error) throw updated.error;
+  }
+}
+
 // ====== RENDER ======
 function render(){
   lista.innerHTML='';
@@ -797,6 +896,9 @@ function render(){
         <button onclick="eliminarNota(${i},${ni})">Eliminar</button>
       </div>
     `).join('');
+    const faltantes = documentosFaltantes(p);
+    const docsHTML = (p.documentos||[]).map(doc=>`<div>${doc.tipo}: ${doc.url ? `<a href="${doc.url}" target="_blank">${doc.nombre}</a>` : doc.nombre}</div>`).join('') || 'Sin documentos';
+    const pagosHTML = (p.pagos||[]).map(pago=>`<div>${pago.fecha} | RD$${Number(pago.monto||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | ${pago.referencia||'-'}</div>`).join('') || 'Sin pagos parciales';
 
     lista.innerHTML+=`
     <div class="proceso">
@@ -804,6 +906,10 @@ function render(){
       <small>${p.tipoSolicitud || 'Compra'}${p.numeroProceso ? ` | Proceso: ${p.numeroProceso}` : ''}</small>
       ${Number(p.montoAdjudicado||0)>0 ? `<div class="historial"><b>Monto adjudicado:</b> RD$${Number(p.montoAdjudicado||0).toLocaleString('es-DO',{minimumFractionDigits:2})} | <b>Pagado:</b> RD$${Number(p.montoPagado||0).toLocaleString('es-DO',{minimumFractionDigits:2})}</div>` : ''}
       ${p.tipoSolicitud==='Compra' && Number(p.montoAdjudicado||0)>0 && Number(p.montoPagado||0)<Number(p.montoAdjudicado||0) ? `<div class="historial"><b>Avance pagado:</b> ${((Number(p.montoPagado||0)/Number(p.montoAdjudicado||0))*100).toFixed(2)}%</div>` : ''}
+      <div class="historial">
+        <b>Checklist documental</b>
+        <div class="checklist">${faltantes.length ? faltantes.map(doc=>`<span class="falta">Falta: ${doc}</span>`).join('') : '<span class="ok">Documentación requerida completa para avanzar</span>'}</div>
+      </div>
       ${puedeEditarCompras() ? `
         <div class="historial">
           <b>Datos de Compras y Contrataciones</b><br>
@@ -819,10 +925,16 @@ function render(){
           <b>Pagos de Finanzas</b><br>
           <input id="montoPagado-${i}" type="number" min="0" step="0.01" value="${Number(p.montoPagado||0)}" placeholder="Monto pagado">
           <button onclick="actualizarPagoFinanzas(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Guardar pago</button>
+          <button onclick="agregarPagoParcial(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Agregar pago parcial</button>
+          <div>${pagosHTML}</div>
         </div>` : ''}
+      <div class="historial"><b>Documentos</b><div>${docsHTML}</div><button onclick="agregarDocumento(${i}).catch(error=>alert(error.message||'No se pudo guardar'))">Adjuntar documento</button></div>
       <div class="timeline">${etapas}</div>
 
+      <div class="acciones-secundarias">
       <button class="btn-success" ${fin?'disabled':''} onclick="avanzar(${i})">Avanzar</button>
+      <button onclick="devolverProceso(${i}).catch(error=>alert(error.message||'No se pudo devolver'))">Devolver</button>
+      </div>
       <button onclick="excel(${i})">Excel</button>
       <button onclick="pdf(${i})">PDF</button>
 
@@ -895,7 +1007,8 @@ function revisarAlertas(){
     let inicioActivo = activa ? activa.inicio : null;
     let fechaBase = inicioActivo || p.ultimoCambio || p.creado;
 
-    return !finalizado && fechaBase && (Date.now() - fechaBase) > LIMITE_SIN_AVANCE;
+    const limiteEtapa = (PLAZO_ETAPA_HORAS[activa?.nombre] || 48) * 60 * 60 * 1000;
+    return !finalizado && fechaBase && (Date.now() - fechaBase) > limiteEtapa;
   });
 
   if(!demorados.length){
@@ -911,7 +1024,7 @@ function revisarAlertas(){
     return `
       <div class="alerta">
         <b>${p.id} sin cambios</b>
-        El proceso "${p.descripcion}" no ha avanzado en ${horas} horas.
+        El proceso "${p.descripcion}" no ha avanzado en ${horas} horas. Etapa: ${activa?.nombre || '-'}.
       </div>
     `;
   }).join('');
@@ -948,6 +1061,10 @@ function kpi(){
       }]
     }
   });
+  const bloques = Object.fromEntries(GRUPOS_KANBAN.map(grupo=>[grupo, procesos.filter(p=>etapaKanban(p)===grupo).length]));
+  document.getElementById('p').title = Object.entries(bloques).map(([k,v])=>`${k}: ${v}`).join(' | ');
+  dashboardCompras.innerHTML = `<h3>Resumen por etapa</h3>` + Object.entries({...bloques, Completado:procesos.filter(p=>etapaKanban(p)==='Completado').length})
+    .map(([etapa,total])=>`<div>${etapa}: <b>${total}</b></div>`).join('');
 }
 
 // ====== EXPORT ======
