@@ -1042,7 +1042,7 @@
         const catalogs = defaultCatalogs();
         catalogsResult.data.forEach(row => {
           catalogs[row.tipo] = catalogs[row.tipo] || [];
-          catalogs[row.tipo].push(row.valor);
+          if (!catalogs[row.tipo].includes(row.valor)) catalogs[row.tipo].push(row.valor);
         });
         state.catalogs = catalogs;
       }
@@ -1950,7 +1950,7 @@
       const prioritySelect = document.querySelector('#warehouseRequestForm select[name="prioridad"]');
       if (prioritySelect) {
         const selected = prioritySelect.value;
-        const values = state.catalogs?.urgencia || ["Normal", "Alta", "Urgente"];
+        const values = [...new Set((state.catalogs?.urgencia || ["Normal", "Alta", "Urgente"]).filter(Boolean))];
         prioritySelect.innerHTML = values.map(value => `<option>${escapeHtml(value)}</option>`).join("");
         if (selected && values.includes(selected)) prioritySelect.value = selected;
       }
