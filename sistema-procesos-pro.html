@@ -48,10 +48,10 @@ button{padding:8px 10px;border:none;border-radius:8px;cursor:pointer;margin-top:
 .embedded-tabs{display:none;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .embedded-tabs button{margin-top:0;background:#e8eef8;color:#17324d;font-weight:700}
 .embedded-tabs button.activo{background:var(--azul);color:#fff}
-.messages{position:relative;display:inline-flex;margin-bottom:12px}
+.messages{position:relative;display:flex;justify-content:flex-end;margin-bottom:12px}
 .messages button{margin-top:0;background:#e8eef8;color:#17324d;font-weight:700}
 .messages-count{min-width:20px;min-height:20px;margin-left:6px;border-radius:999px;background:#e74c3c;color:#fff;display:inline-grid;place-items:center;font-size:11px}
-.messages-panel{position:absolute;left:0;top:calc(100% + 6px);z-index:40;width:min(430px,calc(100vw - 30px));padding:12px;border:1px solid var(--borde);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,.14)}
+.messages-panel{position:absolute;right:0;top:calc(100% + 6px);z-index:40;width:min(430px,calc(100vw - 30px));padding:12px;border:1px solid var(--borde);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,.14)}
 .messages-item{padding:9px 0;border-bottom:1px solid var(--borde)}
 .messages-item:last-child{border-bottom:0}
 .timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
