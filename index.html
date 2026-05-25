@@ -310,6 +310,7 @@
         <button class="nav-btn" data-view="tareas" onclick="showView('tareas')">Mis tareas</button>
         <button class="nav-btn" data-view="notificaciones" onclick="showView('notificaciones')">Notificaciones</button>
         <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuario</button>
+        <button class="nav-btn" data-view="recursos-humanos" onclick="showView('recursos-humanos')">Recursos Humanos</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
         <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a Almacén</button>
@@ -580,6 +581,19 @@
         </div>
       </section>
 
+      <section class="section" id="recursos-humanos">
+        <div class="panel">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Gestión interna</span>
+              <h1>Recursos Humanos</h1>
+              <p class="sub">Panel reservado para completar la información y procesos del área.</p>
+            </div>
+          </div>
+          <div class="empty">Este módulo está listo para configurar formularios, reportes y controles de Recursos Humanos.</div>
+        </div>
+      </section>
+
       <section class="section" id="registro">
         <div class="grid cards">
           <div class="panel wide">
@@ -795,6 +809,7 @@
       tareas: "Mis tareas",
       notificaciones: "Notificaciones",
       usuarios: "Usuario",
+      "recursos-humanos": "Recursos Humanos",
       controles: "Controles y alertas",
       registro: "Registro de proyectos",
       solicitudes: "Solicitudes de Compras",
@@ -833,7 +848,7 @@
       "report-snip": "Reporte por código SNIP"
     };
     const permissionGroups = {
-      "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
+      "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
       "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Solicitudes de Compras": ["compras-datos", "finanzas-pagos-compras"],
       "Almacén e inventario": ["warehouse-create", "inventory-edit"],
@@ -845,6 +860,7 @@
       "Dirección Técnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
       "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
       "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "documentos"],
       "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
