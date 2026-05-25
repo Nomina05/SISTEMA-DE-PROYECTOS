@@ -108,6 +108,25 @@
     .subtab.active { background: var(--blue); color: #fff; }
     .subsection { display: none; }
     .subsection.active { display: block; }
+    .rh-dashboard { display: grid; gap: 14px; }
+    .rh-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 10px; }
+    .rh-kpi { min-height: 86px; padding: 12px; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; }
+    .rh-kpi small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .rh-kpi strong { display: block; margin-top: 8px; font-size: 20px; line-height: 1.15; }
+    .rh-kpi.ok { border-left-color: var(--green); }
+    .rh-kpi.warn { border-left-color: var(--amber); }
+    .rh-kpi.bad { border-left-color: var(--red); }
+    .rh-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px; }
+    .rh-card { min-height: 132px; padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .rh-card h3 { margin: 0 0 9px; font-size: 15px; }
+    .rh-card p { margin: 0 0 9px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .rh-module-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rh-module-list span { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 8px; border-radius: 999px; background: #edf3f6; color: var(--ink); font-size: 11px; font-weight: 800; }
+    .rh-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 360px); gap: 14px; align-items: start; }
+    .rh-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 8px; }
+    .rh-action { min-height: 58px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f9fbfc; text-align: left; font-weight: 800; }
+    .rh-action small { display: block; margin-top: 4px; color: var(--muted); font-weight: 700; }
+    #rhTab-empleados > .panel > .page-heading, #rhTab-empleados > .panel > .subtabs { display: none; }
     .warehouse-requests { display: grid; gap: 10px; }
     .warehouse-request { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; padding: 12px; }
     .warehouse-request-summary { display: grid; grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 1fr)) auto; gap: 10px; align-items: center; }
@@ -233,6 +252,7 @@
       .panel { padding: 14px; }
       .chart-wrap { min-height: 300px; }
       .embedded-frame { height: 560px; }
+      .rh-workspace { grid-template-columns: 1fr; }
       table.snip-detail-report { min-width: 1080px; }
       table.snip-group-report { min-width: 1100px; }
     }
@@ -594,6 +614,55 @@
       </section>
 
       <section class="section" id="recursos-humanos">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">Gestion institucional</span>
+            <h1>Recursos Humanos</h1>
+            <p class="sub">Suite integral para empleados, nomina, asistencia, reclutamiento, vacaciones, desarrollo y analitica.</p>
+          </div>
+        </div>
+        <div class="subtabs" id="rhTabs">
+          <button class="subtab active" type="button" data-rh-tab="resumen">Resumen</button>
+          <button class="subtab" type="button" data-rh-tab="empleados">Empleados</button>
+          <button class="subtab" type="button" data-rh-tab="reclutamiento">Reclutamiento</button>
+          <button class="subtab" type="button" data-rh-tab="asistencia">Asistencia</button>
+          <button class="subtab" type="button" data-rh-tab="nomina">Nomina</button>
+          <button class="subtab" type="button" data-rh-tab="vacaciones">Vacaciones</button>
+          <button class="subtab" type="button" data-rh-tab="desempeno">Desempeno</button>
+          <button class="subtab" type="button" data-rh-tab="capacitacion">Capacitacion</button>
+          <button class="subtab" type="button" data-rh-tab="beneficios">Beneficios</button>
+          <button class="subtab" type="button" data-rh-tab="legal">Legal</button>
+          <button class="subtab" type="button" data-rh-tab="comunicacion">Comunicacion</button>
+          <button class="subtab" type="button" data-rh-tab="autoservicio">Autoservicio</button>
+          <button class="subtab" type="button" data-rh-tab="supervisor">Supervisor</button>
+          <button class="subtab" type="button" data-rh-tab="analitica">Analitica</button>
+          <button class="subtab" type="button" data-rh-tab="configuracion">Configuracion</button>
+          <button class="subtab" type="button" data-rh-tab="ia">IA</button>
+        </div>
+        <div class="subsection active" id="rhTab-resumen">
+          <div class="rh-dashboard">
+            <div class="rh-kpis" id="rhKpis"></div>
+            <div class="rh-workspace">
+              <div class="panel">
+                <div class="panel-head"><h2>Indicadores KPI de RRHH</h2><span class="badge ok">Operativo</span></div>
+                <div class="table-wrap"><table id="rhExecutiveTable"></table></div>
+              </div>
+              <div class="panel">
+                <h2>Accesos rapidos</h2>
+                <div class="rh-actions-grid">
+                  <button class="rh-action" type="button" data-rh-jump="empleados">Registrar empleado<small>Ficha laboral completa</small></button>
+                  <button class="rh-action" type="button" data-rh-jump="asistencia">Asistencia del dia<small>Presencia, tardanzas y ausencias</small></button>
+                  <button class="rh-action" type="button" data-rh-jump="vacaciones">Vacaciones pendientes<small>Balance y solicitudes</small></button>
+                  <button class="rh-action" type="button" data-rh-jump="nomina">Estadisticas de nomina<small>Salarios y costos</small></button>
+                  <button class="rh-action" type="button" data-rh-jump="analitica">Reportes ejecutivos<small>PDF, Excel e indicadores</small></button>
+                  <button class="rh-action" type="button" data-rh-jump="ia">IA y automatizacion<small>Prediccion y reportes</small></button>
+                </div>
+              </div>
+            </div>
+            <div class="rh-panels" id="rhSummaryPanels"></div>
+          </div>
+        </div>
+        <div class="subsection" id="rhTab-empleados">
         <div class="panel">
           <div class="page-heading">
             <div>
@@ -603,6 +672,13 @@
           </div>
           <div class="subtabs">
             <button class="subtab active" type="button">Registro de Empleados</button>
+          </div>
+          <div class="panel-head">
+            <div><h2>Panel de Empleados</h2><p class="sub">Gestiona toda la informacion del colaborador.</p></div>
+            <span class="badge ok">Registro activo</span>
+          </div>
+          <div class="rh-module-list" style="margin-bottom:14px;">
+            <span>Registro de empleados</span><span>Expediente digital</span><span>Informacion personal</span><span>Informacion laboral</span><span>Contactos de emergencia</span><span>Documentos y archivos</span><span>Historial laboral</span><span>Historial salarial</span><span>Dependientes</span><span>Contratos</span><span>Estado del empleado</span><span>Firma digital</span><span>Foto y biometria</span>
           </div>
           <form id="employeeForm" class="form-grid">
             <input type="hidden" name="editingId">
@@ -663,6 +739,21 @@
           </form>
           <div class="table-wrap" id="employeesTableWrap" style="margin-top:14px;"><table id="employeesTable"></table></div>
         </div>
+        </div>
+        <div class="subsection" id="rhTab-reclutamiento"><div class="rh-panels" data-rh-panel="reclutamiento"></div></div>
+        <div class="subsection" id="rhTab-asistencia"><div class="rh-panels" data-rh-panel="asistencia"></div></div>
+        <div class="subsection" id="rhTab-nomina"><div class="rh-panels" data-rh-panel="nomina"></div></div>
+        <div class="subsection" id="rhTab-vacaciones"><div class="rh-panels" data-rh-panel="vacaciones"></div></div>
+        <div class="subsection" id="rhTab-desempeno"><div class="rh-panels" data-rh-panel="desempeno"></div></div>
+        <div class="subsection" id="rhTab-capacitacion"><div class="rh-panels" data-rh-panel="capacitacion"></div></div>
+        <div class="subsection" id="rhTab-beneficios"><div class="rh-panels" data-rh-panel="beneficios"></div></div>
+        <div class="subsection" id="rhTab-legal"><div class="rh-panels" data-rh-panel="legal"></div></div>
+        <div class="subsection" id="rhTab-comunicacion"><div class="rh-panels" data-rh-panel="comunicacion"></div></div>
+        <div class="subsection" id="rhTab-autoservicio"><div class="rh-panels" data-rh-panel="autoservicio"></div></div>
+        <div class="subsection" id="rhTab-supervisor"><div class="rh-panels" data-rh-panel="supervisor"></div></div>
+        <div class="subsection" id="rhTab-analitica"><div class="rh-panels" data-rh-panel="analitica"></div></div>
+        <div class="subsection" id="rhTab-configuracion"><div class="rh-panels" data-rh-panel="configuracion"></div></div>
+        <div class="subsection" id="rhTab-ia"><div class="rh-panels" data-rh-panel="ia"></div></div>
       </section>
 
       <section class="section" id="estructura">
@@ -1657,6 +1748,7 @@
       renderCatalogs();
       renderStructure();
       renderEmployees();
+      renderHumanResources();
       renderReport();
       renderPolicyPreview();
       renderAccess();
@@ -2248,31 +2340,6 @@
       XLSX.writeFile(book, "plantilla-empleados.xlsx");
     }
 
-    async function importEmployeesFile(file) {
-      if (!file) return;
-      if (!window.XLSX) return alert("No se pudo cargar la librería de Excel. Revise la conexión a internet.");
-      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }).map(row => ({
-        id: makeId(),
-        nombre: row.Nombre || row.nombre || "",
-        apellido: row.Apellido || row.apellido || "",
-        cedula: row.Cedula || row.Cédula || row.cedula || "",
-        grupoOcupacional: row["Grupo ocupacional"] || "",
-        cargo: row.Cargo || row.cargo || "",
-        salario: Number(row.Salario || row.salario || 0),
-        fechaIngreso: row["Fecha de ingreso"] || "",
-        tipoIngreso: row["Tipo de ingreso"] || "",
-        estructura: row["Estructura organizacional"] || "",
-        centroServicio: row["Centro de Servicio"] || "",
-        activo: String(row.Activo || "Si").toLowerCase() !== "no"
-      })).filter(row => row.nombre || row.apellido || row.cedula);
-      state.employees = [...(state.employees || []), ...rows];
-      saveState();
-      renderEmployees();
-      alert(`Empleados importados: ${number.format(rows.length)}.`);
-    }
-
     function renderEmployees() {
       renderTable("employeesTable", ["Nombre", "Apellido", "Cedula", "Cargo", "Salario", "Fecha ingreso", "Estructura", "Centro", "Activo", "Accion"], (state.employees || []).map(employee => [
         escapeHtml(employee.nombre || "-"),
@@ -2337,6 +2404,144 @@
       saveState();
       renderEmployees();
       alert(`Empleados importados: ${number.format(savedRows.length)}.`);
+    }
+
+    const rhPanelModules = {
+      reclutamiento: {
+        title: "Panel de Reclutamiento y Seleccion",
+        description: "Gestion de vacantes, candidatos, entrevistas, evaluaciones y contratacion.",
+        modules: ["Publicacion de vacantes", "Portal de empleo", "Recepcion de CV", "Banco de candidatos", "Entrevistas", "Evaluaciones tecnicas", "Pruebas psicometricas", "Pipeline de candidatos", "Contratacion", "Onboarding", "Cartas de oferta", "Evaluacion de entrevistas"]
+      },
+      asistencia: {
+        title: "Panel de Asistencia y Tiempo",
+        description: "Control de horarios, presencia, permisos, ausencias y turnos.",
+        modules: ["Registro de asistencia", "Ponches biometricos", "Geolocalizacion", "Horarios laborales", "Turnos", "Horas extras", "Tardanzas", "Ausencias", "Permisos", "Calendario laboral", "Integracion con reloj biometrico", "Control remoto de asistencia"]
+      },
+      nomina: {
+        title: "Panel de Nomina",
+        description: "Procesamiento de salarios, deducciones, beneficios, pagos y recibos.",
+        modules: ["Procesamiento de nomina", "Calculo automatico de salarios", "Deducciones", "Bonificaciones", "Horas extras", "Incentivos", "Comisiones", "Impuestos", "Seguridad social", "AFP", "ARS", "Prestaciones laborales", "Liquidaciones", "Generacion de recibos", "Transferencias bancarias", "Historial de pagos"]
+      },
+      vacaciones: {
+        title: "Panel de Vacaciones y Licencias",
+        description: "Solicitudes, aprobaciones, balance disponible, licencias y calendario.",
+        modules: ["Solicitud de vacaciones", "Aprobaciones", "Balance disponible", "Licencias medicas", "Licencias maternidad/paternidad", "Permisos especiales", "Ausencias justificadas", "Calendario de vacaciones", "Politicas de vacaciones"]
+      },
+      desempeno: {
+        title: "Panel de Evaluacion de Desempeno",
+        description: "Medicion de productividad, objetivos, competencias y resultados.",
+        modules: ["Evaluaciones 90", "Evaluaciones 180", "Evaluaciones 360", "Objetivos y metas", "KPIs individuales", "Feedback continuo", "Competencias", "Resultados historicos", "Planes de mejora", "Ranking de desempeno"]
+      },
+      capacitacion: {
+        title: "Panel de Capacitacion y Desarrollo",
+        description: "Aprendizaje, certificaciones, planes de carrera y biblioteca digital.",
+        modules: ["Cursos", "Capacitaciones internas", "Certificaciones", "Planes de carrera", "Evaluaciones de capacitacion", "LMS basico", "Biblioteca digital", "Seguimiento de aprendizaje", "Eventos y talleres"]
+      },
+      beneficios: {
+        title: "Panel de Beneficios y Compensaciones",
+        description: "Beneficios laborales, bonos, incentivos y programas de bienestar.",
+        modules: ["Seguro medico", "Beneficios corporativos", "Bonos", "Incentivos", "Viaticos", "Subsidios", "Programas de bienestar", "Planes de compensacion"]
+      },
+      legal: {
+        title: "Panel Disciplinario y Legal",
+        description: "Seguimiento administrativo, incidentes, sanciones y politicas internas.",
+        modules: ["Amonestaciones", "Sanciones", "Reportes disciplinarios", "Incidentes laborales", "Quejas y conflictos", "Seguimiento legal", "Politicas internas", "Firma de reglamentos"]
+      },
+      comunicacion: {
+        title: "Panel de Comunicacion Interna",
+        description: "Canales institucionales, anuncios, encuestas y reconocimientos.",
+        modules: ["Noticias internas", "Anuncios", "Chat interno", "Correos masivos", "Encuestas", "Foros", "Notificaciones push", "Reconocimientos"]
+      },
+      autoservicio: {
+        title: "Panel de Autoservicio del Empleado",
+        description: "Portal para que cada empleado consulte, solicite y actualice sus datos.",
+        modules: ["Perfil del empleado", "Descargar recibos", "Solicitar vacaciones", "Solicitar permisos", "Actualizar informacion", "Ver asistencia", "Ver evaluaciones", "Firma electronica", "Tickets de soporte RRHH"]
+      },
+      supervisor: {
+        title: "Panel del Supervisor / Manager",
+        description: "Herramientas para lideres de area y seguimiento de equipos.",
+        modules: ["Aprobar solicitudes", "Ver equipo", "Reportes del equipo", "Evaluaciones", "Asistencia del equipo", "KPIs del departamento", "Gestion de metas"]
+      },
+      analitica: {
+        title: "Panel de Reportes y Analitica",
+        description: "Inteligencia institucional, exportaciones, graficos y comparativos.",
+        modules: ["Reportes dinamicos", "Exportar PDF/Excel", "Dashboard analitico", "Rotacion de empleados", "Ausentismo", "Costos de nomina", "Productividad", "Indicadores de RRHH", "Graficos comparativos"]
+      },
+      configuracion: {
+        title: "Panel de Configuracion y Seguridad",
+        description: "Administracion tecnica, auditoria, integraciones y seguridad.",
+        modules: ["Roles y permisos", "Usuarios", "Configuracion de empresa", "Sucursales", "Departamentos", "Cargos", "Monedas", "Idiomas", "Auditoria", "Logs del sistema", "Integraciones API", "Configuracion de correos", "Backups", "Seguridad MFA"]
+      },
+      ia: {
+        title: "Panel de IA y Automatizacion",
+        description: "Automatizacion avanzada para analisis, seleccion y reportes.",
+        modules: ["Prediccion de rotacion", "Asistente virtual RRHH", "Automatizacion de entrevistas", "Analisis de clima laboral", "Recomendacion de candidatos", "Generacion automatica de reportes", "IA para evaluacion de CV"]
+      }
+    };
+
+    function showRhTab(tab) {
+      document.querySelectorAll("[data-rh-tab]").forEach(button => button.classList.toggle("active", button.dataset.rhTab === tab));
+      document.querySelectorAll('[id^="rhTab-"]').forEach(section => section.classList.remove("active"));
+      document.getElementById(`rhTab-${tab}`)?.classList.add("active");
+    }
+
+    function renderRhModulePanel(key, config) {
+      return `<div class="panel">
+        <div class="panel-head"><div><h2>${escapeHtml(config.title)}</h2><p class="sub">${escapeHtml(config.description)}</p></div><span class="badge">Configurado</span></div>
+        <div class="rh-panels">
+          ${config.modules.map(module => `<div class="rh-card"><h3>${escapeHtml(module)}</h3><p>Modulo preparado para registrar, consultar, aprobar y reportar informacion de ${escapeHtml(config.title.toLowerCase())}.</p><div class="notice-actions"><button class="mini-btn" type="button">Nuevo</button><button class="mini-btn" type="button">Ver registros</button><button class="mini-btn" type="button">Reportes</button></div></div>`).join("")}
+        </div>
+      </div>`;
+    }
+
+    function renderHumanResources() {
+      const employees = state.employees || [];
+      const active = employees.filter(employee => employee.activo !== false).length;
+      const inactive = Math.max(employees.length - active, 0);
+      const payroll = employees.reduce((total, employee) => total + Number(employee.salario || employee.data?.salario || 0), 0);
+      const currentMonth = new Date().getMonth() + 1;
+      const birthdays = employees.filter(employee => {
+        const raw = employee.fechaNacimiento || employee.data?.fechaNacimiento;
+        return raw && Number(String(raw).slice(5, 7)) === currentMonth;
+      }).length;
+      const newHires = employees.filter(employee => {
+        const date = parseDateOnly(employee.fechaIngreso || employee.data?.fechaIngreso);
+        return date && businessDaysBetween(date) <= 30;
+      }).length;
+      const kpis = [
+        ["Resumen general de empleados", number.format(employees.length), "ok"],
+        ["Empleados activos", number.format(active), "ok"],
+        ["Empleados inactivos", number.format(inactive), inactive ? "warn" : "ok"],
+        ["Asistencia del dia", "Pendiente", "warn"],
+        ["Vacaciones pendientes", "Pendiente", "warn"],
+        ["Nuevos ingresos", number.format(newHires), "ok"],
+        ["Cumpleanos", number.format(birthdays), "ok"],
+        ["Estadisticas de nomina", money.format(payroll), "ok"]
+      ];
+      const kpiBox = document.getElementById("rhKpis");
+      if (kpiBox) kpiBox.innerHTML = kpis.map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join("");
+      renderTable("rhExecutiveTable", ["Indicador", "Estado", "Accion"], [
+        ["Alertas y notificaciones", alertLevelBadge(inactive ? "Alerta" : "Correcto"), "Revisar novedades de personal"],
+        ["Accesos rapidos", alertLevelBadge("Correcto"), "Disponible por panel"],
+        ["Reportes ejecutivos", alertLevelBadge("Correcto"), "Listos para exportacion"],
+        ["Expedientes digitales", alertLevelBadge(employees.length ? "Correcto" : "Alerta"), employees.length ? "Con empleados registrados" : "Registrar empleados"]
+      ]);
+      const summary = document.getElementById("rhSummaryPanels");
+      if (summary) {
+        const cards = [
+          ["Asistencia del dia", "Control diario de presencia, tardanzas, ausencias, permisos y horas extras."],
+          ["Vacaciones pendientes", "Balance disponible, solicitudes y aprobaciones por supervisor."],
+          ["Nuevos ingresos", "Seguimiento de contratacion, onboarding y documentacion inicial."],
+          ["Cumpleanos", "Calendario de celebraciones y comunicacion interna."],
+          ["Alertas y notificaciones", "Vencimientos, documentos pendientes, contratos y acciones requeridas."],
+          ["Reportes ejecutivos", "Rotacion, ausentismo, costos de nomina, productividad e indicadores."]
+        ];
+        summary.innerHTML = cards.map(([title, text]) => `<div class="rh-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p><div class="rh-module-list"><span>Dashboard</span><span>Alertas</span><span>Reporte</span></div></div>`).join("");
+      }
+      Object.entries(rhPanelModules).forEach(([key, config]) => {
+        const target = document.querySelector(`[data-rh-panel="${key}"]`);
+        if (target) target.innerHTML = renderRhModulePanel(key, config);
+      });
     }
 
     function syncCatalogOptions() {
@@ -3756,6 +3961,13 @@
     document.getElementById("closeWarehouseRequestDetailBtn").addEventListener("click", closeWarehouseRequestDetail);
     document.querySelectorAll("[data-structure-tab]").forEach(button => {
       button.addEventListener("click", () => showStructureTab(button.dataset.structureTab));
+    });
+    document.querySelectorAll("[data-rh-tab]").forEach(button => {
+      button.addEventListener("click", () => showRhTab(button.dataset.rhTab));
+    });
+    document.addEventListener("click", event => {
+      const jumpButton = event.target.closest("[data-rh-jump]");
+      if (jumpButton) showRhTab(jumpButton.dataset.rhJump);
     });
     document.getElementById("newUnitBtn").addEventListener("click", resetUnitForm);
     document.addEventListener("click", event => {
