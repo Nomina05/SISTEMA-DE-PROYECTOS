@@ -292,10 +292,10 @@
     <div class="auth-card">
       <h1>CORAAMOCA</h1>
       <p class="sub">Iniciar sesión para acceder al sistema</p>
-      <form id="loginForm" action="javascript:void(0)" onsubmit="return loginSupabase(event);" novalidate>
+      <form id="loginForm" novalidate>
         <label>Usuario o correo<input id="loginEmail" type="email" autocomplete="username" required></label>
         <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-        <button class="btn" id="loginBtn" type="button" onclick="loginSupabase(event)">Iniciar sesión</button>
+        <button class="btn" id="loginBtn" type="submit">Iniciar sesión</button>
         <div class="auth-error" id="authError"></div>
       </form>
     </div>
@@ -329,7 +329,7 @@
         <button class="btn secondary" id="restoreBtn" type="button">Importar respaldo</button>
         <button class="btn secondary" id="contrastBtn" type="button">Alto contraste</button>
         <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseña</button>
-        <button class="btn danger" id="logoutBtn" type="button" onclick="logoutSupabase()">Cerrar sesión</button>
+        <button class="btn danger" id="logoutBtn" type="button">Cerrar sesión</button>
         <input type="file" id="restoreFile" accept="application/json" hidden>
       </div>
       <div class="modal-backdrop" id="passwordModal" hidden>
@@ -1201,7 +1201,7 @@
     function can(permission) {
       if (adminEmails.includes(String(currentSessionEmail || "").toLowerCase())) return true;
       const user = activeUser();
-      if (!user) return true;
+      if (!user) return false;
       if (user.rol === "Administrador") return true;
       return user.permissions.includes(permission);
     }
@@ -2953,28 +2953,33 @@
       return matchedUser || null;
     }
 
-    function showAuthenticated(session) {
-      document.body.classList.remove("auth-locked");
-      document.body.classList.add("auth-ready");
-      resetInactivityTimer();
-      loadSupabaseData()
-        .catch(error => {
-          console.error(error);
-          alert("No se pudieron cargar datos de Supabase. El sistema cerrará la sesión para evitar trabajar con datos locales.");
-          document.body.classList.remove("auth-ready");
-          document.body.classList.add("auth-locked");
-          window.supabaseClient.auth.signOut();
-        })
-        .finally(() => {
-          if (document.body.classList.contains("auth-locked")) return;
-          const matchedUser = applySessionUser(session);
-          renderAll();
-          notifyLoginAlerts();
-          showMovementAlert();
-          if (matchedUser?.requiereCambioPassword) {
-            openPasswordModal(true, matchedUser);
-          }
-        });
+    async function showAuthenticated(session) {
+      document.body.classList.add("auth-locked");
+      document.body.classList.remove("auth-ready");
+      document.getElementById("authError").textContent = "Validando sesión...";
+      try {
+        await loadSupabaseData();
+        const matchedUser = applySessionUser(session);
+        if (!matchedUser && !adminEmails.includes(String(currentSessionEmail || "").toLowerCase())) {
+          throw new Error("El correo inició sesión en Supabase Auth, pero no está registrado como usuario activo del sistema.");
+        }
+        document.body.classList.remove("auth-locked");
+        document.body.classList.add("auth-ready");
+        document.getElementById("authError").textContent = "";
+        resetInactivityTimer();
+        renderAll();
+        notifyLoginAlerts();
+        showMovementAlert();
+        if (matchedUser?.requiereCambioPassword) {
+          openPasswordModal(true, matchedUser);
+        }
+      } catch (error) {
+        console.error(error);
+        document.getElementById("authError").textContent = error.message || "No se pudo validar la sesión.";
+        document.body.classList.add("auth-locked");
+        document.body.classList.remove("auth-ready");
+        await window.supabaseClient.auth.signOut();
+      }
     }
 
     function notifyLoginAlerts() {
@@ -3391,16 +3396,14 @@
       }
     }
 
+    window.loginSupabase = handleLogin;
     document.getElementById("loginForm").addEventListener("submit", handleLogin);
-    document.getElementById("loginBtn").addEventListener("click", handleLogin);
-    document.getElementById("loginPassword").addEventListener("keydown", event => {
-      if (event.key === "Enter") handleLogin(event);
-    });
 
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
+    window.logoutSupabase = async function logoutSupabase() {
       audit("Cierre de sesión", currentSessionEmail || state.activeUser || "Usuario");
       await window.supabaseClient.auth.signOut();
-    });
+    };
+    document.getElementById("logoutBtn").addEventListener("click", window.logoutSupabase);
 
     document.getElementById("changePasswordBtn").addEventListener("click", openPasswordModal);
     document.getElementById("cancelPasswordBtn").addEventListener("click", closePasswordModal);
