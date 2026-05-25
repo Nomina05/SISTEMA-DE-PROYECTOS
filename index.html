@@ -749,7 +749,59 @@
         <div class="subsection" id="rhTab-beneficios"><div class="rh-panels" data-rh-panel="beneficios"></div></div>
         <div class="subsection" id="rhTab-legal"><div class="rh-panels" data-rh-panel="legal"></div></div>
         <div class="subsection" id="rhTab-comunicacion"><div class="rh-panels" data-rh-panel="comunicacion"></div></div>
-        <div class="subsection" id="rhTab-autoservicio"><div class="rh-panels" data-rh-panel="autoservicio"></div></div>
+        <div class="subsection" id="rhTab-autoservicio">
+          <div class="panel">
+            <div class="panel-head">
+              <div><h2>Panel de Autoservicio del Empleado</h2><p class="sub">Perfil, recibos, solicitudes, asistencia, evaluaciones y tickets de soporte RRHH.</p></div>
+              <label style="min-width:260px;">Empleado<select id="essEmployeeSelect"></select></label>
+            </div>
+            <div id="essProfile"></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Descargar recibos</h2>
+            <div class="table-wrap"><table id="essPayslipsTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Solicitar vacaciones y permisos</h2>
+            <form id="essLeaveForm" class="form-grid">
+              <label>Tipo<select name="tipo"><option>Vacaciones</option><option>Permiso</option><option>Licencia medica</option><option>Licencia maternidad/paternidad</option><option>Permiso especial</option></select></label>
+              <label>Desde<input name="desde" type="date" required></label>
+              <label>Hasta<input name="hasta" type="date" required></label>
+              <label>Dias solicitados<input name="dias" type="number" min="0.5" step="0.5" required></label>
+              <label class="span-4">Motivo de la solicitud<textarea name="motivo" required></textarea></label>
+              <button class="btn span-2" type="submit">Enviar solicitud</button>
+            </form>
+            <div class="table-wrap" style="margin-top:12px;"><table id="essLeaveTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Actualizar informacion y firma electronica</h2>
+            <form id="essUpdateForm" class="form-grid">
+              <label class="span-2">Direccion residencial<input name="direccionResidencia"></label>
+              <label>Sector<input name="sector"></label>
+              <label>Contacto de emergencia<input name="contactoEmergencia"></label>
+              <label>Telefono de emergencia<input name="telefonoEmergencia"></label>
+              <label>Parentesco<input name="parentesco"></label>
+              <label class="span-2">Firma electronica / referencia<input name="firmaDigital"></label>
+              <button class="btn span-2" type="submit">Actualizar informacion</button>
+            </form>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Ver asistencia y evaluaciones</h2>
+            <div class="table-wrap"><table id="essAttendanceTable"></table></div>
+            <div class="table-wrap" style="margin-top:12px;"><table id="essEvaluationsTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Tickets de soporte RRHH</h2>
+            <form id="essTicketForm" class="form-grid">
+              <label class="span-2">Asunto del ticket<input name="asunto" required></label>
+              <label>Categoria<select name="categoria"><option>Nomina</option><option>Vacaciones</option><option>Asistencia</option><option>Documentos</option><option>Datos personales</option><option>Otro</option></select></label>
+              <label>Prioridad<select name="prioridad"><option>Normal</option><option>Alta</option><option>Urgente</option></select></label>
+              <label class="span-4">Detalle de la solicitud<textarea name="detalle" required></textarea></label>
+              <button class="btn span-2" type="submit">Crear ticket</button>
+            </form>
+            <div class="table-wrap" style="margin-top:12px;"><table id="essTicketsTable"></table></div>
+          </div>
+        </div>
         <div class="subsection" id="rhTab-supervisor"><div class="rh-panels" data-rh-panel="supervisor"></div></div>
         <div class="subsection" id="rhTab-analitica"><div class="rh-panels" data-rh-panel="analitica"></div></div>
         <div class="subsection" id="rhTab-configuracion"><div class="rh-panels" data-rh-panel="configuracion"></div></div>
@@ -2581,6 +2633,100 @@
         const target = document.querySelector(`[data-rh-panel="${key}"]`);
         if (target) target.innerHTML = renderRhModulePanel(key, config);
       });
+      renderEmployeeSelfService();
+    }
+
+    function essCurrentEmployee() {
+      const employees = state.employees || [];
+      if (!employees.length) {
+        return {
+          id: "EMP737",
+          codigo: "EMP737",
+          nombre: "Abigail",
+          apellido: "Casta\u00f1os Ramirez",
+          cedula: "402-0927385-9",
+          cargo: "AUXILIAR ADMINISTRATIVO I",
+          estructura: "Direccion General / Produccion y Tratamiento de Agua Potable / Laboratorio de Agua Potable",
+          salario: 13200,
+          centroServicio: "Planta de tratamiento La Dura",
+          firmaDigital: "Pendiente",
+          data: {}
+        };
+      }
+      const selectedId = state.essSelectedEmployeeId || employees[0]?.id;
+      return employees.find(employee => String(employee.id) === String(selectedId)) || employees[0];
+    }
+
+    function employeeFullName(employee) {
+      return `${employee.nombre || ""} ${employee.apellido || ""}`.trim() || "Empleado";
+    }
+
+    function renderEmployeeSelfService() {
+      const select = document.getElementById("essEmployeeSelect");
+      const profile = document.getElementById("essProfile");
+      if (!select || !profile) return;
+      const employees = state.employees || [];
+      if (employees.length) {
+        const selectedId = state.essSelectedEmployeeId || employees[0].id;
+        select.innerHTML = employees.map(employee => `<option value="${escapeHtml(employee.id)}">${escapeHtml(employee.codigo || employee.id)} - ${escapeHtml(employeeFullName(employee))}</option>`).join("");
+        select.value = selectedId;
+        state.essSelectedEmployeeId = selectedId;
+      } else {
+        select.innerHTML = `<option value="EMP737">EMP737 - Abigail Casta\u00f1os Ramirez</option>`;
+        select.value = "EMP737";
+      }
+      const employee = essCurrentEmployee();
+      const data = employee.data || {};
+      const employeeId = String(employee.id || employee.codigo || "EMP737");
+      const salary = Number(employee.salario || data.salario || 13200);
+      const deduction = Math.min(780.12, Math.max(salary * 0.0591, 0));
+      const leaveRows = (state.essLeaveRequests || []).filter(row => String(row.employeeId) === employeeId);
+      const ticketRows = (state.essTickets || []).filter(row => String(row.employeeId) === employeeId);
+      const employeeCode = employee.codigo || (employeeId === "EMP737" ? "EMP737" : `EMP${String(employeeId).slice(0, 3).toUpperCase()}`);
+      profile.innerHTML = `<div class="rh-workspace">
+        <div class="rh-card">
+          <h3>Perfil del empleado</h3>
+          <div class="detail-grid">
+            <div class="detail-item"><small>Empleado</small><strong>${escapeHtml(employeeCode)} - ${escapeHtml(employeeFullName(employee))}</strong></div>
+            <div class="detail-item"><small>Documento</small><strong>${escapeHtml(employee.cedula || data.cedula || "402-0927385-9")}</strong></div>
+            <div class="detail-item"><small>Cargo</small><strong>${escapeHtml(employee.cargo || data.cargo || "AUXILIAR ADMINISTRATIVO I")}</strong></div>
+            <div class="detail-item"><small>Unidad</small><strong>${escapeHtml(employee.estructura || data.estructura || "Direccion General / Produccion y Tratamiento de Agua Potable / Laboratorio de Agua Potable")}</strong></div>
+            <div class="detail-item"><small>Salario</small><strong>${money.format(salary)}</strong></div>
+            <div class="detail-item"><small>Centro servicio</small><strong>${escapeHtml(employee.centroServicio || data.centroServicio || "Planta de tratamiento La Dura")}</strong></div>
+            <div class="detail-item"><small>Firma electronica</small><strong>${escapeHtml(data.firmaDigital || employee.firmaDigital || "Pendiente")}</strong></div>
+          </div>
+        </div>
+        <div class="rh-kpis">
+          <div class="rh-kpi ok"><small>Recibos disponibles</small><strong>1</strong></div>
+          <div class="rh-kpi warn"><small>Asistencias</small><strong>0</strong></div>
+          <div class="rh-kpi ${leaveRows.length ? "warn" : "ok"}"><small>Solicitudes pendientes</small><strong>${number.format(leaveRows.filter(row => row.estado === "Pendiente").length)}</strong></div>
+          <div class="rh-kpi ${ticketRows.length ? "warn" : "ok"}"><small>Tickets abiertos</small><strong>${number.format(ticketRows.filter(row => row.estado !== "Cerrado").length)}</strong></div>
+        </div>
+      </div>`;
+      renderTable("essPayslipsTable", ["Periodo", "Salario", "Deducciones", "Neto", "Accion"], [[
+        "2026-05",
+        money.format(salary),
+        money.format(deduction),
+        money.format(salary - deduction),
+        `<button class="mini-btn" type="button">Recibo</button>`
+      ]]);
+      renderTable("essLeaveTable", ["Tipo", "Desde", "Hasta", "Dias", "Estado", "Motivo"], leaveRows.map(row => [
+        escapeHtml(row.tipo), escapeHtml(row.desde), escapeHtml(row.hasta), number.format(Number(row.dias || 0)), alertLevelBadge(row.estado || "Pendiente"), escapeHtml(row.motivo || "-")
+      ]));
+      renderTable("essAttendanceTable", ["Fecha", "Estado", "Entrada", "Salida", "Horas extras", "Nota"], []);
+      renderTable("essEvaluationsTable", ["Periodo", "Tipo", "Resultado", "Evaluador", "Feedback"], []);
+      renderTable("essTicketsTable", ["Fecha", "Asunto", "Categoria", "Prioridad", "Estado", "Detalle"], ticketRows.map(row => [
+        escapeHtml(row.fecha), escapeHtml(row.asunto), escapeHtml(row.categoria), escapeHtml(row.prioridad), alertLevelBadge(row.estado || "Abierto"), escapeHtml(row.detalle || "-")
+      ]));
+      const updateForm = document.getElementById("essUpdateForm");
+      if (updateForm) {
+        updateForm.elements.direccionResidencia.value = data.direccionResidencia || "";
+        updateForm.elements.sector.value = data.sector || "";
+        updateForm.elements.contactoEmergencia.value = data.contactoEmergencia || "";
+        updateForm.elements.telefonoEmergencia.value = data.telefonoEmergencia || "";
+        updateForm.elements.parentesco.value = data.parentesco || "";
+        updateForm.elements.firmaDigital.value = data.firmaDigital || "";
+      }
     }
 
     function syncCatalogOptions() {
@@ -4003,6 +4149,54 @@
     });
     document.querySelectorAll("[data-rh-tab]").forEach(button => {
       button.addEventListener("click", () => showRhTab(button.dataset.rhTab));
+    });
+    document.getElementById("essEmployeeSelect").addEventListener("change", event => {
+      state.essSelectedEmployeeId = event.target.value;
+      saveState();
+      renderEmployeeSelfService();
+    });
+    document.getElementById("essLeaveForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const employee = essCurrentEmployee();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      state.essLeaveRequests = state.essLeaveRequests || [];
+      state.essLeaveRequests.unshift({ id: makeId(), employeeId: String(employee.id || employee.codigo || "EMP737"), fecha: new Date().toISOString(), estado: "Pendiente", ...data });
+      audit("Solicitud ESS registrada", `${employeeFullName(employee)} | ${data.tipo}`);
+      saveState();
+      event.currentTarget.reset();
+      renderEmployeeSelfService();
+    });
+    document.getElementById("essUpdateForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const employee = essCurrentEmployee();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const index = (state.employees || []).findIndex(item => String(item.id) === String(employee.id));
+      if (index >= 0) {
+        state.employees[index].data = { ...(state.employees[index].data || {}), ...data };
+        Object.assign(state.employees[index], {
+          direccionResidencia: data.direccionResidencia,
+          sector: data.sector,
+          contactoEmergencia: data.contactoEmergencia,
+          telefonoEmergencia: data.telefonoEmergencia,
+          parentesco: data.parentesco,
+          firmaDigital: data.firmaDigital
+        });
+      }
+      audit("Autoservicio actualizado", employeeFullName(employee));
+      saveState();
+      renderEmployeeSelfService();
+      alert("Informacion actualizada.");
+    });
+    document.getElementById("essTicketForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const employee = essCurrentEmployee();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      state.essTickets = state.essTickets || [];
+      state.essTickets.unshift({ id: makeId(), employeeId: String(employee.id || employee.codigo || "EMP737"), fecha: new Date().toLocaleDateString("es-DO"), estado: "Abierto", ...data });
+      audit("Ticket RRHH creado", `${employeeFullName(employee)} | ${data.asunto}`);
+      saveState();
+      event.currentTarget.reset();
+      renderEmployeeSelfService();
     });
     document.addEventListener("click", event => {
       const jumpButton = event.target.closest("[data-rh-jump]");
