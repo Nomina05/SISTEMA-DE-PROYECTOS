@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="app.js"></script>
+  <script src="estructura-data.js"></script>
   <style>
     :root {
       --bg: #f3f6f8;
@@ -102,6 +103,11 @@
     .mobile-records { display: none; gap: 10px; }
     .mobile-record { padding: 12px; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; }
     .mobile-record strong { display: block; margin-bottom: 6px; }
+    .subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+    .subtab { padding: 8px 11px; border-radius: 6px; background: #e7edf0; color: #172026; font-weight: 800; }
+    .subtab.active { background: var(--blue); color: #fff; }
+    .subsection { display: none; }
+    .subsection.active { display: block; }
     .warehouse-requests { display: grid; gap: 10px; }
     .warehouse-request { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; padding: 12px; }
     .warehouse-request-summary { display: grid; grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 1fr)) auto; gap: 10px; align-items: center; }
@@ -311,6 +317,7 @@
         <button class="nav-btn" data-view="notificaciones" onclick="showView('notificaciones')">Notificaciones</button>
         <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuario</button>
         <button class="nav-btn" data-view="recursos-humanos" onclick="showView('recursos-humanos')">Recursos Humanos</button>
+        <button class="nav-btn" data-view="estructura" onclick="showView('estructura')">Estructura</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
         <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a Almacén</button>
@@ -594,6 +601,46 @@
         </div>
       </section>
 
+      <section class="section" id="estructura">
+        <div class="panel">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Organización</span>
+              <h1>Estructura</h1>
+            </div>
+          </div>
+          <div class="subtabs">
+            <button class="subtab active" type="button" data-structure-tab="organigrama">Estructura Organizacional</button>
+            <button class="subtab" type="button" data-structure-tab="unidades">Unidades</button>
+            <button class="subtab" type="button" data-structure-tab="cargos">Cargos</button>
+            <button class="subtab" type="button" data-structure-tab="centros">Centros de Servicio</button>
+          </div>
+          <div class="subsection active" id="structureTab-organigrama">
+            <div class="table-wrap"><table id="structureTreeTable"></table></div>
+          </div>
+          <div class="subsection" id="structureTab-unidades">
+            <form id="unitForm" class="form-grid">
+              <input type="hidden" name="editingId">
+              <label>Tipo de unidad<select name="tipo" required><option>Direccion</option><option>Departamento</option><option>Division</option><option>Seccion</option></select></label>
+              <label class="span-2">Depende de<select name="padreId"><option value="">Sin padre / nivel principal</option></select></label>
+              <label class="span-2">Nombre de la unidad<input name="nombre" required></label>
+              <div class="actions span-4">
+                <button class="btn" type="submit">Guardar Unidad</button>
+                <button class="btn secondary" id="newUnitBtn" type="button">Nueva</button>
+              </div>
+            </form>
+            <h2 style="margin-top:16px;">Catalogo de unidades</h2>
+            <div class="table-wrap"><table id="unitsCatalogTable"></table></div>
+          </div>
+          <div class="subsection" id="structureTab-cargos">
+            <div class="empty">Panel de cargos listo para configurar.</div>
+          </div>
+          <div class="subsection" id="structureTab-centros">
+            <div class="empty">Panel de centros de servicio listo para configurar.</div>
+          </div>
+        </div>
+      </section>
+
       <section class="section" id="registro">
         <div class="grid cards">
           <div class="panel wide">
@@ -810,6 +857,7 @@
       notificaciones: "Notificaciones",
       usuarios: "Usuario",
       "recursos-humanos": "Recursos Humanos",
+      estructura: "Estructura",
       controles: "Controles y alertas",
       registro: "Registro de proyectos",
       solicitudes: "Solicitudes de Compras",
@@ -848,7 +896,7 @@
       "report-snip": "Reporte por código SNIP"
     };
     const permissionGroups = {
-      "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
+      "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "estructura", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
       "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Solicitudes de Compras": ["compras-datos", "finanzas-pagos-compras"],
       "Almacén e inventario": ["warehouse-create", "inventory-edit"],
@@ -860,7 +908,7 @@
       "Dirección Técnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
       "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
       "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "documentos"],
+      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos"],
       "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
@@ -921,9 +969,21 @@
       };
     }
 
+    function initialOrgUnits() {
+      return (window.CORAAMOCA_ORG_UNITS || []).map((row, index) => ({
+        id: makeId(),
+        tempKey: `seed-${index}`,
+        tipo: row.tipo || "",
+        nombre: row.nombre || "",
+        padreNombre: row.padre || "",
+        ruta: row.ruta || row.nombre || "",
+        creadoEn: new Date().toISOString()
+      }));
+    }
+
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: mergeProjects(parsed.projects || []),
@@ -934,6 +994,7 @@
         audit: parsed.audit || [],
         technicalLogs: parsed.technicalLogs || [],
         documents: parsed.documents || [],
+        organizationUnits: parsed.organizationUnits?.length ? parsed.organizationUnits : initialOrgUnits(),
         notificationSettings: parsed.notificationSettings || [],
         internalNotifications: parsed.internalNotifications || [],
         workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] },
@@ -1022,7 +1083,7 @@
 
     async function loadSupabaseData() {
       if (!window.supabaseClient) return;
-      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult] = await Promise.all([
+      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult] = await Promise.all([
         window.supabaseClient.from("proyectos").select("*, contratistas(nombre)").order("municipio", { ascending: true }),
         window.supabaseClient.from("usuarios").select("*, areas(nombre)").order("nombre", { ascending: true }),
         window.supabaseClient.from("usuario_permisos").select("usuario_id, permisos(codigo)"),
@@ -1030,7 +1091,8 @@
         window.supabaseClient.from("solicitudes_almacen").select("*").order("fecha_hora", { ascending: false }),
         window.supabaseClient.from("articulos_almacen").select("*").order("nombre", { ascending: true }),
         window.supabaseClient.from("configuracion_alertas").select("*").eq("id", "principal").maybeSingle(),
-        window.supabaseClient.from("catalogos_sistema").select("*").order("tipo", { ascending: true }).order("valor", { ascending: true })
+        window.supabaseClient.from("catalogos_sistema").select("*").order("tipo", { ascending: true }).order("valor", { ascending: true }),
+        window.supabaseClient.from("estructura_unidades").select("*").order("ruta", { ascending: true })
       ]);
       if (projectsResult.error) throw projectsResult.error;
       if (usersResult.error) throw usersResult.error;
@@ -1038,6 +1100,7 @@
       if (warehouseArticlesResult.error && !String(warehouseArticlesResult.error.message || "").toLowerCase().includes("relation")) throw warehouseArticlesResult.error;
       if (alertConfigResult.error && !String(alertConfigResult.error.message || "").toLowerCase().includes("relation")) throw alertConfigResult.error;
       if (catalogsResult.error && !String(catalogsResult.error.message || "").toLowerCase().includes("relation")) throw catalogsResult.error;
+      if (orgUnitsResult.error && !String(orgUnitsResult.error.message || "").toLowerCase().includes("relation")) throw orgUnitsResult.error;
       const permissionMap = {};
       (permissionsResult.data || []).forEach(row => {
         permissionMap[row.usuario_id] = permissionMap[row.usuario_id] || [];
@@ -1061,6 +1124,17 @@
           if (!catalogs[row.tipo].includes(row.valor)) catalogs[row.tipo].push(row.valor);
         });
         state.catalogs = catalogs;
+      }
+      if (orgUnitsResult.data?.length) {
+        state.organizationUnits = orgUnitsResult.data.map(row => ({
+          id: row.id,
+          tipo: row.tipo || "",
+          nombre: row.nombre || "",
+          padreId: row.padre_id || "",
+          padreNombre: row.padre_nombre || "",
+          ruta: row.ruta || row.nombre || "",
+          creadoEn: row.creado_en || ""
+        }));
       }
       state.audit = state.audit || [];
       state.payments = (cubicacionesResult.data || []).map(payment => ({
@@ -1486,6 +1560,7 @@
       renderDocumentsForProjects();
       renderControls();
       renderCatalogs();
+      renderStructure();
       renderReport();
       renderPolicyPreview();
       renderAccess();
@@ -1953,6 +2028,60 @@
     function renderCatalogs() {
       const rows = Object.entries(state.catalogs || {}).flatMap(([tipo, values]) => (values || []).map(valor => [tipo, valor]));
       renderTable("catalogTable", ["Catálogo", "Valor"], rows);
+    }
+
+    function unitRoute(unit, units = state.organizationUnits || []) {
+      if (unit.ruta) return unit.ruta;
+      const parent = units.find(item => String(item.id) === String(unit.padreId));
+      return parent ? `${unitRoute(parent, units)} > ${unit.nombre}` : unit.nombre;
+    }
+
+    function renderStructure() {
+      const units = state.organizationUnits || [];
+      const parentSelect = document.querySelector('#unitForm select[name="padreId"]');
+      if (parentSelect) {
+        const selected = parentSelect.value;
+        parentSelect.innerHTML = `<option value="">Sin padre / nivel principal</option>` + units.map(unit =>
+          `<option value="${escapeHtml(unit.id)}">${escapeHtml(unitRoute(unit))}</option>`
+        ).join("");
+        if (selected && units.some(unit => String(unit.id) === String(selected))) parentSelect.value = selected;
+      }
+      const rows = units.map(unit => {
+        const parent = units.find(item => String(item.id) === String(unit.padreId));
+        const parentName = unit.padreNombre || parent?.nombre || "";
+        return [
+          escapeHtml(unit.tipo || "-"),
+          escapeHtml(unit.nombre || "-"),
+          escapeHtml(parentName),
+          escapeHtml(unitRoute(unit)),
+          `<button class="btn secondary edit-unit-btn" type="button" data-id="${escapeHtml(unit.id)}">Modificar</button>`
+        ];
+      });
+      renderTable("unitsCatalogTable", ["Tipo", "Nombre", "Depende de", "Ruta", "Acción"], rows);
+      renderTable("structureTreeTable", ["Tipo", "Nombre", "Depende de", "Ruta"], rows.map(row => row.slice(0, 4)));
+    }
+
+    function resetUnitForm() {
+      const form = document.getElementById("unitForm");
+      form.reset();
+      form.elements.editingId.value = "";
+    }
+
+    function editUnit(id) {
+      const unit = (state.organizationUnits || []).find(item => String(item.id) === String(id));
+      if (!unit) return;
+      showStructureTab("unidades");
+      const form = document.getElementById("unitForm");
+      form.elements.editingId.value = unit.id;
+      form.elements.tipo.value = unit.tipo || "Direccion";
+      form.elements.nombre.value = unit.nombre || "";
+      form.elements.padreId.value = unit.padreId || "";
+    }
+
+    function showStructureTab(tab) {
+      document.querySelectorAll("[data-structure-tab]").forEach(button => button.classList.toggle("active", button.dataset.structureTab === tab));
+      document.querySelectorAll('[id^="structureTab-"]').forEach(section => section.classList.remove("active"));
+      document.getElementById(`structureTab-${tab}`)?.classList.add("active");
     }
 
     function syncCatalogOptions() {
@@ -3351,6 +3480,8 @@
       if (detailButton) openProjectDetail(detailButton.dataset.projectKey);
       const warehouseDetailButton = event.target.closest(".warehouse-detail-btn");
       if (warehouseDetailButton) openWarehouseRequestDetail(warehouseDetailButton.dataset.id);
+      const editUnitButton = event.target.closest(".edit-unit-btn");
+      if (editUnitButton) editUnit(editUnitButton.dataset.id);
       const rejectButton = event.target.closest(".reject-payment-btn");
       if (rejectButton) rejectPayment(rejectButton.dataset.id).catch(error => alert(error.message || "No se pudo rechazar la cubicación."));
       const noticeReadButton = event.target.closest(".notice-read-btn");
@@ -3366,6 +3497,10 @@
 
     document.getElementById("closeProjectDetailBtn").addEventListener("click", closeProjectDetail);
     document.getElementById("closeWarehouseRequestDetailBtn").addEventListener("click", closeWarehouseRequestDetail);
+    document.querySelectorAll("[data-structure-tab]").forEach(button => {
+      button.addEventListener("click", () => showStructureTab(button.dataset.structureTab));
+    });
+    document.getElementById("newUnitBtn").addEventListener("click", resetUnitForm);
     document.addEventListener("click", event => {
       const editUserButton = event.target.closest(".edit-user-btn");
       if (editUserButton) editUser(editUserButton.dataset.id);
@@ -3749,6 +3884,45 @@
       saveState();
       event.currentTarget.reset();
       renderCatalogs();
+    });
+
+    document.getElementById("unitForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!can("estructura")) return alert("El usuario activo no tiene permiso para modificar la estructura.");
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form));
+      const parent = (state.organizationUnits || []).find(unit => String(unit.id) === String(data.padreId));
+      const route = parent ? `${unitRoute(parent)} > ${data.nombre}` : data.nombre;
+      const id = data.editingId || makeId();
+      const unit = {
+        id,
+        tipo: data.tipo,
+        nombre: String(data.nombre || "").trim(),
+        padreId: data.padreId || "",
+        padreNombre: parent?.nombre || "",
+        ruta: route,
+        creadoEn: new Date().toISOString()
+      };
+      if (!unit.nombre) return alert("Debe escribir el nombre de la unidad.");
+      if (window.supabaseClient) {
+        const result = await window.supabaseClient.from("estructura_unidades").upsert({
+          id: unit.id,
+          tipo: unit.tipo,
+          nombre: unit.nombre,
+          padre_id: unit.padreId || null,
+          padre_nombre: unit.padreNombre,
+          ruta: unit.ruta
+        }).select("*").single();
+        if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
+        if (result.data) unit.id = result.data.id;
+      }
+      const index = (state.organizationUnits || []).findIndex(item => String(item.id) === String(id));
+      if (index >= 0) state.organizationUnits[index] = unit;
+      else state.organizationUnits = [...(state.organizationUnits || []), unit];
+      audit(data.editingId ? "Unidad modificada" : "Unidad creada", `${unit.tipo} | ${unit.ruta}`);
+      saveState();
+      resetUnitForm();
+      renderStructure();
     });
 
     document.getElementById("inventoryForm").addEventListener("submit", async event => {
