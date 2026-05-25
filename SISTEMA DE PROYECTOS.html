@@ -689,8 +689,8 @@
             <label>Nombre<input name="nombre" required></label>
             <label>Apellido<input name="apellido" required></label>
             <label>Cédula<input name="cedula" placeholder="000-0000000-0" required></label>
-            <label>Grupo ocupacional<input name="grupoOcupacional"></label>
-            <label class="span-2">Cargo<input name="cargo"></label>
+            <label>Grupo ocupacional<select name="grupoOcupacional" id="employeeGroupSelect"><option value="">Seleccione grupo</option></select></label>
+            <label class="span-2">Cargo<select name="cargo" id="employeePositionSelect"><option value="">Seleccione cargo</option></select></label>
             <label>Salario<input name="salario" type="number" min="0" step="0.01"></label>
             <label>Fecha de ingreso<input name="fechaIngreso" type="date"></label>
             <label>Tipo de Ingreso<input name="tipoIngreso"></label>
@@ -1747,6 +1747,7 @@
       renderControls();
       renderCatalogs();
       renderStructure();
+      populateOccupationalGroups(document.getElementById("employeeGroupSelect")?.value || "", document.getElementById("employeePositionSelect")?.value || "");
       renderEmployees();
       renderHumanResources();
       renderReport();
@@ -2288,6 +2289,42 @@
       document.getElementById(`structureTab-${tab}`)?.classList.add("active");
     }
 
+    const occupationalGroups = {
+      "GRUPO OCUPACIONAL I - SERVICIOS GENERALES": [
+        "CONSERJE", "PARQUEADOR", "FOTOCOPIADOR", "MENSAJERO INTERNO", "PORTERO", "VIGILANTE", "JARDINERO", "AYUDANTE DE MANTENIMIENTO", "MENSAJERO EXTERNO", "CHOFER I", "CHOFER II", "AYUDANTE DE PLOMERO", "OPERADOR DE EQUIPO DE BOMBEO", "RECOLECTOR DE MUESTRAS DE AGUA POTABLE", "LECTOR DE MEDIDORES", "OPERADOR DE EQUIPO PESADO", "OPERADOR DE VALVULA"
+      ],
+      "GRUPO OCUPACIONAL II - SUPERVISION Y APOYO": [
+        "RECEPCIONISTA", "SECRETARIA", "AUXILIAR DE RELACIONES PUBLICAS", "AUXILIAR ADMINISTRATIVO I", "AUXILIAR COMERCIAL", "AUXILIAR DE SERVICIO AL CLIENTE", "CAJERO", "AUXILIAR DE ALMACEN Y SUMINISTRO", "SECRETARIA EJECUTIVA", "DIGITADOR", "AUXILIAR DE FACTURACION", "AUXILIAR DE CATASTRO", "AUXILIAR DE GESTION DE COBRO", "AUXILIAR DE VALIJA", "OPERADOR DE PLANTA DE TRATAMIENTO DE AGUA POTABLE", "OPERADOR DE PLANTA DE TRATAMIENTO DE AGUAS RESIDUALES", "SUPERVISOR GENERAL", "SUPERVISOR COMERCIAL", "SUPERVISOR DE REDES DE AGUA POTABLE", "GESTOR DE COBRO", "SUPERVISOR DE PROTOCOLO", "ENCARGADO (A) SECCION DE SEGURIDAD", "ENCARGADO (A) SECCION DE MAYORDOMIA"
+      ],
+      "GRUPO OCUPACIONAL III - TECNICOS": [
+        "PLOMERO I", "PLOMERO II", "SOLDADOR", "OPERADOR DE OBRA DE TOMA", "FOTOGRAFO", "ELECTRICISTA", "ALBANIL", "TECNICO EN ELECTRONICA", "TECNICO DE TESORERIA", "DIAGRAMADOR", "TECNICO DE NOMINA", "CAMAROGRAFO", "TECNICO ADMINISTRATIVO", "DISENADOR GRAFICO", "TECNICO DE CONTABILIDAD", "TECNICO DE LABORATORIO CONTROL DE CALIDAD DEL AGUA", "SOPORTE TECNICO INFORMATICO", "DISENADOR DE PAGINA WEB", "TECNICO EN COMPRAS Y CONTRATACIONES", "TECNICO DE ARCHIVISTICA", "TECNICO DE RECURSOS HUMANOS", "PROGRAMADOR DE COMPUTADORAS", "MONITOR DE CAMARAS", "TECNICO DE CLORACION", "COORDINADOR DE INCORPORACIONES DE AGUA POTABLE Y SANEAMIENTO", "ENCARGADO (A) SECCION DE TRANSPORTACION", "ENCARGADO (A) SECCION DE ALMACEN Y SUMINISTRO", "ENCARGADO (A) SECCION CORTE Y RECONEXION", "ENCARGADO (A) CENTROS DE PAGOS EXTERNOS", "ENCARGADO (A) SECCION DE MANTENIMIENTO Y REPARACION", "ENCARGADO (A) SECCION OBRAS DE TOMA"
+      ],
+      "GRUPO OCUPACIONAL IV - PROFESIONALES": [
+        "ANALISTA DE CAPACITACION Y DESARROLLO", "ANALISTA DE RECURSOS HUMANOS", "ANALISTA DE CONTROL Y ANALISIS DE OPERACIONES", "ANALISTA DE PRESUPUESTO", "ANALISTA DE PLANIFICACION", "ANALISTA DE DESARROLLO INSTITUCIONAL", "ANALISTA DE CALIDAD EN LA GESTION", "ANALISTA DE COOPERACION INTERNACIONAL", "ANALISTA DE PROYECTOS", "PSICOLOGO INDUSTRIAL", "ANALISTA DE SISTEMAS INFORMATICOS", "ANALISTA DE DATOS ESTADISTICOS", "ADMINISTRADOR DE BASE DE DATOS", "ABOGADO I", "ABOGADO II", "CONTADOR", "ANALISTA FINANCIERO", "ADMINISTRADOR DE RED", "AGRIMENSOR", "SUPERVISOR DE OBRAS", "ANALISTA DE PRESUPUESTO DE OBRAS", "LABORATORISTA CONTROL CALIDAD DE AGUA", "PERIODISTA", "ADMINISTRADOR (A) DE CENTROS DE SERVICIO AL CLIENTE", "ANALISTA DE ASISTENCIA SOCIAL"
+      ],
+      "GRUPO OCUPACIONAL V - DIRECCION": [
+        "ENCARGADO (A) DE CENTROS DE SERVICIO AL CLIENTE", "ENCARGADO (A) SECCION DE ARCHIVO Y CORRESPONDENCIA", "ENCARGADO (A) SECCION DE PROTOCOLO Y EVENTOS", "ENCARGADO (A) SECCION DE COOPERACION INTERNACIONAL", "ENCARGADO (A) SECCION DE REDES SOCIALES Y MEDIOS DIGITALES", "ENCARGADO (A) SECCION DE SERVICIO AL CLIENTE", "ENCARGADO (A) SECCION DE REGISTRO, CONTROL Y NOMINA", "ENCARGADO (A) SECCION DE EVALUACION DEL DESEMPENO Y CAPACITACION", "ENCARGADO (A) SECCION DE ORGANIZACION DEL TRABAJO Y COMPENSACIONES", "ENCARGADO (A) SECCION DE COMPRAS Y CONTRATACIONES", "ENCARGADO (A) SECCION DE CONTROL DE ACTIVO FIJO", "ENCARGADO (A) SECCION DE TESORERIA", "ENCARGADO (A) SECCION DE PRESUPUESTO", "ENCARGADO (A) SECCION DE GESTION DE COBROS", "ENCARGADO (A) SECCION DE ADMINISTRACION DE SERVICIOS TIC", "ENCARGADO (A) SECCION DE OPERACIONES TIC", "ENCARGADO (A) SECCION DE TRATAMIENTO DE AGUA POTABLE", "ENCARGADO (A) SECCION DE CONTROL DE CALIDAD DE AGUA POTABLE", "ENCARGADO (A) SECCION DE LABORATORIO", "ENCARGADO (A) SECCION DE MANTENIMIENTO DE REDES DE AGUA POTABLE", "ENCARGADO (A) SECCION DE OPERACION Y DISTRIBUCION DE AGUA POTABLE", "ENCARGADO (A) SECCION DE CATASTRO DE REDES DE AGUA POTABLE", "ENCARGADO (A) SECCION DE OPERACION Y MANTENIMIENTO ZONAS PERIFERICAS", "ENCARGADO (A) SECCION DE ELECTROMECANICA", "ENCARGADO (A) SECCION DE CONSTRUCCIONES", "ENCARGADO (A) SECCION DE DISENO Y PRESUPUESTO DE OBRAS", "ENCARGADO (A) SECCION DE FISCALIZACION Y CONTROL DE OBRAS", "ENCARGADO (A) SECCION DE OPERACION Y MANTENIMIENTO DE REDES DE AGUAS RESIDUALES", "ENCARGADO (A) SECCION DE CONTROL DE CALIDAD AGUAS RESIDUALES", "ENCARGADO (A) SECCION DE TRATAMIENTO DE AGUAS RESIDUALES", "ENCARGADO (A) SECCION DE MICRO MEDICION", "ENCARGADO (A) SECCION DE CATASTRO DE USUARIOS", "ENCARGADO (A) SECCION DE FACTURACION", "ENCARGADO (A) SECCION DE PRENSA", "ENCARGADO (A) DIVISION DE SERVICIOS GENERALES", "ENCARGADO (A) DIVISION DE RELACIONES PUBLICAS", "ENCARGADO (A) DE DIVISION PARTICIPACION SOCIAL Y CIUDADANA", "ENCARGADO (A) DEPARTAMENTO DE CONTABILIDAD", "ENCARGADO (A) DEPARTAMENTO DE FORMULACION, MONITOREO Y EVALUACION DE PLANES, PROGRAMAS Y PROYECTOS", "ENCARGADO(A) DEPARTAMENTO DE DESARROLLO INSTITUCIONAL Y CALIDAD EN LA GESTION", "ENCARGADO (A) DEPARTAMENTO DE GESTION OPERATIVA", "ENCARGADO (A) DEPARTAMENTO DE GESTION COMERCIAL", "ENCARGADO (A) DEPARTAMENTO DE AGUAS RESIDUALES Y SANEAMIENTO", "ENCARGADO (A) DEPARTAMENTO DE PRODUCCION Y TRATAMIENTO DE AGUA POTABLE", "ENCARGADO (A) DEPARTAMENTO DE OPERACION Y MANTENIMIENTO DE AGUA POTABLE", "ENCARGADO (A) DEPARTAMENTO DE INGENIERIA", "ENCARGADO (A) DEPARTAMENTO FINANCIERO", "ENCARGADO (A) DEPARTAMENTO ADMINISTRATIVO", "ENCARGADO (A) DEPARTAMENTO DE TECNOLOGIAS DE LA INFORMACION Y COMUNICACION", "ENCARGADO (A) DEPARTAMENTO JURIDICO", "ENCARGADO (A) DEPARTAMENTO DE CONTROL Y ANALISIS DE OPERACIONES", "ENCARGADO (A) OFICINA DE ACCESO A LA INFORMACION PUBLICA", "DIRECTOR (A) DE PLANIFICACION Y DESARROLLO", "DIRECTOR (A) DE COMUNICACIONES", "DIRECTOR (A) DE RECURSOS HUMANOS", "DIRECTOR (A) ADMINISTRATIVO FINANCIERO", "DIRECTOR (A) TECNICO", "DIRECTOR (A) COMERCIAL"
+      ]
+    };
+
+    function populateOccupationalGroups(selectedGroup = "", selectedPosition = "") {
+      const groupSelect = document.getElementById("employeeGroupSelect");
+      const positionSelect = document.getElementById("employeePositionSelect");
+      if (!groupSelect || !positionSelect) return;
+      const groups = Object.keys(occupationalGroups);
+      groupSelect.innerHTML = `<option value="">Seleccione grupo</option>` + groups.map(group => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
+      if (selectedGroup && !groups.includes(selectedGroup)) {
+        groupSelect.innerHTML += `<option value="${escapeHtml(selectedGroup)}">${escapeHtml(selectedGroup)}</option>`;
+      }
+      groupSelect.value = selectedGroup || "";
+      const positions = occupationalGroups[groupSelect.value] || [];
+      positionSelect.innerHTML = `<option value="">Seleccione cargo</option>` + positions.map(position => `<option value="${escapeHtml(position)}">${escapeHtml(position)}</option>`).join("");
+      if (selectedPosition && !positions.includes(selectedPosition)) {
+        positionSelect.innerHTML += `<option value="${escapeHtml(selectedPosition)}">${escapeHtml(selectedPosition)}</option>`;
+      }
+      positionSelect.value = selectedPosition || "";
+    }
+
     function employeeFromForm(form) {
       const data = Object.fromEntries(new FormData(form));
       return {
@@ -2305,6 +2342,7 @@
       form.reset();
       form.elements.editingId.value = "";
       form.elements.activo.checked = true;
+      populateOccupationalGroups();
     }
 
     function editEmployee(id) {
@@ -2317,6 +2355,7 @@
       });
       form.elements.editingId.value = employee.id;
       form.elements.activo.checked = employee.activo !== false;
+      populateOccupationalGroups(data.grupoOcupacional || "", data.cargo || "");
       document.getElementById("recursos-humanos").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -2325,8 +2364,8 @@
         Nombre: "Juan",
         Apellido: "Perez",
         Cedula: "000-0000000-0",
-        "Grupo ocupacional": "",
-        Cargo: "",
+        "Grupo ocupacional": "GRUPO OCUPACIONAL II - SUPERVISION Y APOYO",
+        Cargo: "AUXILIAR ADMINISTRATIVO I",
         Salario: 0,
         "Fecha de ingreso": "2026-01-01",
         "Tipo de ingreso": "",
@@ -4383,6 +4422,9 @@
     });
 
     document.getElementById("newEmployeeBtn").addEventListener("click", resetEmployeeForm);
+    document.getElementById("employeeGroupSelect").addEventListener("change", event => {
+      populateOccupationalGroups(event.target.value, "");
+    });
     document.getElementById("viewEmployeesBtn").addEventListener("click", () => {
       document.getElementById("employeesTableWrap").scrollIntoView({ behavior: "smooth", block: "start" });
     });
