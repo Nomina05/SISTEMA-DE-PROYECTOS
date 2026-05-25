@@ -562,15 +562,20 @@
           </div>
         </div>
         <div class="panel" data-permission="users-admin">
-          <h2>Registro de usuarios</h2>
+          <h2>Panel de Usuarios</h2>
           <form id="userForm" class="form-grid">
             <input type="hidden" name="editingUserId" id="editingUserId">
-            <label>Nombre<input name="nombre" required></label>
+            <label class="span-2">Vincular empleado RRHH<input name="empleadoRrhh" placeholder="Seleccione o escriba el empleado"></label>
+            <label>Nombre completo<input name="nombre" required></label>
             <label>Usuario<input name="usuario" required></label>
-            <label>Área de trabajo<input name="area" id="workAreaInput" placeholder="Ej. Dirección Técnica" required></label>
+            <label>Correo institucional<input name="correo" type="email" required placeholder="usuario@coraamoca.gob.do"></label>
+            <label>Rol<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Recursos Humanos</option><option>Consulta</option></select></label>
+            <label>Rol comercial si aplica<input name="rolComercial" placeholder="Ej. Atención al Cliente"></label>
+            <label class="permission-check"><input name="activo" type="checkbox" checked>Activo</label>
+            <label class="span-2">Unidad organizacional / línea de mando<select name="area" id="workAreaInput" required><option value="">Seleccione unidad</option></select></label>
             <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
-            <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Consulta</option></select></label>
-            <label>Contraseña temporal<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Contraseña genérica" required></label>
+            <label>Clave de acceso<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Clave genérica" required></label>
+            <label class="span-2">Nota de acceso<input name="notaAcceso" placeholder="Observación interna sobre el acceso"></label>
             <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
             <div class="span-4" id="policyPreview"></div>
             <div class="span-4 actions">
@@ -594,10 +599,69 @@
             <div>
               <span class="eyebrow">Gestión interna</span>
               <h1>Recursos Humanos</h1>
-              <p class="sub">Panel reservado para completar la información y procesos del área.</p>
             </div>
           </div>
-          <div class="empty">Este módulo está listo para configurar formularios, reportes y controles de Recursos Humanos.</div>
+          <div class="subtabs">
+            <button class="subtab active" type="button">Registro de Empleados</button>
+          </div>
+          <form id="employeeForm" class="form-grid">
+            <input type="hidden" name="editingId">
+            <label class="span-2">Importar Excel<input id="employeeImportInput" type="file" accept=".xlsx,.xls,.csv"></label>
+            <div class="actions span-2">
+              <button class="btn secondary" id="employeeTemplateBtn" type="button">Plantilla</button>
+            </div>
+            <label>Nombre<input name="nombre" required></label>
+            <label>Apellido<input name="apellido" required></label>
+            <label>Cédula<input name="cedula" placeholder="000-0000000-0" required></label>
+            <label>Grupo ocupacional<input name="grupoOcupacional"></label>
+            <label class="span-2">Cargo<input name="cargo"></label>
+            <label>Salario<input name="salario" type="number" min="0" step="0.01"></label>
+            <label>Fecha de ingreso<input name="fechaIngreso" type="date"></label>
+            <label>Tipo de Ingreso<input name="tipoIngreso"></label>
+            <label class="span-2">Estructura organizacional<select name="estructura"><option value="">Sin estructura seleccionada</option></select></label>
+            <label>Dirección<input name="direccionOrg"></label>
+            <label>Departamento<input name="departamento"></label>
+            <label>División<input name="division"></label>
+            <label>Sección<input name="seccion"></label>
+            <label>Centro de Servicio<input name="centroServicio"></label>
+            <label>Clasificación presupuestaria<input name="clasificacionPresupuestaria"></label>
+            <label>Fondo<input name="fondo"></label>
+            <label>Programa<input name="programa"></label>
+            <label>SubProg<input name="subprog"></label>
+            <label>Actividad<input name="actividad"></label>
+            <h2 class="span-4">Datos personales y bancarios</h2>
+            <label class="span-2">Dirección de residencia<input name="direccionResidencia"></label>
+            <label>Sector<input name="sector"></label>
+            <label>Cuenta de banco<input name="cuentaBanco"></label>
+            <label>Edad<input name="edad" type="number" min="0" step="1"></label>
+            <label>Fecha de nacimiento<input name="fechaNacimiento" type="date"></label>
+            <label>Nivel de escolaridad<input name="nivelEscolaridad"></label>
+            <label>Estado civil<input name="estadoCivil"></label>
+            <label>Cantidad de hijos<input name="cantidadHijos" type="number" min="0" step="1"></label>
+            <label>Tipo de sangre<input name="tipoSangre"></label>
+            <label>Licencia de conducir<input name="licenciaConducir"></label>
+            <h2 class="span-4">Expediente digital y datos complementarios</h2>
+            <label>Contacto de emergencia<input name="contactoEmergencia"></label>
+            <label>Teléfono de emergencia<input name="telefonoEmergencia"></label>
+            <label>Parentesco<input name="parentesco"></label>
+            <label>Documentos y archivos<input name="documentosArchivos"></label>
+            <label class="span-2">Historial laboral<textarea name="historialLaboral"></textarea></label>
+            <label class="span-2">Historial salarial<textarea name="historialSalarial"></textarea></label>
+            <label class="span-2">Dependientes<textarea name="dependientes"></textarea></label>
+            <label class="span-2">Contratos<textarea name="contratos"></textarea></label>
+            <label class="span-2">Firma digital / referencia<input name="firmaDigital"></label>
+            <label class="span-2">Foto / URL o referencia<input name="fotoReferencia"></label>
+            <label class="span-2">Biometría / referencia<input name="biometriaReferencia"></label>
+            <label class="span-2">Recomendación<input name="recomendacion"></label>
+            <label class="span-4">Nota<textarea name="nota"></textarea></label>
+            <label class="permission-check"><input name="activo" type="checkbox" checked>Activo</label>
+            <div class="actions span-4">
+              <button class="btn" type="submit">Guardar</button>
+              <button class="btn secondary" id="newEmployeeBtn" type="button">Nuevo</button>
+              <button class="btn secondary" id="viewEmployeesBtn" type="button">Ver empleados</button>
+            </div>
+          </form>
+          <div class="table-wrap" id="employeesTableWrap" style="margin-top:14px;"><table id="employeesTable"></table></div>
         </div>
       </section>
 
@@ -983,11 +1047,12 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: baseProjects, users: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: baseProjects, users: [], employees: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: mergeProjects(parsed.projects || []),
         users: parsed.users || [],
+        employees: parsed.employees || [],
         payments: parsed.payments || [],
         warehouseRequests: parsed.warehouseRequests || [],
         warehouseArticles: parsed.warehouseArticles || [],
@@ -1075,6 +1140,10 @@
         area: user.areas?.nombre || user.area || user.perfil_base || "",
         cargo: user.cargo || "",
         rol: user.perfil_base || "Consulta",
+        empleadoRrhh: user.empleado_rrhh || "",
+        rolComercial: user.rol_comercial || "",
+        notaAcceso: user.nota_acceso || "",
+        activo: user.activo !== false,
         permissions: permissionMap[user.id] || [],
         requiereCambioPassword: Boolean(user.requiere_cambio_password),
         creado: user.creado_en ? new Date(user.creado_en).toLocaleDateString("es-DO") : ""
@@ -1083,7 +1152,7 @@
 
     async function loadSupabaseData() {
       if (!window.supabaseClient) return;
-      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult] = await Promise.all([
+      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult, employeesResult] = await Promise.all([
         window.supabaseClient.from("proyectos").select("*, contratistas(nombre)").order("municipio", { ascending: true }),
         window.supabaseClient.from("usuarios").select("*, areas(nombre)").order("nombre", { ascending: true }),
         window.supabaseClient.from("usuario_permisos").select("usuario_id, permisos(codigo)"),
@@ -1092,7 +1161,8 @@
         window.supabaseClient.from("articulos_almacen").select("*").order("nombre", { ascending: true }),
         window.supabaseClient.from("configuracion_alertas").select("*").eq("id", "principal").maybeSingle(),
         window.supabaseClient.from("catalogos_sistema").select("*").order("tipo", { ascending: true }).order("valor", { ascending: true }),
-        window.supabaseClient.from("estructura_unidades").select("*").order("ruta", { ascending: true })
+        window.supabaseClient.from("estructura_unidades").select("*").order("ruta", { ascending: true }),
+        window.supabaseClient.from("rrhh_empleados").select("*").order("apellido", { ascending: true })
       ]);
       if (projectsResult.error) throw projectsResult.error;
       if (usersResult.error) throw usersResult.error;
@@ -1101,6 +1171,7 @@
       if (alertConfigResult.error && !String(alertConfigResult.error.message || "").toLowerCase().includes("relation")) throw alertConfigResult.error;
       if (catalogsResult.error && !String(catalogsResult.error.message || "").toLowerCase().includes("relation")) throw catalogsResult.error;
       if (orgUnitsResult.error && !String(orgUnitsResult.error.message || "").toLowerCase().includes("relation")) throw orgUnitsResult.error;
+      if (employeesResult.error && !String(employeesResult.error.message || "").toLowerCase().includes("relation")) throw employeesResult.error;
       const permissionMap = {};
       (permissionsResult.data || []).forEach(row => {
         permissionMap[row.usuario_id] = permissionMap[row.usuario_id] || [];
@@ -1134,6 +1205,21 @@
           padreNombre: row.padre_nombre || "",
           ruta: row.ruta || row.nombre || "",
           creadoEn: row.creado_en || ""
+        }));
+      }
+      if (employeesResult.data?.length) {
+        state.employees = employeesResult.data.map(row => ({
+          id: row.id,
+          nombre: row.nombre || "",
+          apellido: row.apellido || "",
+          cedula: row.cedula || "",
+          cargo: row.cargo || "",
+          salario: Number(row.salario || 0),
+          fechaIngreso: row.fecha_ingreso || "",
+          estructura: row.estructura || "",
+          centroServicio: row.centro_servicio || "",
+          activo: row.activo !== false,
+          data: row.datos || {}
         }));
       }
       state.audit = state.audit || [];
@@ -1339,7 +1425,7 @@
 
     function renderPermissionChecklist(checkedPermissions) {
       const selected = new Set(checkedPermissions || []);
-      return `<small>Permisos del usuario</small><div class="permission-groups">` +
+      return `<small>Todo el sistema</small><div class="permission-groups">` +
         Object.entries(permissionGroups).map(([group, permissions]) => `
           <section class="permission-group">
             <h3>${group}</h3>
@@ -1373,7 +1459,8 @@
       document.getElementById("editingUserId").value = "";
       const passwordInput = form.elements.passwordTemporal;
       passwordInput.required = true;
-      passwordInput.placeholder = "Contraseña genérica";
+      passwordInput.placeholder = "Clave genérica";
+      form.elements.activo.checked = true;
       form.elements.cargo.required = true;
       form.elements.cargo.placeholder = "Ej. Supervisor de obras";
       document.getElementById("userSubmitBtn").textContent = "Guardar usuario";
@@ -1391,8 +1478,16 @@
       document.getElementById("editingUserId").value = user.id;
       form.elements.nombre.value = user.nombre || "";
       form.elements.usuario.value = user.usuario || user.correo || "";
+      form.elements.correo.value = user.correo || user.usuario || "";
+      form.elements.empleadoRrhh.value = user.empleadoRrhh || "";
+      if (user.area && ![...form.elements.area.options].some(option => option.value === user.area)) {
+        form.elements.area.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(user.area)}">${escapeHtml(user.area)}</option>`);
+      }
       form.elements.area.value = user.area || user.rol || "";
       form.elements.cargo.value = user.cargo || "";
+      form.elements.rolComercial.value = user.rolComercial || "";
+      form.elements.notaAcceso.value = user.notaAcceso || "";
+      form.elements.activo.checked = user.activo !== false;
       form.elements.cargo.required = false;
       form.elements.cargo.placeholder = "Opcional al modificar";
       const isMasterAdmin = String(user.usuario || user.correo || "").toLowerCase() === "registroycontroldenomina@coraamoca.gob.do";
@@ -1561,6 +1656,7 @@
       renderControls();
       renderCatalogs();
       renderStructure();
+      renderEmployees();
       renderReport();
       renderPolicyPreview();
       renderAccess();
@@ -1825,22 +1921,17 @@
     }
 
     function renderUsers() {
-      renderTable("usersTable", ["Nombre", "Usuario", "Área", "Cargo", "Perfil base", "Cambio clave", "Permisos", "Creado"], state.users.map(user => {
-        const u = normalizedUser(user);
-        return [u.nombre, u.usuario, u.area || u.rol || "-", u.cargo || "-", u.rol, u.requiereCambioPassword ? "Pendiente" : "No", permissionBadges(u.permissions), u.creado];
-      }));
-    }
-
-    function renderUsers() {
-      renderTable("usersTable", ["Nombre", "Usuario", "Correo", "Área", "Cargo", "Perfil base", "Cambio clave", "Permisos", "Creado", "Acción"], state.users.map(user => {
+      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Activo", "Unidad / línea de mando", "Cargo", "Rol", "Rol comercial", "Cambio clave", "Permisos", "Creado", "Acción"], state.users.map(user => {
         const u = normalizedUser(user);
         return [
           escapeHtml(u.nombre),
           escapeHtml(u.usuario),
           escapeHtml(u.correo || u.usuario || "-"),
+          u.activo === false ? alertLevelBadge("Crítico") : alertLevelBadge("Correcto"),
           escapeHtml(u.area || u.rol || "-"),
           escapeHtml(u.cargo || "-"),
           escapeHtml(u.rol || "-"),
+          escapeHtml(u.rolComercial || "-"),
           u.requiereCambioPassword ? "Pendiente" : "No",
           permissionSummary(u),
           escapeHtml(u.creado || "-"),
@@ -2046,6 +2137,27 @@
         ).join("");
         if (selected && units.some(unit => String(unit.id) === String(selected))) parentSelect.value = selected;
       }
+      const userUnitSelect = document.getElementById("workAreaInput");
+      if (userUnitSelect) {
+        const selected = userUnitSelect.value;
+        userUnitSelect.innerHTML = `<option value="">Seleccione unidad</option>` + units.map(unit =>
+          `<option value="${escapeHtml(unitRoute(unit))}">${escapeHtml(unitRoute(unit))}</option>`
+        ).join("");
+        if (selected) {
+          if (![...userUnitSelect.options].some(option => option.value === selected)) {
+            userUnitSelect.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+          }
+          userUnitSelect.value = selected;
+        }
+      }
+      const employeeStructureSelect = document.querySelector('#employeeForm select[name="estructura"]');
+      if (employeeStructureSelect) {
+        const selected = employeeStructureSelect.value;
+        employeeStructureSelect.innerHTML = `<option value="">Sin estructura seleccionada</option>` + units.map(unit =>
+          `<option value="${escapeHtml(unitRoute(unit))}">${escapeHtml(unitRoute(unit))}</option>`
+        ).join("");
+        if (selected) employeeStructureSelect.value = selected;
+      }
       const rows = units.map(unit => {
         const parent = units.find(item => String(item.id) === String(unit.padreId));
         const parentName = unit.padreNombre || parent?.nombre || "";
@@ -2082,6 +2194,164 @@
       document.querySelectorAll("[data-structure-tab]").forEach(button => button.classList.toggle("active", button.dataset.structureTab === tab));
       document.querySelectorAll('[id^="structureTab-"]').forEach(section => section.classList.remove("active"));
       document.getElementById(`structureTab-${tab}`)?.classList.add("active");
+    }
+
+    function employeeFromForm(form) {
+      const data = Object.fromEntries(new FormData(form));
+      return {
+        id: data.editingId || makeId(),
+        ...data,
+        salario: Number(data.salario || 0),
+        edad: Number(data.edad || 0),
+        cantidadHijos: Number(data.cantidadHijos || 0),
+        activo: form.querySelector('input[name="activo"]').checked
+      };
+    }
+
+    function resetEmployeeForm() {
+      const form = document.getElementById("employeeForm");
+      form.reset();
+      form.elements.editingId.value = "";
+      form.elements.activo.checked = true;
+    }
+
+    function renderEmployees() {
+      renderTable("employeesTable", ["Nombre", "Apellido", "Cédula", "Cargo", "Salario", "Fecha ingreso", "Estructura", "Centro", "Activo", "Acción"], (state.employees || []).map(employee => [
+        escapeHtml(employee.nombre || "-"),
+        escapeHtml(employee.apellido || "-"),
+        escapeHtml(employee.cedula || "-"),
+        escapeHtml(employee.cargo || employee.data?.cargo || "-"),
+        money.format(Number(employee.salario || employee.data?.salario || 0)),
+        escapeHtml(employee.fechaIngreso || employee.data?.fechaIngreso || "-"),
+        escapeHtml(employee.estructura || employee.data?.estructura || "-"),
+        escapeHtml(employee.centroServicio || employee.data?.centroServicio || "-"),
+        employee.activo === false ? alertLevelBadge("Crítico") : alertLevelBadge("Correcto"),
+        `<button class="btn secondary edit-employee-btn" type="button" data-id="${escapeHtml(employee.id)}">Modificar</button>`
+      ]));
+    }
+
+    function editEmployee(id) {
+      const employee = (state.employees || []).find(item => String(item.id) === String(id));
+      if (!employee) return;
+      const form = document.getElementById("employeeForm");
+      const data = { ...(employee.data || {}), ...employee };
+      Object.keys(data).forEach(key => {
+        if (form.elements[key] && key !== "activo") form.elements[key].value = data[key] ?? "";
+      });
+      form.elements.editingId.value = employee.id;
+      form.elements.activo.checked = employee.activo !== false;
+      document.getElementById("recursos-humanos").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function downloadEmployeeTemplate() {
+      const rows = [{
+        Nombre: "Juan",
+        Apellido: "Perez",
+        Cedula: "000-0000000-0",
+        "Grupo ocupacional": "",
+        Cargo: "",
+        Salario: 0,
+        "Fecha de ingreso": "2026-01-01",
+        "Tipo de ingreso": "",
+        "Estructura organizacional": "",
+        "Centro de Servicio": "",
+        Activo: "Si"
+      }];
+      const sheet = XLSX.utils.json_to_sheet(rows);
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, "Empleados");
+      XLSX.writeFile(book, "plantilla-empleados.xlsx");
+    }
+
+    async function importEmployeesFile(file) {
+      if (!file) return;
+      if (!window.XLSX) return alert("No se pudo cargar la librería de Excel. Revise la conexión a internet.");
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }).map(row => ({
+        id: makeId(),
+        nombre: row.Nombre || row.nombre || "",
+        apellido: row.Apellido || row.apellido || "",
+        cedula: row.Cedula || row.Cédula || row.cedula || "",
+        grupoOcupacional: row["Grupo ocupacional"] || "",
+        cargo: row.Cargo || row.cargo || "",
+        salario: Number(row.Salario || row.salario || 0),
+        fechaIngreso: row["Fecha de ingreso"] || "",
+        tipoIngreso: row["Tipo de ingreso"] || "",
+        estructura: row["Estructura organizacional"] || "",
+        centroServicio: row["Centro de Servicio"] || "",
+        activo: String(row.Activo || "Si").toLowerCase() !== "no"
+      })).filter(row => row.nombre || row.apellido || row.cedula);
+      state.employees = [...(state.employees || []), ...rows];
+      saveState();
+      renderEmployees();
+      alert(`Empleados importados: ${number.format(rows.length)}.`);
+    }
+
+    function renderEmployees() {
+      renderTable("employeesTable", ["Nombre", "Apellido", "Cedula", "Cargo", "Salario", "Fecha ingreso", "Estructura", "Centro", "Activo", "Accion"], (state.employees || []).map(employee => [
+        escapeHtml(employee.nombre || "-"),
+        escapeHtml(employee.apellido || "-"),
+        escapeHtml(employee.cedula || "-"),
+        escapeHtml(employee.cargo || employee.data?.cargo || "-"),
+        money.format(Number(employee.salario || employee.data?.salario || 0)),
+        escapeHtml(employee.fechaIngreso || employee.data?.fechaIngreso || "-"),
+        escapeHtml(employee.estructura || employee.data?.estructura || "-"),
+        escapeHtml(employee.centroServicio || employee.data?.centroServicio || "-"),
+        employee.activo === false ? alertLevelBadge("Critico") : alertLevelBadge("Correcto"),
+        `<button class="btn secondary edit-employee-btn" type="button" data-id="${escapeHtml(employee.id)}">Modificar</button>`
+      ]));
+    }
+
+    async function importEmployeesFile(file) {
+      if (!file) return;
+      if (!window.XLSX) return alert("No se pudo cargar la libreria de Excel. Revise la conexion a internet.");
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }).map(row => ({
+        id: makeId(),
+        nombre: row.Nombre || row.nombre || "",
+        apellido: row.Apellido || row.apellido || "",
+        cedula: row.Cedula || row["Cedula"] || row.cedula || "",
+        grupoOcupacional: row["Grupo ocupacional"] || "",
+        cargo: row.Cargo || row.cargo || "",
+        salario: Number(row.Salario || row.salario || 0),
+        fechaIngreso: row["Fecha de ingreso"] || "",
+        tipoIngreso: row["Tipo de ingreso"] || "",
+        estructura: row["Estructura organizacional"] || "",
+        centroServicio: row["Centro de Servicio"] || "",
+        activo: String(row.Activo || "Si").toLowerCase() !== "no"
+      })).filter(row => row.nombre || row.apellido || row.cedula);
+      let savedRows = rows;
+      if (window.supabaseClient && rows.length) {
+        const payload = rows.map(employee => ({
+          id: employee.id,
+          nombre: employee.nombre,
+          apellido: employee.apellido,
+          cedula: employee.cedula,
+          cargo: employee.cargo,
+          salario: employee.salario,
+          fecha_ingreso: employee.fechaIngreso || null,
+          estructura: employee.estructura,
+          centro_servicio: employee.centroServicio,
+          activo: employee.activo,
+          datos: employee
+        }));
+        const result = await window.supabaseClient.from("rrhh_empleados").upsert(payload).select("*");
+        if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
+        if (Array.isArray(result.data)) {
+          savedRows = rows.map(employee => {
+            const saved = result.data.find(item => String(item.cedula || "") === String(employee.cedula || "") && employee.cedula);
+            return saved ? { ...employee, id: saved.id } : employee;
+          });
+        }
+      }
+      const existing = new Map((state.employees || []).map(employee => [String(employee.id), employee]));
+      savedRows.forEach(employee => existing.set(String(employee.id), employee));
+      state.employees = Array.from(existing.values());
+      saveState();
+      renderEmployees();
+      alert(`Empleados importados: ${number.format(savedRows.length)}.`);
     }
 
     function syncCatalogOptions() {
@@ -3482,6 +3752,8 @@
       if (warehouseDetailButton) openWarehouseRequestDetail(warehouseDetailButton.dataset.id);
       const editUnitButton = event.target.closest(".edit-unit-btn");
       if (editUnitButton) editUnit(editUnitButton.dataset.id);
+      const editEmployeeButton = event.target.closest(".edit-employee-btn");
+      if (editEmployeeButton) editEmployee(editEmployeeButton.dataset.id);
       const rejectButton = event.target.closest(".reject-payment-btn");
       if (rejectButton) rejectPayment(rejectButton.dataset.id).catch(error => alert(error.message || "No se pudo rechazar la cubicación."));
       const noticeReadButton = event.target.closest(".notice-read-btn");
@@ -3573,70 +3845,21 @@
 
     document.getElementById("userForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("users-admin")) return alert("El usuario activo no tiene permiso para crear usuarios.");
-      try {
-      const data = Object.fromEntries(new FormData(event.currentTarget));
-      const permissions = [...event.currentTarget.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
-      if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
-      if (!data.passwordTemporal || data.passwordTemporal.length < 6) return alert("Debe colocar una contraseña temporal de al menos 6 caracteres.");
-      const mustChangePassword = event.currentTarget.querySelector('input[name="requiereCambioPassword"]').checked;
-      if (window.supabaseClient) {
-        const currentSession = await window.supabaseClient.auth.getSession();
-        const authResult = await window.supabaseClient.auth.signUp({
-          email: data.usuario,
-          password: data.passwordTemporal,
-          options: { data: { nombre: data.nombre, requiere_cambio_password: mustChangePassword } }
-        });
-        if (authResult.error) throw authResult.error;
-        if (currentSession.data.session?.access_token && currentSession.data.session?.refresh_token) {
-          await window.supabaseClient.auth.setSession({
-            access_token: currentSession.data.session.access_token,
-            refresh_token: currentSession.data.session.refresh_token
-          });
-        }
-        const inserted = await window.supabaseClient.from("usuarios").insert({
-          nombre: data.nombre,
-          usuario: data.usuario,
-          correo: data.usuario,
-          cargo: data.cargo,
-          perfil_base: data.rol,
-          requiere_cambio_password: mustChangePassword,
-          activo: true
-        }).select("*").single();
-        if (inserted.error) throw inserted.error;
-        const permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
-        if (permissionRows.error) throw permissionRows.error;
-        if (permissionRows.data.length) {
-          const links = permissionRows.data.map(permission => ({ usuario_id: inserted.data.id, permiso_id: permission.id }));
-          const linkResult = await window.supabaseClient.from("usuario_permisos").insert(links);
-          if (linkResult.error) throw linkResult.error;
-        }
-        await loadSupabaseData();
-      } else {
-        state.users.push({ ...data, passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, permissions, creado: new Date().toLocaleDateString("es-DO") });
-      }
-      saveState();
-      event.currentTarget.reset();
-      renderAll();
-      } catch (error) {
-        alert(error.message || "No se pudo guardar el usuario en Supabase.");
-      }
-    });
-
-    document.getElementById("userForm").addEventListener("submit", async event => {
-      event.preventDefault();
       event.stopImmediatePropagation();
       if (!can("users-admin")) return alert("El usuario activo no tiene permiso para crear o modificar usuarios.");
       try {
         const form = event.currentTarget;
         const data = Object.fromEntries(new FormData(form));
-        const isMasterAdmin = String(data.usuario || "").toLowerCase() === "registroycontroldenomina@coraamoca.gob.do";
+        const accessEmail = String(data.correo || data.usuario || "").trim().toLowerCase();
+        const isMasterAdmin = accessEmail === "registroycontroldenomina@coraamoca.gob.do";
         if (isMasterAdmin) data.rol = "Administrador";
         const permissions = isMasterAdmin
           ? Object.keys(permissionLabels)
           : [...form.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
         const mustChangePassword = form.querySelector('input[name="requiereCambioPassword"]').checked;
+        const isActive = form.querySelector('input[name="activo"]').checked;
         if (!permissions.length) return alert("Debe seleccionar al menos un permiso para el usuario.");
+        if (!accessEmail) return alert("Debe colocar el correo institucional.");
 
         if (editingUserId) {
           if (window.supabaseClient) {
@@ -3644,11 +3867,14 @@
             const updatePayload = {
               nombre: data.nombre,
               usuario: data.usuario,
-              correo: data.usuario,
+              correo: accessEmail,
               cargo: data.cargo,
               perfil_base: data.rol,
               requiere_cambio_password: mustChangePassword,
-              activo: true,
+              activo: isActive,
+              empleado_rrhh: data.empleadoRrhh || "",
+              rol_comercial: data.rolComercial || "",
+              nota_acceso: data.notaAcceso || "",
               actualizado_en: new Date().toISOString()
             };
             if (areaId) updatePayload.area_id = areaId;
@@ -3660,7 +3886,7 @@
             if (refreshedUser) refreshedUser.permissions = [...permissions];
           } else {
             const index = state.users.findIndex(user => user.id === editingUserId);
-            if (index >= 0) state.users[index] = { ...state.users[index], nombre: data.nombre, usuario: data.usuario, correo: data.usuario, area: data.area, cargo: data.cargo, rol: data.rol, requiereCambioPassword: mustChangePassword, permissions };
+            if (index >= 0) state.users[index] = { ...state.users[index], nombre: data.nombre, usuario: data.usuario, correo: accessEmail, area: data.area, cargo: data.cargo, rol: data.rol, rolComercial: data.rolComercial, empleadoRrhh: data.empleadoRrhh, notaAcceso: data.notaAcceso, activo: isActive, requiereCambioPassword: mustChangePassword, permissions };
           }
           audit("Usuario modificado", `${data.nombre} (${data.usuario})`);
           saveState();
@@ -3669,12 +3895,12 @@
           return;
         }
 
-        if (!data.passwordTemporal || data.passwordTemporal.length < 6) return alert("Debe colocar una contraseña temporal de al menos 6 caracteres.");
+        if (!data.passwordTemporal || data.passwordTemporal.length < 6) return alert("Debe colocar una clave de acceso de al menos 6 caracteres.");
         if (window.supabaseClient) {
           const areaId = await ensureAreaId(data.area);
           const currentSession = await window.supabaseClient.auth.getSession();
           const authResult = await window.supabaseClient.auth.signUp({
-            email: data.usuario,
+            email: accessEmail,
             password: data.passwordTemporal,
             options: { data: { nombre: data.nombre, requiere_cambio_password: mustChangePassword } }
           });
@@ -3688,12 +3914,15 @@
           const inserted = await window.supabaseClient.from("usuarios").upsert({
             nombre: data.nombre,
             usuario: data.usuario,
-            correo: data.usuario,
+            correo: accessEmail,
             area_id: areaId,
             cargo: data.cargo,
             perfil_base: data.rol,
             requiere_cambio_password: mustChangePassword,
-            activo: true
+            activo: isActive,
+            empleado_rrhh: data.empleadoRrhh || "",
+            rol_comercial: data.rolComercial || "",
+            nota_acceso: data.notaAcceso || ""
           }, { onConflict: "usuario" }).select("*").single();
           if (inserted.error) throw inserted.error;
           await replaceUserPermissions(inserted.data.id, permissions);
@@ -3701,7 +3930,7 @@
           const refreshedUser = state.users.find(user => user.id === inserted.data.id);
           if (refreshedUser) refreshedUser.permissions = [...permissions];
         } else {
-          state.users.push({ ...data, id: makeId(), passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, permissions, creado: new Date().toLocaleDateString("es-DO") });
+          state.users.push({ ...data, id: makeId(), correo: accessEmail, passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, activo: isActive, permissions, creado: new Date().toLocaleDateString("es-DO") });
         }
         audit("Usuario creado", `${data.nombre} (${data.usuario})`);
         saveState();
@@ -3923,6 +4152,46 @@
       saveState();
       resetUnitForm();
       renderStructure();
+    });
+
+    document.getElementById("employeeForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!can("recursos-humanos")) return alert("El usuario activo no tiene permiso para registrar empleados.");
+      const employee = employeeFromForm(event.currentTarget);
+      if (window.supabaseClient) {
+        const payload = {
+          id: employee.id,
+          nombre: employee.nombre,
+          apellido: employee.apellido,
+          cedula: employee.cedula,
+          cargo: employee.cargo,
+          salario: employee.salario,
+          fecha_ingreso: employee.fechaIngreso || null,
+          estructura: employee.estructura,
+          centro_servicio: employee.centroServicio,
+          activo: employee.activo,
+          datos: employee
+        };
+        const result = await window.supabaseClient.from("rrhh_empleados").upsert(payload).select("*").single();
+        if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
+        if (result.data) employee.id = result.data.id;
+      }
+      const index = (state.employees || []).findIndex(item => String(item.id) === String(employee.id));
+      if (index >= 0) state.employees[index] = employee;
+      else state.employees = [employee, ...(state.employees || [])];
+      audit("Empleado guardado", `${employee.nombre || ""} ${employee.apellido || ""} | ${employee.cedula || ""}`);
+      saveState();
+      resetEmployeeForm();
+      renderEmployees();
+    });
+
+    document.getElementById("newEmployeeBtn").addEventListener("click", resetEmployeeForm);
+    document.getElementById("viewEmployeesBtn").addEventListener("click", () => {
+      document.getElementById("employeesTableWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    document.getElementById("employeeTemplateBtn").addEventListener("click", downloadEmployeeTemplate);
+    document.getElementById("employeeImportInput").addEventListener("change", event => {
+      importEmployeesFile(event.target.files[0]).catch(error => alert(error.message || "No se pudo importar el Excel."));
     });
 
     document.getElementById("inventoryForm").addEventListener("submit", async event => {
