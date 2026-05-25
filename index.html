@@ -127,6 +127,20 @@
     .rh-action { min-height: 58px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f9fbfc; text-align: left; font-weight: 800; }
     .rh-action small { display: block; margin-top: 4px; color: var(--muted); font-weight: 700; }
     #rhTab-empleados > .panel > .page-heading, #rhTab-empleados > .panel > .subtabs { display: none; }
+    .employee-register-panel { padding: 10px; background: #f6f9fc; }
+    .employee-register-panel .rh-module-list { display: none; }
+    .employee-register-panel .panel-head { margin: 0 0 10px; }
+    .employee-register-panel .panel-head h2 { font-size: 26px; color: #0d3159; }
+    .employee-register-panel .panel-head h2::after { content: ""; display: block; width: 48px; height: 3px; margin-top: 8px; border-radius: 999px; background: var(--blue); }
+    .employee-register-panel .panel-head .sub, .employee-register-panel .panel-head .badge { display: none; }
+    .employee-form { grid-template-columns: repeat(8, minmax(120px, 1fr)); gap: 8px; padding: 10px; border: 1px solid #cfddea; border-radius: 8px; background: #f8fbff; }
+    .employee-form label { gap: 4px; font-size: 11px; }
+    .employee-form input, .employee-form select, .employee-form textarea { min-height: 34px; padding: 7px 9px; border-color: #c9d8e6; font-size: 12px; }
+    .employee-form textarea { min-height: 50px; }
+    .employee-form h2 { grid-column: 1 / -1; margin: 2px 0 0; padding: 10px 8px 0; border-top: 1px solid #d8e5f0; color: #102b4a; font-size: 14px; }
+    .employee-form .actions { align-items: center; }
+    .employee-form .span-2 { grid-column: span 2; }
+    .employee-form .span-4 { grid-column: 1 / -1; }
     .warehouse-requests { display: grid; gap: 10px; }
     .warehouse-request { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; padding: 12px; }
     .warehouse-request-summary { display: grid; grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 1fr)) auto; gap: 10px; align-items: center; }
@@ -253,6 +267,7 @@
       .chart-wrap { min-height: 300px; }
       .embedded-frame { height: 560px; }
       .rh-workspace { grid-template-columns: 1fr; }
+      .employee-form { grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); }
       table.snip-detail-report { min-width: 1080px; }
       table.snip-group-report { min-width: 1100px; }
     }
@@ -275,6 +290,7 @@
       .panel { padding: 12px; border-radius: 6px; }
       .metric strong { font-size: 16px; }
       .span-2, .span-4 { grid-column: auto; }
+      .employee-form .span-2, .employee-form .span-4 { grid-column: auto; }
       .wide { grid-column: auto; }
       .filters input, .filters select { width: 100%; }
       .table-tools { align-items: stretch; }
@@ -663,7 +679,7 @@
           </div>
         </div>
         <div class="subsection" id="rhTab-empleados">
-        <div class="panel">
+        <div class="panel employee-register-panel">
           <div class="page-heading">
             <div>
               <span class="eyebrow">Gestión interna</span>
@@ -680,18 +696,18 @@
           <div class="rh-module-list" style="margin-bottom:14px;">
             <span>Registro de empleados</span><span>Expediente digital</span><span>Informacion personal</span><span>Informacion laboral</span><span>Contactos de emergencia</span><span>Documentos y archivos</span><span>Historial laboral</span><span>Historial salarial</span><span>Dependientes</span><span>Contratos</span><span>Estado del empleado</span><span>Firma digital</span><span>Foto y biometria</span>
           </div>
-          <form id="employeeForm" class="form-grid">
+          <form id="employeeForm" class="form-grid employee-form">
             <input type="hidden" name="editingId">
             <label class="span-2">Importar Excel<input id="employeeImportInput" type="file" accept=".xlsx,.xls,.csv"></label>
             <div class="actions span-2">
               <button class="btn secondary" id="employeeTemplateBtn" type="button">Plantilla</button>
             </div>
-            <label>Nombre<input name="nombre" required></label>
-            <label>Apellido<input name="apellido" required></label>
+            <label>Nombre<input name="nombre" placeholder="Nombre" required></label>
+            <label>Apellido<input name="apellido" placeholder="Apellido" required></label>
             <label>Cédula<input name="cedula" placeholder="000-0000000-0" required></label>
             <label>Grupo ocupacional<select name="grupoOcupacional" id="employeeGroupSelect"><option value="">Seleccione grupo</option></select></label>
             <label class="span-2">Cargo<select name="cargo" id="employeePositionSelect"><option value="">Seleccione cargo</option></select></label>
-            <label>Salario<input name="salario" type="number" min="0" step="0.01"></label>
+            <label>Salario<input name="salario" type="number" min="0" step="0.01" placeholder="Salario"></label>
             <label>Fecha de ingreso<input name="fechaIngreso" type="date"></label>
             <label>Tipo de Ingreso<input name="tipoIngreso"></label>
             <label class="span-2">Estructura organizacional<select name="estructura"><option value="">Sin estructura seleccionada</option></select></label>
