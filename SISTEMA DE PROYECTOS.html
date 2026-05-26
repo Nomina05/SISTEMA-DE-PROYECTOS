@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -340,11 +340,11 @@
   <div class="auth-screen" id="authScreen">
     <div class="auth-card">
       <h1>CORAAMOCA</h1>
-      <p class="sub">Iniciar sesión para acceder al sistema</p>
+      <p class="sub">Iniciar sesiÃ³n para acceder al sistema</p>
       <form id="loginForm" novalidate>
         <label>Usuario o correo<input id="loginEmail" type="email" autocomplete="username" required></label>
-        <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-        <button class="btn" id="loginBtn" type="submit">Iniciar sesión</button>
+        <label>ContraseÃ±a<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <button class="btn" id="loginBtn" type="submit">Iniciar sesiÃ³n</button>
         <div class="auth-error" id="authError"></div>
       </form>
     </div>
@@ -363,7 +363,7 @@
         <button class="nav-btn" data-view="estructura" onclick="showView('estructura')">Estructura</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
-        <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a Almacén</button>
+        <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a AlmacÃ©n</button>
         <button class="nav-btn" data-view="inventario" onclick="showView('inventario')">Inventario</button>
         <button class="nav-btn" data-view="documentos" onclick="showView('documentos')">Documentos</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
@@ -386,20 +386,20 @@
         <button class="btn secondary" id="backupBtn" type="button">Exportar respaldo</button>
         <button class="btn secondary" id="restoreBtn" type="button">Importar respaldo</button>
         <button class="btn secondary" id="contrastBtn" type="button">Alto contraste</button>
-        <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseña</button>
-        <button class="btn danger" id="logoutBtn" type="button">Cerrar sesión</button>
+        <button class="btn secondary" id="changePasswordBtn" type="button">Cambiar contraseÃ±a</button>
+        <button class="btn danger" id="logoutBtn" type="button">Cerrar sesiÃ³n</button>
         <input type="file" id="restoreFile" accept="application/json" hidden>
       </div>
       <div class="modal-backdrop" id="passwordModal" hidden>
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
-          <h2 id="passwordModalTitle">Cambiar contraseña</h2>
-          <p class="sub">La nueva contraseña se guardará en Supabase para el usuario conectado.</p>
+          <h2 id="passwordModalTitle">Cambiar contraseÃ±a</h2>
+          <p class="sub">La nueva contraseÃ±a se guardarÃ¡ en Supabase para el usuario conectado.</p>
           <form id="passwordForm">
-            <label>Nueva contraseña<input id="newPassword" type="password" autocomplete="new-password" minlength="6" required></label>
-            <label>Confirmar contraseña<input id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required></label>
+            <label>Nueva contraseÃ±a<input id="newPassword" type="password" autocomplete="new-password" minlength="6" required></label>
+            <label>Confirmar contraseÃ±a<input id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required></label>
             <div class="form-message" id="passwordMessage"></div>
             <div class="actions">
-              <button class="btn" id="savePasswordBtn" type="submit">Guardar contraseña</button>
+              <button class="btn" id="savePasswordBtn" type="submit">Guardar contraseÃ±a</button>
               <button class="btn secondary" id="cancelPasswordBtn" type="button">Cancelar</button>
             </div>
           </form>
@@ -440,8 +440,8 @@
           <button type="button" id="togglePurchasingModule">Abrir procesos</button>
         </div>
         <div class="area-card"><strong>Presupuesto</strong><span></span></div>
-        <div class="area-card"><strong>Dirección Técnica</strong><span></span></div>
-        <div class="area-card"><strong>Dirección General</strong><span></span></div>
+        <div class="area-card"><strong>DirecciÃ³n TÃ©cnica</strong><span></span></div>
+        <div class="area-card"><strong>DirecciÃ³n General</strong><span></span></div>
       </div>
 
       <div class="embedded-module hidden-system-bar" id="purchasingModule" hidden>
@@ -456,7 +456,7 @@
           <div>
             <span class="eyebrow">Resumen institucional</span>
             <h1>Dashboard ejecutivo</h1>
-            <p class="sub">Seguimiento presupuestario, alertas operativas y distribución de inversión.</p>
+            <p class="sub">Seguimiento presupuestario, alertas operativas y distribuciÃ³n de inversiÃ³n.</p>
           </div>
         </div>
         <div class="grid metrics" id="metrics"></div>
@@ -466,13 +466,13 @@
             <div class="executive-metrics" id="executiveMetrics"></div>
           </div>
           <div class="panel">
-            <h2>Semáforo general</h2>
+            <h2>SemÃ¡foro general</h2>
             <div class="semaphore-grid" id="semaphoreGrid"></div>
           </div>
         </div>
         <div class="area-insights" id="areaInsights"></div>
         <div class="panel" style="margin-top:14px;">
-          <h2>Mapa municipal de inversión</h2>
+          <h2>Mapa municipal de inversiÃ³n</h2>
           <div class="municipal-map" id="municipalMap"></div>
         </div>
         <div class="dashboard-layout">
@@ -533,33 +533,33 @@
           <div class="table-wrap"><table id="projectHistoryTable"></table></div>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
-          <h2>Configuración de flujo</h2>
+          <h2>ConfiguraciÃ³n de flujo</h2>
           <form id="workflowConfigForm" class="form-grid">
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente técnica">Aprobación técnica</label>
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente presupuesto">Aprobación de presupuesto</label>
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente finanzas">Aprobación de finanzas</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente tÃ©cnica">AprobaciÃ³n tÃ©cnica</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente presupuesto">AprobaciÃ³n de presupuesto</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente finanzas">AprobaciÃ³n de finanzas</label>
             <button class="btn" type="submit">Guardar flujo</button>
           </form>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
-          <h2>Parámetros de alertas</h2>
+          <h2>ParÃ¡metros de alertas</h2>
           <form id="alertConfigForm" class="form-grid">
-            <label>Días sin movimiento<input name="diasSinMovimiento" type="number" min="1" step="1" value="10"></label>
+            <label>DÃ­as sin movimiento<input name="diasSinMovimiento" type="number" min="1" step="1" value="10"></label>
             <label>Disponibilidad baja %<input name="porcentajeDisponibilidadBaja" type="number" min="1" max="100" step="1" value="5"></label>
-            <label>Horas máximas por etapa de compra<input name="horasEtapaCompra" type="number" min="1" step="1" value="96"></label>
-            <label>Días de vencimiento documental<input name="diasDocumento" type="number" min="1" step="1" value="7"></label>
-            <button class="btn" type="submit">Guardar parámetros</button>
+            <label>Horas mÃ¡ximas por etapa de compra<input name="horasEtapaCompra" type="number" min="1" step="1" value="96"></label>
+            <label>DÃ­as de vencimiento documental<input name="diasDocumento" type="number" min="1" step="1" value="7"></label>
+            <button class="btn" type="submit">Guardar parÃ¡metros</button>
           </form>
         </div>
         <div class="quick-panels">
           <div class="panel" data-permission="technical-log" hidden>
-            <h2>Bitácora técnica</h2>
+            <h2>BitÃ¡cora tÃ©cnica</h2>
             <form id="technicalLogForm" class="form-grid">
               <label class="span-2">Proyecto<select name="projectKey" required></select></label>
               <label>Fecha<input name="fecha" type="date" required></label>
-              <label>Avance físico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
-              <label class="span-4">Observación<textarea name="observacion" required></textarea></label>
-              <button class="btn span-2" type="submit">Guardar bitácora</button>
+              <label>Avance fÃ­sico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
+              <label class="span-4">ObservaciÃ³n<textarea name="observacion" required></textarea></label>
+              <button class="btn span-2" type="submit">Guardar bitÃ¡cora</button>
             </form>
             <div class="table-wrap" style="margin-top:12px;"><table id="technicalLogTable"></table></div>
           </div>
@@ -567,9 +567,9 @@
             <h2>Documentos adjuntos</h2>
             <form id="documentForm" class="form-grid">
               <label class="span-2">Proyecto<select name="projectKey" required></select></label>
-              <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>Cubicación PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
+              <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>CubicaciÃ³n PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
               <label>Archivo<input name="archivo" id="documentFileInput" type="file" required></label>
-              <label class="span-4">Descripción<input name="descripcion" placeholder="Detalle del documento"></label>
+              <label class="span-4">DescripciÃ³n<input name="descripcion" placeholder="Detalle del documento"></label>
               <button class="btn span-2" type="submit">Adjuntar documento</button>
               <span class="file-name span-2" id="documentUploadNote"></span>
             </form>
@@ -581,9 +581,9 @@
               <label class="span-2">Correos destinatarios<input name="emails" placeholder="correo1@dominio.do, correo2@dominio.do"></label>
               <label>Frecuencia<select name="frecuencia"><option>Diaria</option><option>Semanal</option><option>Mensual</option></select></label>
               <label>Hora<input name="hora" type="time" value="08:00"></label>
-              <label class="permission-check span-2"><input name="criticas" type="checkbox" checked>Alertas críticas</label>
+              <label class="permission-check span-2"><input name="criticas" type="checkbox" checked>Alertas crÃ­ticas</label>
               <label class="permission-check span-2"><input name="vencimientos" type="checkbox" checked>Vencimientos y cubicaciones pendientes</label>
-              <button class="btn span-2" type="submit">Guardar configuración</button>
+              <button class="btn span-2" type="submit">Guardar configuraciÃ³n</button>
             </form>
             <div class="table-wrap" style="margin-top:12px;"><table id="notificationTable"></table></div>
           </div>
@@ -593,10 +593,10 @@
           <div class="table-wrap"><table id="auditTable"></table></div>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
-          <h2>Catálogos normalizados</h2>
+          <h2>CatÃ¡logos normalizados</h2>
           <form id="catalogForm" class="form-grid">
-            <label>Tipo de catálogo<select name="tipo"><option>estatus_obra</option><option>urgencia</option><option>unidad</option><option>tipo_obra</option><option>area</option></select></label>
-            <label class="span-2">Valor<input name="valor" required placeholder="Ej. En ejecución"></label>
+            <label>Tipo de catÃ¡logo<select name="tipo"><option>estatus_obra</option><option>urgencia</option><option>unidad</option><option>tipo_obra</option><option>area</option></select></label>
+            <label class="span-2">Valor<input name="valor" required placeholder="Ej. En ejecuciÃ³n"></label>
             <button class="btn" type="submit">Agregar valor</button>
           </form>
           <div class="table-wrap" style="margin-top:12px;"><table id="catalogTable"></table></div>
@@ -606,7 +606,7 @@
       <section class="section" id="usuarios">
         <div class="page-heading">
           <div>
-            <span class="eyebrow">Administración</span>
+            <span class="eyebrow">AdministraciÃ³n</span>
             <h1>Usuarios y permisos</h1>
             <p class="sub">Crea usuarios, ajusta perfiles y administra accesos del sistema.</p>
           </div>
@@ -619,18 +619,18 @@
             <label>Nombre completo<input name="nombre" required></label>
             <label>Usuario<input name="usuario" required></label>
             <label>Correo institucional<input name="correo" type="email" required placeholder="usuario@coraamoca.gob.do"></label>
-            <label>Rol<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Recursos Humanos</option><option>Consulta</option></select></label>
-            <label>Rol comercial si aplica<input name="rolComercial" placeholder="Ej. Atención al Cliente"></label>
+            <label>Rol<select name="rol" id="roleSelect"><option>Administrador</option><option>DirecciÃ³n TÃ©cnica</option><option>Financiera</option><option>Registro</option><option>Recursos Humanos</option><option>Consulta</option></select></label>
+            <label>Rol comercial si aplica<input name="rolComercial" placeholder="Ej. AtenciÃ³n al Cliente"></label>
             <label class="permission-check"><input name="activo" type="checkbox" checked>Activo</label>
-            <label class="span-2">Unidad organizacional / línea de mando<select name="area" id="workAreaInput" required><option value="">Seleccione unidad</option></select></label>
+            <label class="span-2">Unidad organizacional / lÃ­nea de mando<select name="area" id="workAreaInput" required><option value="">Seleccione unidad</option></select></label>
             <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
-            <label>Clave de acceso<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Clave genérica" required></label>
-            <label class="span-2">Nota de acceso<input name="notaAcceso" placeholder="Observación interna sobre el acceso"></label>
-            <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
+            <label>Clave de acceso<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Clave genÃ©rica" required></label>
+            <label class="span-2">Nota de acceso<input name="notaAcceso" placeholder="ObservaciÃ³n interna sobre el acceso"></label>
+            <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseÃ±a en el primer inicio</label>
             <div class="span-4" id="policyPreview"></div>
             <div class="span-4 actions">
               <button class="btn" id="userSubmitBtn">Guardar usuario</button>
-              <button class="btn secondary" id="cancelUserEditBtn" type="button" hidden>Cancelar modificación</button>
+              <button class="btn secondary" id="cancelUserEditBtn" type="button" hidden>Cancelar modificaciÃ³n</button>
             </div>
           </form>
         </div>
@@ -696,7 +696,7 @@
         <div class="panel employee-register-panel">
           <div class="page-heading">
             <div>
-              <span class="eyebrow">Gestión interna</span>
+              <span class="eyebrow">GestiÃ³n interna</span>
               <h1>Recursos Humanos</h1>
             </div>
           </div>
@@ -718,25 +718,25 @@
             </div>
             <label>Nombre<input name="nombre" placeholder="Nombre" required></label>
             <label>Apellido<input name="apellido" placeholder="Apellido" required></label>
-            <label>Cédula<input name="cedula" placeholder="000-0000000-0" required></label>
+            <label>CÃ©dula<input name="cedula" placeholder="000-0000000-0" required></label>
             <label>Grupo ocupacional<select name="grupoOcupacional" id="employeeGroupSelect"><option value="">Seleccione grupo</option></select></label>
             <label class="span-2">Cargo<select name="cargo" id="employeePositionSelect"><option value="">Seleccione cargo</option></select></label>
             <label>Salario<input name="salario" type="number" min="0" step="0.01" placeholder="Salario"></label>
             <label>Fecha de ingreso<input name="fechaIngreso" type="date"></label>
             <label>Tipo de Ingreso<input name="tipoIngreso"></label>
             <label class="span-2">Estructura organizacional<select name="estructura"><option value="">Sin estructura seleccionada</option></select></label>
-            <label>Dirección<input name="direccionOrg"></label>
+            <label>DirecciÃ³n<input name="direccionOrg"></label>
             <label>Departamento<input name="departamento"></label>
-            <label>División<input name="division"></label>
-            <label>Sección<input name="seccion"></label>
+            <label>DivisiÃ³n<input name="division"></label>
+            <label>SecciÃ³n<input name="seccion"></label>
             <label>Centro de Servicio<input name="centroServicio"></label>
-            <label>Clasificación presupuestaria<input name="clasificacionPresupuestaria"></label>
+            <label>ClasificaciÃ³n presupuestaria<input name="clasificacionPresupuestaria"></label>
             <label>Fondo<input name="fondo"></label>
             <label>Programa<input name="programa"></label>
             <label>SubProg<input name="subprog"></label>
             <label>Actividad<input name="actividad"></label>
             <h2 class="span-4">Datos personales y bancarios</h2>
-            <label class="span-2">Dirección de residencia<input name="direccionResidencia"></label>
+            <label class="span-2">DirecciÃ³n de residencia<input name="direccionResidencia"></label>
             <label>Sector<input name="sector"></label>
             <label>Cuenta de banco<input name="cuentaBanco"></label>
             <label>Edad<input name="edad" type="number" min="0" step="1"></label>
@@ -748,7 +748,7 @@
             <label>Licencia de conducir<input name="licenciaConducir"></label>
             <h2 class="span-4">Expediente digital y datos complementarios</h2>
             <label>Contacto de emergencia<input name="contactoEmergencia"></label>
-            <label>Teléfono de emergencia<input name="telefonoEmergencia"></label>
+            <label>TelÃ©fono de emergencia<input name="telefonoEmergencia"></label>
             <label>Parentesco<input name="parentesco"></label>
             <label>Documentos y archivos<input name="documentosArchivos"></label>
             <label class="span-2">Historial laboral<textarea name="historialLaboral"></textarea></label>
@@ -757,8 +757,8 @@
             <label class="span-2">Contratos<textarea name="contratos"></textarea></label>
             <label class="span-2">Firma digital / referencia<input name="firmaDigital"></label>
             <label class="span-2">Foto / URL o referencia<input name="fotoReferencia"></label>
-            <label class="span-2">Biometría / referencia<input name="biometriaReferencia"></label>
-            <label class="span-2">Recomendación<input name="recomendacion"></label>
+            <label class="span-2">BiometrÃ­a / referencia<input name="biometriaReferencia"></label>
+            <label class="span-2">RecomendaciÃ³n<input name="recomendacion"></label>
             <label class="span-4">Nota<textarea name="nota"></textarea></label>
             <label class="permission-check"><input name="activo" type="checkbox" checked>Activo</label>
             <div class="actions span-4">
@@ -873,7 +873,7 @@
         <div class="panel">
           <div class="page-heading">
             <div>
-              <span class="eyebrow">Organización</span>
+              <span class="eyebrow">OrganizaciÃ³n</span>
               <h1>Estructura</h1>
             </div>
           </div>
@@ -912,7 +912,7 @@
       <section class="section" id="registro">
         <div class="grid cards">
           <div class="panel wide">
-            <h2>Registrar código y presupuesto</h2>
+            <h2>Registrar cÃ³digo y presupuesto</h2>
             <form id="projectForm" class="form-grid">
               <div class="span-4 actions">
                 <button class="btn secondary" type="button" id="newProjectBtn">Nuevo proyecto</button>
@@ -920,15 +920,15 @@
                 <button class="btn secondary" type="button" id="cancelNewProjectBtn" hidden>Cancelar</button>
               </div>
               <label class="span-2" id="existingProjectField" hidden>Proyecto<select name="projectKey"></select></label>
-              <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. Construcción de pozo tubular"></label>
+              <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. ConstrucciÃ³n de pozo tubular"></label>
               <label class="span-2 new-project-field" hidden>Municipio<input name="municipioNuevo" placeholder="Ej. Municipio de Moca"></label>
               <label class="span-2 new-project-field" hidden>Comunidad / proyecto<input name="comunidadNuevo" placeholder="Nombre del proyecto o comunidad"></label>
-              <label class="new-project-field" hidden>Población<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
-              <label>Código<input name="codigo" placeholder="Ej. SNIP-0000"></label>
-              <label>Contratista<input name="contratista" placeholder="Nombre o razón social"></label>
+              <label class="new-project-field" hidden>PoblaciÃ³n<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
+              <label>CÃ³digo<input name="codigo" placeholder="Ej. SNIP-0000"></label>
+              <label>Contratista<input name="contratista" placeholder="Nombre o razÃ³n social"></label>
               <label>Presupuesto RD$<input name="presupuesto" type="number" min="0" step="0.01"></label>
               <label>Monto adjudicado RD$<input name="adjudicado" type="number" min="0" step="0.01"></label>
-              <label>Estatus<select name="estatus"><option value=""></option><option>Publicado</option><option>Sin Publicar</option><option>20% Ejecutado</option><option>30% Ejecutado</option><option>60% Ejecutado</option><option>85% Ejecutado</option><option>En proceso</option><option>Contratado</option><option>En ejecución</option><option>Terminado</option><option>Paralizado</option></select></label>
+              <label>Estatus<select name="estatus"><option value=""></option><option>Publicado</option><option>Sin Publicar</option><option>20% Ejecutado</option><option>30% Ejecutado</option><option>60% Ejecutado</option><option>85% Ejecutado</option><option>En proceso</option><option>Contratado</option><option>En ejecuciÃ³n</option><option>Terminado</option><option>Paralizado</option></select></label>
               <button class="btn" id="projectSubmitBtn" hidden>Guardar proyecto</button>
             </form>
           </div>
@@ -937,9 +937,9 @@
           <h2>Documentos adjuntos</h2>
           <form id="documentFormProject" class="form-grid">
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
-            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>Cubicación PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
+            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>CubicaciÃ³n PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
             <label>Archivo<input name="archivo" id="documentFileInputProject" type="file" required></label>
-            <label class="span-4">Descripción<input name="descripcion" placeholder="Detalle del documento"></label>
+            <label class="span-4">DescripciÃ³n<input name="descripcion" placeholder="Detalle del documento"></label>
             <button class="btn span-2" type="submit">Adjuntar documento</button>
             <span class="file-name span-2" id="documentUploadNoteProject"></span>
           </form>
@@ -964,11 +964,11 @@
             <label class="span-2">Solicitante<select id="warehouseRequester" name="solicitanteUsuarioId" required></select></label>
             <label>Fecha y hora<input name="fechaHora" type="datetime-local" required></label>
             <label>Nivel de urgencia<select name="prioridad"><option>Normal</option><option>Alta</option><option>Urgente</option></select></label>
-            <label class="span-2">Buscar artículo<input id="warehouseArticleSearch" placeholder="Escriba para buscar"></label>
-            <label class="span-2">Artículo<select id="warehouseArticleSelect" name="articulo" required></select></label>
+            <label class="span-2">Buscar artÃ­culo<input id="warehouseArticleSearch" placeholder="Escriba para buscar"></label>
+            <label class="span-2">ArtÃ­culo<select id="warehouseArticleSelect" name="articulo" required></select></label>
             <label>Cantidad<input name="cantidad" type="number" min="0.01" step="0.01" required></label>
             <label>Unidad<input id="warehouseUnit" name="unidad" required placeholder="Ej. Unidad"></label>
-            <label class="span-4">Observación<textarea name="observacion" placeholder="Detalle adicional de la solicitud"></textarea></label>
+            <label class="span-4">ObservaciÃ³n<textarea name="observacion" placeholder="Detalle adicional de la solicitud"></textarea></label>
             <button class="btn span-2" type="submit">Guardar solicitud</button>
           </form>
         </div>
@@ -981,27 +981,27 @@
       <section class="section" id="inventario">
         <div class="page-heading">
           <div>
-            <span class="eyebrow">Almacén</span>
+            <span class="eyebrow">AlmacÃ©n</span>
             <h1>Inventario</h1>
-            <p class="sub">Catálogo de artículos disponibles para las solicitudes a almacén.</p>
+            <p class="sub">CatÃ¡logo de artÃ­culos disponibles para las solicitudes a almacÃ©n.</p>
           </div>
         </div>
         <div class="panel">
-          <h2>Registrar artículo</h2>
+          <h2>Registrar artÃ­culo</h2>
           <form id="inventoryForm" class="form-grid">
-            <label class="span-2">Artículo<input name="nombre" required placeholder="Ej. Cemento gris"></label>
+            <label class="span-2">ArtÃ­culo<input name="nombre" required placeholder="Ej. Cemento gris"></label>
             <label>Unidad<input name="unidad" required placeholder="Ej. Fundas"></label>
             <label>Existencia inicial<input name="existencia" type="number" min="0" step="0.01" required></label>
-            <label>Existencia mínima<input name="existenciaMinima" type="number" min="0" step="0.01" value="0"></label>
-            <label class="span-2">Ubicación<input name="ubicacion" placeholder="Ej. Almacén principal"></label>
-            <button class="btn span-2" type="submit">Guardar artículo</button>
+            <label>Existencia mÃ­nima<input name="existenciaMinima" type="number" min="0" step="0.01" value="0"></label>
+            <label class="span-2">UbicaciÃ³n<input name="ubicacion" placeholder="Ej. AlmacÃ©n principal"></label>
+            <button class="btn span-2" type="submit">Guardar artÃ­culo</button>
           </form>
         </div>
         <div class="panel" style="margin-top:14px;">
           <div class="panel-head">
             <div>
               <h2>Carga masiva de inventario</h2>
-              <p class="sub">Use la plantilla para importar varios artículos de una vez.</p>
+              <p class="sub">Use la plantilla para importar varios artÃ­culos de una vez.</p>
             </div>
             <div class="actions">
               <button class="btn secondary" id="downloadInventoryTemplateBtn" type="button">Descargar plantilla</button>
@@ -1010,14 +1010,14 @@
           </div>
         </div>
         <div class="panel" style="margin-top:14px;">
-          <h2>Artículos registrados</h2>
+          <h2>ArtÃ­culos registrados</h2>
           <div class="table-wrap desktop-table-only"><table id="inventoryTable"></table></div>
           <div class="mobile-records" id="inventoryCards"></div>
         </div>
       </section>
 
       <section class="section" id="documentos">
-        <div class="page-heading"><div><span class="eyebrow">Expedientes</span><h1>Gestión documental</h1></div></div>
+        <div class="page-heading"><div><span class="eyebrow">Expedientes</span><h1>GestiÃ³n documental</h1></div></div>
         <div class="panel">
           <div class="table-tools">
             <div class="filters"><input id="documentSearchBox" placeholder="Buscar por proyecto, tipo o archivo"></div>
@@ -1033,9 +1033,9 @@
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
             <label>Fecha<input name="fecha" type="date" required></label>
             <label>Monto RD$<input name="monto" type="number" min="0" step="0.01" required></label>
-            <label>Número de cubicación<input name="numero" placeholder="CUB-001"></label>
-            <label class="span-2">Observación<input name="observacion" placeholder="Detalle de pago o avance"></label>
-            <button class="btn">Registrar cubicación</button>
+            <label>NÃºmero de cubicaciÃ³n<input name="numero" placeholder="CUB-001"></label>
+            <label class="span-2">ObservaciÃ³n<input name="observacion" placeholder="Detalle de pago o avance"></label>
+            <button class="btn">Registrar cubicaciÃ³n</button>
           </form>
         </div>
         <div class="panel" style="margin-top:14px;">
@@ -1043,13 +1043,13 @@
           <div class="table-wrap"><table id="paymentsTable"></table></div>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="technical-log">
-          <h2>Bitácora técnica</h2>
+          <h2>BitÃ¡cora tÃ©cnica</h2>
           <form id="technicalLogFormPayments" class="form-grid">
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
             <label>Fecha<input name="fecha" type="date" required></label>
-            <label>Avance físico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
-            <label class="span-4">Observación<textarea name="observacion" required></textarea></label>
-            <button class="btn span-2" type="submit">Guardar bitácora</button>
+            <label>Avance fÃ­sico %<input name="avance" type="number" min="0" max="100" step="0.01" required></label>
+            <label class="span-4">ObservaciÃ³n<textarea name="observacion" required></textarea></label>
+            <button class="btn span-2" type="submit">Guardar bitÃ¡cora</button>
           </form>
           <div class="table-wrap" style="margin-top:12px;"><table id="technicalLogTablePayments"></table></div>
         </div>
@@ -1057,9 +1057,9 @@
           <h2>Documentos adjuntos</h2>
           <form id="documentFormPayments" class="form-grid">
             <label class="span-2">Proyecto<select name="projectKey" required></select></label>
-            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>Cubicación PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
+            <label>Tipo<select name="tipo"><option>Contrato</option><option>Acta</option><option>Factura</option><option>CubicaciÃ³n PDF</option><option>Foto de avance</option><option>Otro</option></select></label>
             <label>Archivo<input name="archivo" id="documentFileInputPayments" type="file" required></label>
-            <label class="span-4">Descripción<input name="descripcion" placeholder="Detalle del documento"></label>
+            <label class="span-4">DescripciÃ³n<input name="descripcion" placeholder="Detalle del documento"></label>
             <button class="btn span-2" type="submit">Adjuntar documento</button>
             <span class="file-name span-2" id="documentUploadNotePayments"></span>
           </form>
@@ -1076,27 +1076,27 @@
             <button class="tab" data-report="disponibilidad">Disponibilidad de presupuesto</button>
             <button class="tab" data-report="compras">Proceso de compras</button>
             <button class="tab" data-report="ejecutivo">Ejecutivo</button>
-            <button class="tab" data-report="inversion">Inversión Pública</button>
+            <button class="tab" data-report="inversion">InversiÃ³n PÃºblica</button>
             <button class="tab" data-report="mensual">Comparativo mensual</button>
-            <button class="tab" data-report="direccion">Dirección General</button>
+            <button class="tab" data-report="direccion">DirecciÃ³n General</button>
             <button class="tab" data-report="pagos">Pagos realizados</button>
             <button class="tab" data-report="estatus">Estatus de obras</button>
-            <button class="tab" data-report="snip">Por código SNIP</button>
+            <button class="tab" data-report="snip">Por cÃ³digo SNIP</button>
             <button class="tab" data-report="inconsistencias">Inconsistencias</button>
           </div>
           <div class="table-tools">
             <div class="filters">
               <input id="searchBox" placeholder="Buscar...">
-              <select id="snipFilter" class="snip-filter" hidden><option value="">Todos los códigos SNIP</option></select>
+              <select id="snipFilter" class="snip-filter" hidden><option value="">Todos los cÃ³digos SNIP</option></select>
               <select id="snipModeFilter" class="snip-filter" hidden>
                 <option value="detalle">Detalle por obra</option>
-                <option value="agrupado">Agrupar por código SNIP</option>
+                <option value="agrupado">Agrupar por cÃ³digo SNIP</option>
               </select>
               <select id="providerFilter" hidden><option value="">Todos los proveedores</option></select>
               <select id="typeFilter" hidden><option value="">Todos los tipos de obra</option></select>
               <select id="processTypeFilter"><option value="">Todos los tipos de proceso</option></select>
-              <input id="minAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto mínimo">
-              <input id="maxAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto máximo">
+              <input id="minAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto mÃ­nimo">
+              <input id="maxAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto mÃ¡ximo">
               <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
               <select id="statusFilter"><option value="">Todos los estatus</option></select>
             </div>
@@ -1113,7 +1113,6 @@
   </div>
 
   <script>
-    const seedRows = [[1,"Reconstrucción de Centro de Servicio y Construcción de Parqueos en Guauci","Guauci","Moca",685,9722987.51730456,0,0,0,0,9722987.51730456,"CORAAMOCA-DAF-CM-2026-0024","Sin Proveedor","16844","Sin Item",0,9722987.51730456,"Publicado","Sin Adjudicar",9722987.51730456],[1,"Adquisición de Vehículos Pesados  - 1 Retroexcavadora, 1 Minibus","Moca","Moca",0,15679840,0,0,0,0,15679840,"CORAAMOCA-CCC-LPN-2026-0002","Sin Proveedor","16844","Sin Item",0,15679840,"Publicado","Sin Adjudicar",15679840],[1,"Adquisición de Vehículos Pesados  - 2 Camiones Cisterna","Moca","Moca",0,10657110.2,0,0,0,0,10657110.2,"EN PROCESO DE CARGA EN COMPRAS","Sin Proveedor","16844","Sin Item",0,0,"Sin Publicar","Sin Adjudicar",10657110.2],[1,"Adquisición de Vehículos Pesados  - Equipamientos","Moca","Moca",0,8500000,0,0,0,0,8500000,"EN PROCESO DE CARGA EN COMPRAS","Sin Proveedor","16844","Sin Item",0,0,"Sin Publicar","Sin Adjudicar",8500000],[3,"Adquisición de Terrenos para la Construcción de 19 Pozos Tubulares","Sin Sectores","Municipio de Cayetano Germosén, Municipio de San Víctor, Municipio de Moca y Municipio de Jamao al Norte",7473,5754824.69,0,0,0,0,5754824.69,"EN PROCESO DE CARGA EN COMPRAS","Sin Proveedor","16879","Sin Item",0,0,"Sin Publicar","Sin Adjudicar",5754824.69],[1,"Ampliación de Redes","Los Polanco","Veragua",315,1322168.26797895,0,0,0,0,1322168.26797895,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","A",0,1322168.26797895,"Publicado","Sin Adjudicar",1322168.26797895],[2,"Ampliación de Redes","Entrada Los Guaos","Veragua",200,1369499.03160221,0,0,0,0,1369499.03160221,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","A",0,1369499.03160221,"Publicado","Sin Adjudicar",1369499.03160221],[3,"Ampliación de Redes","Entrada La Yuca","Veragua",225,1283296.94,0,0,0,0,1283296.94,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","A",0,1283296.94,"Publicado","Sin Adjudicar",1283296.94],[4,"Ampliación de Redes","San Lorenzo","Veragua",800,3364579.14,0,0,0,0,3364579.14,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","A",0,3364579.14,"Publicado","Sin Adjudicar",3364579.14],[1,"Ampliación de Redes","Entrada La Gallera","Villa Magante",200,1900495.7,0,0,0,0,1900495.7,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","C",0,1900495.7,"Publicado","Sin Adjudicar",1900495.7],[2,"Ampliación de Redes","Entrada Playa Rogelio","Villa Magante",400,3038240.06,0,0,0,0,3038240.06,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","C",0,3038240.06,"Publicado","Sin Adjudicar",3038240.06],[1,"Construcción de un pozo tubular #1","Campo de Pozos","Gaspar Hernandez",1000,4561600.78379572,0,0,0,0,4561600.78379572,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","B",0,4561600.78379572,"Publicado","Sin Adjudicar",4561600.78379572],[2,"Construcción de un pozo tubular #2","Campo de Pozos","Gaspar Hernandez",1000,4561600.78379572,0,0,0,0,4561600.78379572,"CORAAMOCA-DAF-CM-2026-0023","Sin Proveedor","16879","B",0,4561600.78379572,"Publicado","Sin Adjudicar",4561600.78379572],[1,"Ampliación de Redes","La Gallera - Guanábano","Cayetano Germosen",2010,225612.527408235,231263.29,46252.658,46252.658,185010.632,179359.869408235,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,225612.527408235,"Publicado","Adjudicado",0],[2,"Ampliación de Redes","Villa Progreso","Cayetano Germosen",570,4074815.4680292,4023612.21,804722.442,804722.442,3218889.768,3270093.0260292,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,4074815.4680292,"Publicado","Adjudicado",0],[3,"Ampliación de Redes","Sabana De Los Jiménez","Cayetano Germosen",36,511793.936673265,523486.66,104697.332,104697.332,418789.328,407096.604673265,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,511793.936673265,"Publicado","Adjudicado",0],[4,"Ampliación de Redes","Calle Del Rio","Cayetano Germosen",141,2438230.12527086,2292599.09,458519.818,458519.818,1834079.272,1979710.30727086,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,2438230.12527086,"Publicado","Adjudicado",0],[5,"Ampliación de Redes","La Penda","Cayetano Germosen",30,388955.640600504,404519.67,80903.934,80903.934,323615.736,308051.706600504,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,388955.640600504,"Publicado","Adjudicado",0],[6,"Ampliación de Redes","Barrio nuevo La Guama","Cayetano Germosen",30,342061.56774936,360198.56,72039.712,72039.712,288158.848,270021.85574936,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,342061.56774936,"Publicado","Adjudicado",0],[7,"Ampliación de Redes","Cruce de La Guama","Cayetano Germosen",45,443175.572638182,453564.99,90712.998,90712.998,362851.992,352462.574638182,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,443175.572638182,"Publicado","Adjudicado",0],[8,"Ampliación de Redes","Urbanización La Guama  (entrada del Play)","Cayetano Germosen",60,699425.002582286,717370.34,143474.068,143474.068,573896.272,555950.934582286,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,699425.002582286,"Publicado","Adjudicado",0],[9,"Ampliación de Redes","Entrada la Iglesia - Hato Viejo","Cayetano Germosen",45,167892.061602159,180968.24,36193.648,36193.648,144774.592,131698.413602159,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,167892.061602159,"Publicado","Adjudicado",0],[10,"Ampliación de Redes","Barrio Marien - Guanábano","Cayetano Germosen",147,2478584.56210003,2414870.65,482974.13,482974.13,1931896.52,1995610.43210003,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","A",0,2478584.56210003,"Publicado","Adjudicado",0],[1,"Construcción de un pozo tubular","Sabana De Los Jiménez","Cayetano Germosen",36,3419652.198798,3077688.25,615537.65,615537.65,2462150.6,2804114.548798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,3419652.198798,"Publicado","Adjudicado",0],[2,"Construcción de un pozo tubular","Calle Del Rio","Cayetano Germosen",390,2977703.448798,2800162.26,560032.452,560032.452,2240129.808,2417670.996798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,2977703.448798,"Publicado","Adjudicado",0],[3,"Construcción de un pozo tubular","La Penda","Cayetano Germosen",600,2977703.448798,2800162.26,560032.452,560032.452,2240129.808,2417670.996798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,2977703.448798,"Publicado","Adjudicado",0],[4,"Construcción de un pozo tubular","La Gallera - Guanábano","Cayetano Germosen",2010,2977703.448798,2800162.26,560032.452,560032.452,2240129.808,2417670.996798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,2977703.448798,"Publicado","Adjudicado",0],[5,"Construcción de un pozo tubular","Maguey","Cayetano Germosen",315,3148252.198798,2898102.26,579620.452,579620.452,2318481.808,2568631.746798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,3148252.198798,"Publicado","Adjudicado",0],[11,"Ampliación de Redes","Ceiba de Madera (El Mango de Nena 1)","San Victor",129,957992.1913005,924528.92,184905.784,184905.784,739623.136,773086.4073005,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","B",0,957992.1913005,"Publicado","Adjudicado",0],[12,"Ampliación de Redes","Ceiba de Madera (El Mango de Nena 2)","San Victor",105,895601.9139105,849850.88,169970.176,169970.176,679880.704,725631.7379105,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","B",0,895601.9139105,"Publicado","Adjudicado",0],[13,"Ampliación de Redes","La Amapola - Entrada María Arroyo","San Victor",75,668232.312716159,667632.81,133526.562,133526.562,534106.248,534705.750716159,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","B",0,668232.312716159,"Publicado","Adjudicado",0],[14,"Ampliación de Redes","Entrada Arte de Jesús","San Victor",45,281073.737196751,287159.2,57431.84,57431.84,229727.36,223641.897196751,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","B",0,281073.737196751,"Publicado","Adjudicado",0],[15,"Ampliación de Redes","San Víctor - Entrada del  Club del los  Choferes","San Victor",90,850618.86,629687.72,125937.544,125937.544,503750.176,724681.316,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","B",0,850618.86,"Publicado","Adjudicado",0],[16,"Ampliación de Redes","Entrada los  Chivos - San Víctor","San Victor",84,312637.96,319546.39,63909.278,63909.278,255637.112,248728.682,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","B",0,312637.96,"Publicado","Adjudicado",0],[6,"Construcción de un pozo tubular","Los Rieles Arriba","San Victor",144,3446792.198798,3102360.26,0,0,3102360.26,3446792.198798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,3446792.198798,"Publicado","Adjudicado",0],[7,"Construcción de un pozo tubular","Ceiba de Madera (El Mango de Nena 1)","San Victor",129,3134894.97546467,2970398.26,0,0,2970398.26,3134894.97546467,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,3134894.97546467,"Publicado","Adjudicado",0],[8,"Construcción de un pozo tubular","B/La Lambada","San Victor",135,3134894.97546467,2970398.26,0,0,2970398.26,3134894.97546467,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,3134894.97546467,"Publicado","Adjudicado",0],[9,"Construcción de un pozo tubular","Centro Tecnológico San Víctor","San Victor",150,3134894.97546467,2970398.26,0,0,2970398.26,3134894.97546467,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,3134894.97546467,"Publicado","Adjudicado",0],[17,"Ampliación de Redes","Los Cocos Llenas","Moca",54,544071.25,422400.31,84480.062,84480.062,337920.248,459591.188,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,544071.25,"Publicado","Adjudicado",0],[18,"Ampliación de Redes","Los Hernández - La Rosario","Moca",78,233463.41,269102.55,53820.51,53820.51,215282.04,179642.9,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,233463.41,"Publicado","Adjudicado",0],[19,"Ampliación de Redes","Quebrada Honda - Lotificación Pilo Santana","Moca",66,363390.87,331387.64,66277.528,66277.528,265110.112,297113.342,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,363390.87,"Publicado","Adjudicado",0],[20,"Ampliación de Redes","Quebrada Honda- Entrada de La Chicha","Moca",57,308577.72,291918.65,58383.73,58383.73,233534.92,250193.99,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,308577.72,"Publicado","Adjudicado",0],[21,"Ampliación de Redes","Quebrada Honda -Entrada de la escuelita, C/Mora","Moca",48,263915.16,258195.18,51639.036,51639.036,206556.144,212276.124,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,263915.16,"Publicado","Adjudicado",0],[22,"Ampliación de Redes","Villa Delia","Moca",6,162409.33,161338.49,32267.698,32267.698,129070.792,130141.632,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,162409.33,"Publicado","Adjudicado",0],[23,"Ampliación de Redes","Entrada  Sixto García - La Soledad","Moca",36,535950.78,400917.65,80183.53,80183.53,320734.12,455767.25,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,535950.78,"Publicado","Adjudicado",0],[24,"Ampliación de Redes","Cacique  Abajo- La Antena","Moca",48,540011.02,414473.32,82894.664,82894.664,331578.656,457116.356,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,540011.02,"Publicado","Adjudicado",0],[25,"Ampliación de Redes","La Ermita B/Eduardo Brito","Moca",123,578583.23,497311.45,99462.29,99462.29,397849.16,479120.94,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,578583.23,"Publicado","Adjudicado",0],[26,"Ampliación de Redes","El Corozo - Entrada Raulito","Moca",120,304517.49,348722.69,69744.538,69744.538,278978.152,234772.952,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,304517.49,"Publicado","Adjudicado",0],[27,"Ampliación de Redes","El Jazmín - Cruce del Algarrobo","Moca",45,812046.64,565638.86,113127.772,113127.772,452511.088,698918.868,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,812046.64,"Publicado","Adjudicado",0],[28,"Ampliación de Redes","Quebrada La Yagua - El Algarrobo","Moca",30,710540.81,494111.7,98822.34,98822.34,395289.36,611718.47,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,710540.81,"Publicado","Adjudicado",0],[29,"Ampliación de Redes","Entrada de la Iglesia y los Cacos, B/Pulu- La Rosario","Moca",51,531890.55,417265.42,83453.084,83453.084,333812.336,448437.466,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,531890.55,"Publicado","Adjudicado",0],[30,"Ampliación de Redes","Estancia Nueva - Los Reinoso","Moca",147,507529.15,488962.61,97792.522,97792.522,391170.088,409736.628,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,507529.15,"Publicado","Adjudicado",0],[31,"Ampliación de Redes","El Fundo San Francisco abajo","Moca",42,172559.91,200850.72,40170.144,40170.144,160680.576,132389.766,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,172559.91,"Publicado","Adjudicado",0],[32,"Ampliación de Redes","Quebrada Honda - Entrada de Willy","Moca",72,324818.66,315184.11,63036.822,63036.822,252147.288,261781.838,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,324818.66,"Publicado","Adjudicado",0],[33,"Ampliación de Redes","La Ermita - Entrada Surtidora Santana","Moca",105,629336.15,518507.36,103701.472,103701.472,414805.888,525634.678,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,629336.15,"Publicado","Adjudicado",0],[34,"Ampliación de Redes","Boca Férrea","Moca",45,1627351.35151805,1497413.99,299482.798,299482.798,1197931.192,1327868.55351805,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,1627351.35151805,"Publicado","Adjudicado",0],[35,"Ampliación de Redes","La Finca","Moca",102,1072948.36340313,1022677.26,204535.452,204535.452,818141.808,868412.911403135,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,1072948.36340313,"Publicado","Adjudicado",0],[36,"Ampliación de Redes","La Lomita","Moca",156,1076598.13205667,1055057.5,211011.5,211011.5,844046,865586.632056674,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,1076598.13205667,"Publicado","Adjudicado",0],[37,"Ampliación de Redes","Canta Rana","Moca",72,834714.981735399,855470.4,171094.08,171094.08,684376.32,663620.901735399,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","C",0,834714.981735399,"Publicado","Adjudicado",0],[10,"Construcción de un pozo tubular","Boca Férrea - Entrada La Escuela","Moca",45,2977703.448798,2820458.25,564091.65,564091.65,2256366.6,2413611.798798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,2977703.448798,"Publicado","Adjudicado",0],[11,"Construcción de un pozo tubular","Cruce La Lomita del Higüero (La Finca)","Moca",102,2977703.448798,2860148.26,572029.652,572029.652,2288118.608,2405673.796798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,2977703.448798,"Publicado","Adjudicado",0],[12,"Construcción de un pozo tubular","Canta Rana","Moca",72,3256812.198798,2980230.26,596046.052,596046.052,2384184.208,2660766.146798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,3256812.198798,"Publicado","Adjudicado",0],[13,"Construcción de un pozo tubular","La Finca - Entrada de la Escuela","Moca",180,3446792.198798,3102360.26,620472.052,620472.052,2481888.208,2826320.146798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,3446792.198798,"Publicado","Adjudicado",0],[14,"Construcción de un pozo tubular","Boca Férrea","Moca",150,2977703.448798,2820458.26,564091.652,564091.652,2256366.608,2413611.796798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,2977703.448798,"Publicado","Adjudicado",0],[38,"Ampliación de Redes","El aguacate - Canca La Reina","Canca La Reina",78,477077.4,406995.03,81399.006,81399.006,325596.024,395678.394,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","E",0,477077.4,"Publicado","Adjudicado",0],[15,"Construcción de un pozo tubular","C/Josefa Rosario","Canca La Reina",450,3066832.198798,2826004.25,565200.85,565200.85,2260803.4,2501631.348798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","E",0,3066832.198798,"Publicado","Adjudicado",0],[16,"Construcción de un pozo tubular","La Chicharra","Canca La Reina",450,2977703.448798,2756148.26,551229.652,551229.652,2204918.608,2426473.796798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","E",0,2977703.448798,"Publicado","Adjudicado",0],[39,"Ampliación de Redes","Juan López - Entrada Los Julines","Juan Lopez",75,203011.66,249051.6,49810.32,49810.32,199241.28,153201.34,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","F",0,203011.66,"Publicado","Adjudicado",0],[40,"Ampliación de Redes","Juan López - Entrada Centro Tecnológico","Juan Lopez",48,152258.75,194994.46,38998.892,38998.892,155995.568,113259.858,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","F",0,152258.75,"Publicado","Adjudicado",0],[41,"Ampliación de Redes","Juan López - Entrada  Los Pérez","Juan Lopez",57,314668.07,295365.96,59073.192,59073.192,236292.768,255594.878,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","F",0,314668.07,"Publicado","Adjudicado",0],[17,"Construcción de un pozo tubular","Los Camacho","Juan Lopez",600,3446792.198798,3102360.26,620472.052,620472.052,2481888.208,2826320.146798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","F",0,3446792.198798,"Publicado","Adjudicado",0],[42,"Ampliación de Redes","Entrada Don Juan Monte de La Jagua","Monte La Jagua",108,507529.15,452375.51,90475.102,90475.102,361900.408,417054.048,"CORAAMOCA-CCC-CP-2025-0005","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","G",0,507529.15,"Publicado","Adjudicado",0],[18,"Construcción de un pozo tubular","El Higuerito Arriba","Moca",600,3446792.198798,3102360.26,620472.052,620472.052,2481888.208,2826320.146798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","H",0,3446792.198798,"Publicado","Adjudicado",0],[19,"Construcción de un pozo tubular","Los Brazos","Jamao Al Norte",600,3419652.198798,3077688.26,615537.652,615537.652,2462150.608,2804114.546798,"CORAAMOCA-CCC-CP-2025-0006","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","I",0,3419652.198798,"Publicado","Adjudicado",0],[1,"Suministro e Instalación de Micro Medidores de Agua Potable en Residenciales e Industrias para Clientes del Municipio de Moca","Moca","Moca",36795,37331677.7,34401994.73,6880398.946,27067116.356,7334878.374,10264561.344,"CORAAMOCA-CCC-CP-2024-0001","CONSTRUCTORA CAMILO PANTALEON (CCP), S.R.L","16340","Sin Item",20186717.41,0,"85% Ejecutado","Adjudicado",0],[1,"Construcción de Centro de Servicio al Cliente","Higuerito","Moca",11343,7384540.56,5907633.62,1181526.724,1181526.724,4726106.896,6203013.836,"CORAAMOCA-CCC-CP-2024-0003","CONSTRUCTORA CRUZ MUÑOZ","16844","A",0,0,"60% Ejecutado","Adjudicado",0],[2,"Construcción de Centro de Servicio al Cliente","Veragua","Gaspar Hernandez",18173,9634540.56,6407477.58,1541495.516,1541495.516,4865982.064,8093045.044,"CORAAMOCA-CCC-CP-2024-0003","CONSTRUCTORA CRUZ MUÑOZ","16844","B",0,0,"20% Ejecutado","Adjudicado",0],[3,"Construcción de Centro de Servicio al Cliente","Juan Lopez","Moca",7279,9384540.56,6211830.62,1502366.124,1502366.124,4709464.496,7882174.436,"CORAAMOCA-CCC-CP-2024-0003","CONSTRUCTORA CRUZ MUÑOZ","16844","C",0,0,"20% Ejecutado","Adjudicado",0],[1,"Ampliación de Redes","Los Cocos","Veragua",330,2810700.01856586,2850122.36,570024.472,570024.472,2280097.888,2240675.54656586,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[2,"Ampliación de Redes","Caño Dulce","Veragua",200,572688.888879836,591558.27,118311.654,118311.654,473246.616,454377.234879836,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[3,"Ampliación de Redes","Entrada La Escuela","Veragua",125,994989.31,1174581.71,234916.342,234916.342,939665.368,760072.968,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[4,"Ampliación de Redes","Callejón de Sara","Veragua",225,1086179.3,1176197.75,235239.55,235239.55,940958.2,850939.75,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[5,"Ampliación de Redes","La Españolita","Veragua",225,1075691.02,1091934.29,218386.858,218386.858,873547.432,857304.162,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[6,"Ampliación de Redes","La Mina","Veragua",505,1920848.44,2060622.85,412124.57,412124.57,1648498.28,1508723.87,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[1,"Construcción de un pozo tubular","Campo de Pozos Veragua","Veragua",1200,3179737.708798,2861763.94,572352.788,572352.788,2289411.152,2607384.920798,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[2,"Construcción de un pozo tubular","Caño Dulce","Veragua",200,3126304.25136242,2813673.83,562734.766,562734.766,2250939.064,2563569.48536242,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","A",0,0,"30% Ejecutado","Adjudicado",0],[7,"Ampliación de Redes","Entrada de Gen","Gaspar Hernandez",275,2025719.18,2009340.36,401868.072,401868.072,1607472.288,1623851.108,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[8,"Ampliación de Redes","Villa Olímpica","Gaspar Hernandez",280,2535373.49,2584327.97,516865.594,516865.594,2067462.376,2018507.896,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[9,"Ampliación de Redes","Villa Valentina","Gaspar Hernandez",125,565528.51,581155.59,116231.118,116231.118,464924.472,449297.392,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[10,"Ampliación de Redes","Entrada el Correo","Gaspar Hernandez",100,693468.93,671509.05,134301.81,134301.81,537207.24,559167.12,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[11,"Ampliación de Redes","Las Colinas La Antena","Gaspar Hernandez",1000,2094659.12,2214571.5,442914.3,442914.3,1771657.2,1651744.82,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[12,"Ampliación de Redes","Loma Al Medio (Entrada La Cigua)","Gaspar Hernandez",75,1228598.75,1298144.87,259628.974,259628.974,1038515.896,968969.776,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[13,"Ampliación de Redes","Entrada La Batata","Gaspar Hernandez",30,2295873.41,2424188.91,484837.782,484837.782,1939351.128,1811035.628,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[3,"Construcción de un pozo tubular","Pozo Las Colinas (La Antena)","Gaspar Hernandez",1000,3126304.25136242,2813673.83,562734.766,562734.766,2250939.064,2563569.48536242,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[4,"Construcción de un pozo tubular","Loma Al Medio (Entrada La Cigua)","Gaspar Hernandez",75,3126304.25136242,2813673.83,562734.766,562734.766,2250939.064,2563569.48536242,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","B",0,0,"30% Ejecutado","Adjudicado",0],[14,"Ampliación de Redes","Entrada Malen","Villa Magante",75,705067.08,648739.39,129747.878,523184.578,125554.812,181882.502,"CORAAMOCA-CCC-CP-2025-0002","BENESTAR CONSTRUCTORA, S.R.L","16879","C",393436.7,0,"30% Ejecutado","Adjudicado",0],[15,"Ampliación de Redes","Rincón de Genaro","Villa Magante",350,1502938.05,1396857.16,279371.432,1179744.722,217112.438,323193.328,"CORAAMOCA-CCC-CP-2025-0002","BENESTAR CONSTRUCTORA, S.R.L","16879","C",900373.29,0,"30% Ejecutado","Adjudicado",0],[5,"Construcción de un pozo tubular","Pozo Tanque Entrada Los Mangos","Villa Magante",380,3126304.25136242,2813673.83,562734.766,562734.766,2250939.064,2563569.48536242,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,0,"30% Ejecutado","Adjudicado",0],[6,"Construcción de un pozo tubular","Vereda Al Medio","Villa Magante",250,3126304.25136242,2813673.83,562734.766,562734.766,2250939.064,2563569.48536242,"CORAAMOCA-CCC-CP-2025-0002","INGENIERIA Y PERFORACIONES (INPER), S.R.L","16879","C",0,0,"30% Ejecutado","Adjudicado",0]];
     const colors = ["#1769aa", "#198754", "#0f766e", "#c47f00", "#b42318", "#6f42c1"];
     const money = new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 2 });
     const number = new Intl.NumberFormat("es-DO");
@@ -1129,23 +1128,23 @@
       controles: "Controles y alertas",
       registro: "Registro de proyectos",
       solicitudes: "Solicitudes de Compras",
-      almacen: "Solicitudes a Almacén",
+      almacen: "Solicitudes a AlmacÃ©n",
       inventario: "Inventario",
       documentos: "Documentos",
       cubicaciones: "Registro de cubicaciones",
       reportes: "Reportes",
       "users-admin": "Crear usuarios",
       backup: "Respaldos",
-      "project-edit": "Editar código, presupuesto y estatus",
+      "project-edit": "Editar cÃ³digo, presupuesto y estatus",
       "payment-create": "Registrar cubicaciones",
       "payment-approve": "Aprobar cubicaciones",
       "payment-reject": "Rechazar cubicaciones",
       "compras-datos": "Editar datos de Compras",
       "finanzas-pagos-compras": "Registrar pagos de Compras",
-      "technical-log": "Bitácora técnica",
+      "technical-log": "BitÃ¡cora tÃ©cnica",
       "documents-manage": "Adjuntar documentos",
       "documents-view": "Ver documentos",
-      "warehouse-create": "Crear solicitudes a almacén",
+      "warehouse-create": "Crear solicitudes a almacÃ©n",
       "inventory-edit": "Editar inventario",
       "notifications-admin": "Configurar notificaciones",
       "mass-upload": "Carga masiva desde Excel",
@@ -1154,26 +1153,26 @@
       "report-contratista": "Reporte por proveedor",
       "report-disponibilidad": "Reporte disponibilidad",
       "report-compras": "Reporte proceso de compras",
-      "report-inversion": "Reporte inversión pública",
+      "report-inversion": "Reporte inversiÃ³n pÃºblica",
       "report-ejecutivo": "Reporte ejecutivo",
       "report-mensual": "Reporte comparativo mensual",
-      "report-direccion": "Modo Dirección General",
+      "report-direccion": "Modo DirecciÃ³n General",
       "report-inconsistencias": "Reporte de inconsistencias",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
-      "report-snip": "Reporte por código SNIP"
+      "report-snip": "Reporte por cÃ³digo SNIP"
     };
     const permissionGroups = {
-      "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "estructura", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
-      "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
+      "NavegaciÃ³n": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "estructura", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
+      "GestiÃ³n": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Solicitudes de Compras": ["compras-datos", "finanzas-pagos-compras"],
-      "Almacén e inventario": ["warehouse-create", "inventory-edit"],
+      "AlmacÃ©n e inventario": ["warehouse-create", "inventory-edit"],
       "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-view", "documents-manage", "notifications-admin"],
       "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
+      "DirecciÃ³n TÃ©cnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
       "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
       "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
       "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos"],
@@ -1194,23 +1193,6 @@
       inconsistencias: "report-inconsistencias"
     };
 
-    function contractorFromExcel(row) {
-      return row[12] || "Sin asignar";
-    }
-
-    const baseProjects = seedRows.map((row, i) => {
-      const r = Array.isArray(row) ? row : row.value;
-      return {
-      key: "P" + String(i + 1).padStart(3, "0"),
-      no: r[0], tipo: r[1], comunidad: r[2], municipio: r[3].trim(),
-      poblacion: r[4], presupuesto: r[5], adjudicado: r[6], comprometido: r[7],
-      pagadoBase: r[8], disponibilidadAdjudicadoBase: r[9], disponibilidadProyectoBase: r[10],
-      procesoCompra: r[11] || "", codigo: r[13] || "", contratista: contractorFromExcel(r),
-      item: r[14] || "", totalCubicadoBase: r[15] || 0, montoPublicado: r[16] || 0,
-      estatus: r[17] || "En proceso", tipoProceso: r[18] || "", montoSinAdjudicar: r[19] || 0
-      };
-    });
-
     let state = loadState();
     let currentReport = "municipio";
     let creatingNewProject = false;
@@ -1229,7 +1211,7 @@
 
     function defaultCatalogs() {
       return {
-        estatus_obra: ["Publicado", "Sin Publicar", "En proceso", "Contratado", "En ejecución", "Terminado", "Paralizado"],
+        estatus_obra: ["Publicado", "Sin Publicar", "En proceso", "Contratado", "En ejecuciÃ³n", "Terminado", "Paralizado"],
         urgencia: ["Normal", "Alta", "Urgente"],
         unidad: ["Unidad"],
         tipo_obra: [],
@@ -1251,10 +1233,10 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: baseProjects, users: [], employees: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: [], users: [], employees: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente tÃ©cnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
-        projects: mergeProjects(parsed.projects || []),
+        projects: [],
         users: parsed.users || [],
         employees: parsed.employees || [],
         payments: parsed.payments || [],
@@ -1266,7 +1248,7 @@
         organizationUnits: parsed.organizationUnits?.length ? parsed.organizationUnits : initialOrgUnits(),
         notificationSettings: parsed.notificationSettings || [],
         internalNotifications: parsed.internalNotifications || [],
-        workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] },
+        workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente tÃ©cnica", "Pendiente presupuesto", "Pendiente finanzas"] },
         alertConfig: { ...defaultAlertConfig(), ...(parsed.alertConfig || {}) },
         catalogs: { ...defaultCatalogs(), ...(parsed.catalogs || {}) },
         favorites: parsed.favorites || [],
@@ -1275,20 +1257,7 @@
     }
 
     function mergeProjects(saved) {
-      const byKey = Object.fromEntries(saved.map(p => [p.key, p]));
-      const mergedBase = baseProjects.map(p => {
-        const stored = byKey[p.key] || {};
-        const merged = { ...p, ...stored };
-        if (stored.pagadoBase === undefined) {
-          merged.pagadoBase = p.pagadoBase;
-        }
-        if (!stored.contratista || stored.contratista === "Sin asignar") {
-          merged.contratista = p.contratista;
-        }
-        return merged;
-      });
-      const customProjects = saved.filter(project => !baseProjects.some(base => base.key === project.key));
-      return [...mergedBase, ...customProjects];
+      return [];
     }
 
     function saveState() {
@@ -1382,7 +1351,6 @@
         if (row.permisos?.codigo) permissionMap[row.usuario_id].push(row.permisos.codigo);
       });
       state.projects = (projectsResult.data || []).map(mapProjectFromDb);
-      if (!state.projects.length) state.projects = baseProjects;
       state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
       if (alertConfigResult.data) {
         state.alertConfig = {
@@ -1555,7 +1523,7 @@
       const foundCodes = new Set((permissionRows.data || []).map(permission => permission.codigo));
       const missingCodes = permissions.filter(code => !foundCodes.has(code));
       if (missingCodes.length) {
-        throw new Error(`Faltan permisos en Supabase: ${missingCodes.join(", ")}. Ejecute la migración de permisos antes de asignarlos.`);
+        throw new Error(`Faltan permisos en Supabase: ${missingCodes.join(", ")}. Ejecute la migraciÃ³n de permisos antes de asignarlos.`);
       }
       const deleteResult = await window.supabaseClient.from("usuario_permisos").delete().eq("usuario_id", userId);
       if (deleteResult.error) throw deleteResult.error;
@@ -1620,7 +1588,7 @@
     }
 
     const defaultPaymentApprovalFlow = [
-      { estado: "Pendiente técnica", area: "Dirección Técnica", label: "Aprobar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
+      { estado: "Pendiente tÃ©cnica", area: "DirecciÃ³n TÃ©cnica", label: "Aprobar tÃ©cnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
       { estado: "Pendiente presupuesto", area: "Presupuesto", label: "Aprobar presupuesto", actorKey: "aprobacionPresupuestoPor", dateKey: "aprobacionPresupuestoEn", dbActor: "aprobacion_presupuesto_por", dbDate: "aprobacion_presupuesto_en" },
       { estado: "Pendiente finanzas", area: "Finanzas", label: "Aprobar finanzas", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en" }
     ];
@@ -1635,7 +1603,7 @@
     }
 
     function currentApprovalStep(payment) {
-      const estado = payment.estado === "Pendiente" ? "Pendiente técnica" : payment.estado;
+      const estado = payment.estado === "Pendiente" ? "Pendiente tÃ©cnica" : payment.estado;
       return paymentApprovalFlow().find(step => step.estado === estado) || null;
     }
 
@@ -1691,7 +1659,7 @@
       document.getElementById("editingUserId").value = "";
       const passwordInput = form.elements.passwordTemporal;
       passwordInput.required = true;
-      passwordInput.placeholder = "Clave genérica";
+      passwordInput.placeholder = "Clave genÃ©rica";
       form.elements.activo.checked = true;
       form.elements.cargo.required = true;
       form.elements.cargo.placeholder = "Ej. Supervisor de obras";
@@ -1704,7 +1672,7 @@
       if (!can("users-admin")) return alert("El usuario activo no tiene permiso para modificar usuarios.");
       const rawUser = state.users.find(item => item.id === userId);
       const user = normalizedUser(rawUser);
-      if (!user) return alert("No se encontró el usuario seleccionado.");
+      if (!user) return alert("No se encontrÃ³ el usuario seleccionado.");
       const form = document.getElementById("userForm");
       editingUserId = user.id;
       document.getElementById("editingUserId").value = user.id;
@@ -1736,7 +1704,7 @@
 
     async function syncAuthUsers() {
       if (!can("users-admin")) return alert("El usuario activo no tiene permiso para sincronizar usuarios.");
-      if (!window.supabaseClient) return alert("Supabase no está disponible.");
+      if (!window.supabaseClient) return alert("Supabase no estÃ¡ disponible.");
       const result = await window.supabaseClient.rpc("sincronizar_usuarios_auth");
       if (result.error) throw result.error;
       await loadSupabaseData();
@@ -1805,7 +1773,7 @@
           dato_nuevo: next
         }).then(result => {
           if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) {
-            console.warn("Auditoría no guardada en Supabase:", result.error.message);
+            console.warn("AuditorÃ­a no guardada en Supabase:", result.error.message);
           }
         });
       }
@@ -1813,7 +1781,7 @@
     }
 
     function alertLevelBadge(level) {
-      const cls = level === "Crítico" ? "bad" : level === "Alerta" ? "warn" : "ok";
+      const cls = level === "CrÃ­tico" ? "bad" : level === "Alerta" ? "warn" : "ok";
       return `<span class="badge ${cls}">${level}</span>`;
     }
 
@@ -1851,7 +1819,7 @@
       const total = noMovementProjects().length;
       if (!total) return;
       const alertBox = document.getElementById("movementAlert");
-      alertBox.innerHTML = `<strong>Alerta de seguimiento</strong>${number.format(total)} obras no tienen movimientos de ejecución o cubicación después de ${number.format(state.alertConfig?.diasSinMovimiento || 10)} días laborables.`;
+      alertBox.innerHTML = `<strong>Alerta de seguimiento</strong>${number.format(total)} obras no tienen movimientos de ejecuciÃ³n o cubicaciÃ³n despuÃ©s de ${number.format(state.alertConfig?.diasSinMovimiento || 10)} dÃ­as laborables.`;
       alertBox.hidden = false;
       sessionStorage.setItem(key, "1");
       setTimeout(() => {
@@ -2131,7 +2099,7 @@
       const lowStock = (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0)).length;
       const documentsCount = (state.documents || []).length;
       const cards = [
-        ["Total Código SNIP", inv.totalSnip, "ok"],
+        ["Total CÃ³digo SNIP", inv.totalSnip, "ok"],
         ["Monto adjudicado", inv.adjudicado, "ok"],
         ["Monto sin adjudicar", inv.sinAdjudicar, "warn"],
         ["Disponible", inv.disponible, inv.disponible < 0 ? "bad" : "ok"],
@@ -2139,19 +2107,19 @@
         ["Obras sin adjudicar", unawarded, unawarded ? "warn" : "ok", "count"],
         ["Cubicaciones pendientes", pendingPayments, pendingPayments ? "warn" : "ok", "count"],
         ["Documentos cargados", documentsCount, "ok", "count"],
-        ["Inventario crítico", lowStock, lowStock ? "warn" : "ok", "count"],
-        ["Alertas críticas", alerts.filter(alert => alert.level === "Crítico").length, alerts.some(alert => alert.level === "Crítico") ? "bad" : "ok", "count"]
+        ["Inventario crÃ­tico", lowStock, lowStock ? "warn" : "ok", "count"],
+        ["Alertas crÃ­ticas", alerts.filter(alert => alert.level === "CrÃ­tico").length, alerts.some(alert => alert.level === "CrÃ­tico") ? "bad" : "ok", "count"]
       ];
       document.getElementById("executiveMetrics").innerHTML = cards.map(([label, value, cls, type]) =>
         `<div class="executive-card ${cls}"><small>${label}</small><strong>${type === "count" ? number.format(value) : money.format(value)}</strong></div>`
       ).join("");
-      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const critical = alerts.filter(alert => alert.level === "CrÃ­tico").length;
       const warning = alerts.filter(alert => alert.level === "Alerta").length;
       const lowAvailabilityRatio = Number(state.alertConfig?.porcentajeDisponibilidadBaja || 5) / 100;
       const availabilityLevel = inv.disponible < 0 ? "bad" : inv.disponible < inv.totalSnip * lowAvailabilityRatio ? "warn" : "ok";
       document.getElementById("semaphoreGrid").innerHTML = [
         ["Disponibilidad presupuestaria", availabilityLevel, availabilityLevel === "bad" ? "Sobregiro o disponibilidad negativa" : availabilityLevel === "warn" ? "Disponibilidad baja" : "Dentro del margen"],
-        ["Alertas críticas", critical ? "bad" : "ok", critical ? `${number.format(critical)} controles críticos` : "Sin alertas críticas"],
+        ["Alertas crÃ­ticas", critical ? "bad" : "ok", critical ? `${number.format(critical)} controles crÃ­ticos` : "Sin alertas crÃ­ticas"],
         ["Alertas preventivas", warning ? "warn" : "ok", warning ? `${number.format(warning)} controles preventivos` : "Sin alertas preventivas"],
         ["Cubicaciones pendientes", pendingPayments ? "warn" : "ok", pendingPayments ? `${number.format(pendingPayments)} por aprobar` : "Sin pendientes"]
       ].map(([label, level, text]) => `<div class="signal-row"><span class="signal-dot ${level === "ok" ? "" : level}"></span><strong>${label}</strong><span>${text}</span></div>`).join("");
@@ -2165,17 +2133,17 @@
       const vencidas = projectDeadlineRows().filter(row => row.status === "Vencido").length;
       const pendientesPorAprobar = state.payments.filter(payment => currentApprovalStep(payment)).length;
       const areaData = [
-        ["Finanzas", `${money.format(sum(rows, "pagado"))} pagado`, `${number.format(pendientesPorAprobar)} cubicaciones en aprobación`],
+        ["Finanzas", `${money.format(sum(rows, "pagado"))} pagado`, `${number.format(pendientesPorAprobar)} cubicaciones en aprobaciÃ³n`],
         ["Compras", `${money.format(inv.sinAdjudicar)} sin adjudicar`, `${number.format(comprasPendientes)} obras pendientes`],
         ["Presupuesto", `${money.format(inv.disponible)} disponible`, `${money.format(sum(rows, "presupuesto"))} presupuesto`],
-        ["Dirección Técnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`]
+        ["DirecciÃ³n TÃ©cnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`]
       ];
       const area = activeUser()?.area || activeUser()?.rol || "General";
       const myDashboard = (() => {
         const key = normalizedArea(area);
         if (key.includes("finanza")) return ["Mi tablero: Finanzas", `${number.format(pendientesPorAprobar)} aprobaciones en flujo`, `${money.format(sum(rows, "pagado"))} pagado`];
         if (key.includes("presupuesto")) return ["Mi tablero: Presupuesto", `${money.format(inv.disponible)} disponible`, `${number.format(comprasPendientes)} obras por adjudicar`];
-        if (key.includes("técnica") || key.includes("tecnica")) return ["Mi tablero: Dirección Técnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`];
+        if (key.includes("tÃ©cnica") || key.includes("tecnica")) return ["Mi tablero: DirecciÃ³n TÃ©cnica", `${number.format(vencidas)} obras sin movimiento`, `${number.format(alerts.filter(alert => alert.type.includes("avance")).length)} alertas de avance`];
         if (key.includes("compra")) return ["Mi tablero: Compras", `${money.format(inv.sinAdjudicar)} sin adjudicar`, `${number.format(comprasPendientes)} procesos pendientes`];
         return ["Mi tablero", `${number.format(alerts.length)} alertas activas`, `${number.format(pendientesPorAprobar)} aprobaciones en flujo`];
       })();
@@ -2296,7 +2264,7 @@
       document.getElementById("statusFilter").innerHTML = `<option value="">Todos los estatus</option>` + statuses.map(s => `<option>${s}</option>`).join("");
       const selectedSnip = document.getElementById("snipFilter").value;
       const snips = [...new Set(state.projects.map(displaySnip))].sort((a, b) => a.localeCompare(b));
-      document.getElementById("snipFilter").innerHTML = `<option value="">Todos los códigos SNIP</option>` + snips.map(code => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`).join("");
+      document.getElementById("snipFilter").innerHTML = `<option value="">Todos los cÃ³digos SNIP</option>` + snips.map(code => `<option value="${escapeHtml(code)}">${escapeHtml(code)}</option>`).join("");
       if (selectedSnip && snips.includes(selectedSnip)) document.getElementById("snipFilter").value = selectedSnip;
       const selectedProvider = document.getElementById("providerFilter").value;
       const providers = [...new Set(state.projects.map(p => p.contratista || "Sin asignar"))].sort((a, b) => a.localeCompare(b));
@@ -2352,13 +2320,13 @@
     }
 
     function renderUsers() {
-      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Activo", "Unidad / línea de mando", "Cargo", "Rol", "Rol comercial", "Cambio clave", "Permisos", "Creado", "Acción"], state.users.map(user => {
+      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Activo", "Unidad / lÃ­nea de mando", "Cargo", "Rol", "Rol comercial", "Cambio clave", "Permisos", "Creado", "AcciÃ³n"], state.users.map(user => {
         const u = normalizedUser(user);
         return [
           escapeHtml(u.nombre),
           escapeHtml(u.usuario),
           escapeHtml(u.correo || u.usuario || "-"),
-          u.activo === false ? alertLevelBadge("Crítico") : alertLevelBadge("Correcto"),
+          u.activo === false ? alertLevelBadge("CrÃ­tico") : alertLevelBadge("Correcto"),
           escapeHtml(u.area || u.rol || "-"),
           escapeHtml(u.cargo || "-"),
           escapeHtml(u.rol || "-"),
@@ -2373,7 +2341,7 @@
 
     function renderPayments() {
       const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
-      renderTable("paymentsTable", ["Fecha", "Proyecto", "Cubicación", "Monto", "Estado", "Observación", "Acción"], state.payments.map(p => [
+      renderTable("paymentsTable", ["Fecha", "Proyecto", "CubicaciÃ³n", "Monto", "Estado", "ObservaciÃ³n", "AcciÃ³n"], state.payments.map(p => [
         p.fecha,
         projects[p.projectKey]?.comunidad || p.projectKey,
         p.numero || "-",
@@ -2394,7 +2362,7 @@
           <div class="warehouse-request-summary">
             <div><small>Solicitante</small><strong>${escapeHtml(row.solicitante || "-")}</strong></div>
             <div><small>Fecha y hora</small>${row.fechaHora ? new Date(row.fechaHora).toLocaleString("es-DO") : "-"}</div>
-            <div><small>Artículo</small>${escapeHtml(row.articulo || "-")}</div>
+            <div><small>ArtÃ­culo</small>${escapeHtml(row.articulo || "-")}</div>
             <div><small>Urgencia</small>${escapeHtml(row.prioridad || "Normal")}</div>
             <div><button class="btn secondary warehouse-detail-btn" type="button" data-id="${escapeHtml(row.id)}">Mostrar detalles</button></div>
           </div>
@@ -2436,14 +2404,14 @@
     function openWarehouseRequestDetail(id) {
       const row = (state.warehouseRequests || []).find(item => String(item.id) === String(id));
       if (!row) return;
-      document.getElementById("warehouseRequestDetailTitle").textContent = "Detalle de solicitud a almacén";
+      document.getElementById("warehouseRequestDetailTitle").textContent = "Detalle de solicitud a almacÃ©n";
       document.getElementById("warehouseRequestDetailSubtitle").textContent = `${row.solicitante || "Sin solicitante"} | ${row.fechaHora ? new Date(row.fechaHora).toLocaleString("es-DO") : "-"}`;
       document.getElementById("warehouseRequestDetailContent").innerHTML = `
         <div class="detail-grid">
           <div class="detail-item"><small>Solicitante</small><strong>${escapeHtml(row.solicitante || "-")}</strong></div>
           <div class="detail-item"><small>Fecha y hora</small><strong>${row.fechaHora ? new Date(row.fechaHora).toLocaleString("es-DO") : "-"}</strong></div>
           <div class="detail-item"><small>Nivel de urgencia</small><strong>${escapeHtml(row.prioridad || "Normal")}</strong></div>
-          <div class="detail-item"><small>Artículo</small><strong>${escapeHtml(row.articulo || "-")}</strong></div>
+          <div class="detail-item"><small>ArtÃ­culo</small><strong>${escapeHtml(row.articulo || "-")}</strong></div>
           <div class="detail-item"><small>Cantidad</small><strong>${number.format(row.cantidad || 0)}</strong></div>
           <div class="detail-item"><small>Unidad</small><strong>${escapeHtml(row.unidad || "-")}</strong></div>
         </div>
@@ -2459,7 +2427,7 @@
     }
 
     function renderInventory() {
-      renderTable("inventoryTable", ["Artículo", "Unidad", "Existencia", "Existencia mínima", "Ubicación", "Estado"], (state.warehouseArticles || []).map(article => {
+      renderTable("inventoryTable", ["ArtÃ­culo", "Unidad", "Existencia", "Existencia mÃ­nima", "UbicaciÃ³n", "Estado"], (state.warehouseArticles || []).map(article => {
         const stock = Number(article.existencia || 0);
         const minimum = Number(article.existenciaMinima || 0);
         const status = stock <= minimum ? alertLevelBadge("Alerta") : alertLevelBadge("Correcto");
@@ -2478,7 +2446,7 @@
         return `<div class="mobile-record">
           <strong>${escapeHtml(article.nombre || "-")}</strong>
           <div>${number.format(stock)} ${escapeHtml(article.unidad || "")}</div>
-          <div>Mínimo: ${number.format(minimum)}</div>
+          <div>MÃ­nimo: ${number.format(minimum)}</div>
           <div>${stock <= minimum ? "Inventario bajo" : "Inventario correcto"}</div>
         </div>`;
       }).join("");
@@ -2508,14 +2476,14 @@
     }
 
     function renderNotificationCenter() {
-      renderTable("notificationCenterTable", ["Nivel", "Tipo", "Referencia", "Detalle", "Estado", "Acción"], notificationRows().map((row, index) => [
+      renderTable("notificationCenterTable", ["Nivel", "Tipo", "Referencia", "Detalle", "Estado", "AcciÃ³n"], notificationRows().map((row, index) => [
         row.level,
         row.type,
         row.reference,
         row.detail,
         row.estado || "Pendiente",
         `<div class="notice-actions">
-          <button class="mini-btn notice-read-btn" type="button" data-index="${index}">Leída</button>
+          <button class="mini-btn notice-read-btn" type="button" data-index="${index}">LeÃ­da</button>
           <button class="mini-btn notice-resolve-btn" type="button" data-index="${index}">Resolver</button>
         </div>`
       ]));
@@ -2524,7 +2492,7 @@
     function renderMyTasks() {
       const tasks = [];
       state.payments.filter(payment => currentApprovalStep(payment) && canApproveCurrentStep(payment)).forEach(payment => {
-        tasks.push(["Cubicación", payment.numero || "-", currentApprovalStep(payment).label, payment.fecha || "-"]);
+        tasks.push(["CubicaciÃ³n", payment.numero || "-", currentApprovalStep(payment).label, payment.fecha || "-"]);
       });
       if (can("inventory-edit")) (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0)).forEach(article => {
         tasks.push(["Inventario", article.nombre, "Revisar stock bajo", "-"]);
@@ -2536,7 +2504,7 @@
         const activeStage = (process.etapas || []).find(stage => stage.estado === "activo");
         if (activeStage) tasks.push(["Compras", process.id || "-", activeStage.nombre || "Continuar proceso", process.descripcion || "-"]);
       });
-      renderTable("myTasksTable", ["Módulo", "Referencia", "Tarea", "Dato"], tasks);
+      renderTable("myTasksTable", ["MÃ³dulo", "Referencia", "Tarea", "Dato"], tasks);
       document.getElementById("myTasksCards").innerHTML = tasks.map(task => `<div class="mobile-record"><strong>${escapeHtml(task[0])}: ${escapeHtml(task[1])}</strong><div>${escapeHtml(task[2])}</div><div>${escapeHtml(task[3])}</div></div>`).join("");
       const workload = [
         ["Cubicaciones", state.payments.filter(payment => currentApprovalStep(payment)).length],
@@ -2549,7 +2517,7 @@
 
     function renderCatalogs() {
       const rows = Object.entries(state.catalogs || {}).flatMap(([tipo, values]) => (values || []).map(valor => [tipo, valor]));
-      renderTable("catalogTable", ["Catálogo", "Valor"], rows);
+      renderTable("catalogTable", ["CatÃ¡logo", "Valor"], rows);
     }
 
     function unitRoute(unit, units = state.organizationUnits || []) {
@@ -2600,7 +2568,7 @@
           `<button class="btn secondary edit-unit-btn" type="button" data-id="${escapeHtml(unit.id)}">Modificar</button>`
         ];
       });
-      renderTable("unitsCatalogTable", ["Tipo", "Nombre", "Depende de", "Ruta", "Acción"], rows);
+      renderTable("unitsCatalogTable", ["Tipo", "Nombre", "Depende de", "Ruta", "AcciÃ³n"], rows);
       renderTable("structureTreeTable", ["Tipo", "Nombre", "Depende de", "Ruta"], rows.map(row => row.slice(0, 4)));
     }
 
@@ -3121,7 +3089,7 @@
         row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
         row.descripcion || "-"
       ]);
-      renderTable("centralDocumentsTable", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
+      renderTable("centralDocumentsTable", ["Proyecto", "Tipo", "Archivo", "DescripciÃ³n"], rows);
     }
 
     function renderWorkflowConfig() {
@@ -3153,11 +3121,11 @@
         return key ? row[key] : "";
       };
       return {
-        nombre: String(findValue("articulo", "artículo", "nombre") || "").trim(),
+        nombre: String(findValue("articulo", "artÃ­culo", "nombre") || "").trim(),
         unidad: String(findValue("unidad") || "").trim(),
         existencia: Number(findValue("existencia", "stock") || 0),
-        existenciaMinima: Number(findValue("existencia minima", "existencia mínima", "minimo", "mínimo") || 0),
-        ubicacion: String(findValue("ubicacion", "ubicación") || "").trim()
+        existenciaMinima: Number(findValue("existencia minima", "existencia mÃ­nima", "minimo", "mÃ­nimo") || 0),
+        ubicacion: String(findValue("ubicacion", "ubicaciÃ³n") || "").trim()
       };
     }
 
@@ -3166,7 +3134,7 @@
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet).map(normalizeInventoryImportRow).filter(row => row.nombre && row.unidad);
-      if (!rows.length) return alert("La plantilla no contiene artículos válidos.");
+      if (!rows.length) return alert("La plantilla no contiene artÃ­culos vÃ¡lidos.");
       try {
         if (window.supabaseClient) {
           const payload = rows.map(row => ({
@@ -3195,7 +3163,7 @@
         }
         renderInventory();
         renderWarehouseArticleOptions(document.getElementById("warehouseArticleSearch").value);
-        alert(`Artículos procesados: ${number.format(rows.length)}.`);
+        alert(`ArtÃ­culos procesados: ${number.format(rows.length)}.`);
       } catch (error) {
         alert(error.message || "No se pudo importar la plantilla de inventario.");
       }
@@ -3210,7 +3178,7 @@
       if (!select) return;
       const term = normalizeSearch(search);
       const articles = (state.warehouseArticles || []).filter(article => normalizeSearch(article.nombre).includes(term));
-      select.innerHTML = `<option value="">Seleccione un artículo</option>` + articles.map(article =>
+      select.innerHTML = `<option value="">Seleccione un artÃ­culo</option>` + articles.map(article =>
         `<option value="${escapeHtml(article.nombre)}" data-unit="${escapeHtml(article.unidad || "")}">${escapeHtml(article.nombre)}</option>`
       ).join("");
     }
@@ -3249,29 +3217,29 @@
       rows.forEach(project => {
         const snip = String(project.codigo || "").trim();
         const proveedor = String(project.contratista || "").trim().toLowerCase();
-        if (!Number(project.presupuesto || 0)) push("Crítico", "Presupuesto en cero", project, "El proyecto no tiene monto de presupuesto.", "Completar presupuesto antes de ejecutar compras o pagos.");
-        if (!snip || snip === "00001" || snip.toLowerCase().includes("sin")) push("Alerta", "Proyecto sin SNIP", project, "El proyecto no tiene un código SNIP definitivo.", "Asignar o confirmar el código SNIP.");
-        if (!proveedor || proveedor === "sin asignar" || proveedor === "sin adjudicar") push("Alerta", "Proyecto sin proveedor", project, "El proyecto no tiene proveedor adjudicado.", "Completar proveedor o marcar como pendiente de adjudicación.");
-        if (Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Sin adjudicación", project, "Tiene presupuesto, pero no tiene monto adjudicado.", "Completar adjudicación cuando el proceso sea aprobado.");
-        if (Number(project.adjudicado || 0) > Number(project.presupuesto || 0) && Number(project.presupuesto || 0) > 0) push("Crítico", "Adjudicado mayor al presupuesto", project, "El monto adjudicado supera el presupuesto.", "Revisar presupuesto o adjudicación.");
-        if (Number(project.disponibilidadAdjudicado || 0) <= 0 && Number(project.adjudicado || 0) > 0) push("Crítico", "Presupuesto adjudicado agotado", project, "La disponibilidad adjudicada está en cero o negativa.", "Revisar pagos y cubicaciones antes de registrar nuevos desembolsos.");
-        if (Number(project.pagado || 0) > Number(project.adjudicado || 0) && Number(project.adjudicado || 0) > 0) push("Crítico", "Pagos mayores al adjudicado", project, "El total pagado supera el monto adjudicado.", "Solicitar aprobación y corregir el monto antes de continuar.");
-        if ((project.estatus === "Publicado" || String(project.procesoCompra || "").trim()) && Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Proceso sin adjudicación", project, "Proceso publicado o cargado sin adjudicación.", "Dar seguimiento a Compras y Contrataciones.");
-        if (Number(project.adjudicado || 0) > 0 && Number(project.comprometido || 0) <= 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Adjudicado sin avance", project, "Existe adjudicación sin avance de obra ni cubicaciones.", "Verificar estatus físico y financiero.");
-        if (Number(project.pagado || 0) > 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Pagos sin cubicaciones", project, "Existe pago o avance registrado sin cubicación asociada.", "Registrar cubicación o corregir avance inicial.");
+        if (!Number(project.presupuesto || 0)) push("CrÃ­tico", "Presupuesto en cero", project, "El proyecto no tiene monto de presupuesto.", "Completar presupuesto antes de ejecutar compras o pagos.");
+        if (!snip || snip === "00001" || snip.toLowerCase().includes("sin")) push("Alerta", "Proyecto sin SNIP", project, "El proyecto no tiene un cÃ³digo SNIP definitivo.", "Asignar o confirmar el cÃ³digo SNIP.");
+        if (!proveedor || proveedor === "sin asignar" || proveedor === "sin adjudicar") push("Alerta", "Proyecto sin proveedor", project, "El proyecto no tiene proveedor adjudicado.", "Completar proveedor o marcar como pendiente de adjudicaciÃ³n.");
+        if (Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Sin adjudicaciÃ³n", project, "Tiene presupuesto, pero no tiene monto adjudicado.", "Completar adjudicaciÃ³n cuando el proceso sea aprobado.");
+        if (Number(project.adjudicado || 0) > Number(project.presupuesto || 0) && Number(project.presupuesto || 0) > 0) push("CrÃ­tico", "Adjudicado mayor al presupuesto", project, "El monto adjudicado supera el presupuesto.", "Revisar presupuesto o adjudicaciÃ³n.");
+        if (Number(project.disponibilidadAdjudicado || 0) <= 0 && Number(project.adjudicado || 0) > 0) push("CrÃ­tico", "Presupuesto adjudicado agotado", project, "La disponibilidad adjudicada estÃ¡ en cero o negativa.", "Revisar pagos y cubicaciones antes de registrar nuevos desembolsos.");
+        if (Number(project.pagado || 0) > Number(project.adjudicado || 0) && Number(project.adjudicado || 0) > 0) push("CrÃ­tico", "Pagos mayores al adjudicado", project, "El total pagado supera el monto adjudicado.", "Solicitar aprobaciÃ³n y corregir el monto antes de continuar.");
+        if ((project.estatus === "Publicado" || String(project.procesoCompra || "").trim()) && Number(project.adjudicado || 0) <= 0 && Number(project.presupuesto || 0) > 0) push("Alerta", "Proceso sin adjudicaciÃ³n", project, "Proceso publicado o cargado sin adjudicaciÃ³n.", "Dar seguimiento a Compras y Contrataciones.");
+        if (Number(project.adjudicado || 0) > 0 && Number(project.comprometido || 0) <= 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Adjudicado sin avance", project, "Existe adjudicaciÃ³n sin avance de obra ni cubicaciones.", "Verificar estatus fÃ­sico y financiero.");
+        if (Number(project.pagado || 0) > 0 && Number(project.cubicaciones || 0) <= 0) push("Alerta", "Pagos sin cubicaciones", project, "Existe pago o avance registrado sin cubicaciÃ³n asociada.", "Registrar cubicaciÃ³n o corregir avance inicial.");
         const docs = (state.documents || []).filter(row => row.projectKey === project.key);
         const logs = (state.technicalLogs || []).filter(row => row.projectKey === project.key);
         if (Number(project.adjudicado || 0) > 0 && !docs.length) push("Alerta", "Expediente sin documentos", project, "El proyecto adjudicado no tiene documentos adjuntos.", "Adjuntar contrato, acta o soporte disponible.");
-        if (Number(project.adjudicado || 0) > 0 && !logs.length) push("Alerta", "Sin bitácora técnica", project, "El proyecto adjudicado no tiene movimientos técnicos registrados.", "Registrar una actualización de avance físico.");
+        if (Number(project.adjudicado || 0) > 0 && !logs.length) push("Alerta", "Sin bitÃ¡cora tÃ©cnica", project, "El proyecto adjudicado no tiene movimientos tÃ©cnicos registrados.", "Registrar una actualizaciÃ³n de avance fÃ­sico.");
       });
       const seen = new Set();
       state.payments.forEach(payment => {
         const numberKey = String(payment.numero || "").trim().toLowerCase();
         const project = rows.find(item => item.key === payment.projectKey);
-        if (currentApprovalStep(payment)) push("Alerta", "Cubicación pendiente de aprobación", project, `La cubicación ${payment.numero || "sin número"} está en ${payment.estado || "flujo de aprobación"} y todavía no impacta el total pagado.`, "Completar el siguiente nivel de aprobación.");
+        if (currentApprovalStep(payment)) push("Alerta", "CubicaciÃ³n pendiente de aprobaciÃ³n", project, `La cubicaciÃ³n ${payment.numero || "sin nÃºmero"} estÃ¡ en ${payment.estado || "flujo de aprobaciÃ³n"} y todavÃ­a no impacta el total pagado.`, "Completar el siguiente nivel de aprobaciÃ³n.");
         if (!numberKey) return;
         const key = `${payment.projectKey}|${numberKey}`;
-        if (seen.has(key)) push("Crítico", "Cubicación duplicada", project, `La cubicación ${payment.numero} está repetida para el mismo proyecto.`, "Unificar o corregir el número de cubicación.");
+        if (seen.has(key)) push("CrÃ­tico", "CubicaciÃ³n duplicada", project, `La cubicaciÃ³n ${payment.numero} estÃ¡ repetida para el mismo proyecto.`, "Unificar o corregir el nÃºmero de cubicaciÃ³n.");
         seen.add(key);
       });
       return alerts;
@@ -3279,7 +3247,7 @@
 
     function renderAlertsTable(id, alerts, limit = null) {
       const visible = limit ? alerts.slice(0, limit) : alerts;
-      renderTable(id, ["Nivel", "Control", "Código SNIP", "Proyecto", "Municipio", "Detalle", "Acción sugerida"], visible.map(alert => [
+      renderTable(id, ["Nivel", "Control", "CÃ³digo SNIP", "Proyecto", "Municipio", "Detalle", "AcciÃ³n sugerida"], visible.map(alert => [
         alertLevelBadge(alert.level),
         alert.type,
         alert.codigo,
@@ -3305,13 +3273,13 @@
     }
 
     function renderDeadlines() {
-      renderTable("deadlinesTable", ["Estado", "Código SNIP", "Proyecto", "Municipio", "Días laborables", "Acción"], projectDeadlineRows().map(row => [
-        row.status === "Vencido" ? alertLevelBadge("Crítico") : alertLevelBadge("Alerta"),
+      renderTable("deadlinesTable", ["Estado", "CÃ³digo SNIP", "Proyecto", "Municipio", "DÃ­as laborables", "AcciÃ³n"], projectDeadlineRows().map(row => [
+        row.status === "Vencido" ? alertLevelBadge("CrÃ­tico") : alertLevelBadge("Alerta"),
         displaySnip(row.project),
         row.project.comunidad || row.project.tipo,
         row.project.municipio || "-",
         number.format(row.days),
-        row.status === "Vencido" ? "Solicitar actualización de avance o cubicación." : "Mantener seguimiento preventivo."
+        row.status === "Vencido" ? "Solicitar actualizaciÃ³n de avance o cubicaciÃ³n." : "Mantener seguimiento preventivo."
       ]));
     }
 
@@ -3324,7 +3292,7 @@
       const project = enrichedProjects().find(item => item.key === select.value);
       const paymentRows = state.payments
         .filter(payment => payment.projectKey === select.value)
-        .map(payment => [payment.fecha || "-", "Cubicación", `${payment.numero || "Sin número"} | ${money.format(payment.monto || 0)} | ${payment.estado || "Aprobada"}`]);
+        .map(payment => [payment.fecha || "-", "CubicaciÃ³n", `${payment.numero || "Sin nÃºmero"} | ${money.format(payment.monto || 0)} | ${payment.estado || "Aprobada"}`]);
       const auditRows = (state.audit || [])
         .filter(row => String(row.detalle || "").includes(project?.comunidad || project?.tipo || select.value))
         .map(row => [row.fecha, row.accion, row.detalle]);
@@ -3347,7 +3315,7 @@
       if (!payment) return;
       const step = currentApprovalStep(payment);
       if (!step) return;
-      if (!canApproveCurrentStep(payment)) return alert(`La siguiente aprobación corresponde a ${step.area}.`);
+      if (!canApproveCurrentStep(payment)) return alert(`La siguiente aprobaciÃ³n corresponde a ${step.area}.`);
       const approvedAt = new Date().toISOString();
       const flow = paymentApprovalFlow();
       const currentIndex = flow.findIndex(item => item.estado === step.estado);
@@ -3365,7 +3333,7 @@
       payment.estado = nextEstado;
       payment[step.actorKey] = currentSessionEmail || activeUser().usuario || "";
       payment[step.dateKey] = approvedAt;
-      audit(nextEstado === "Aprobada" ? "Cubicación aprobada" : "Cubicación enviada al siguiente nivel", `${payment.numero || "sin número"} | ${step.area} | ${money.format(payment.monto || 0)}`);
+      audit(nextEstado === "Aprobada" ? "CubicaciÃ³n aprobada" : "CubicaciÃ³n enviada al siguiente nivel", `${payment.numero || "sin nÃºmero"} | ${step.area} | ${money.format(payment.monto || 0)}`);
       saveState();
       renderAll();
     }
@@ -3375,9 +3343,9 @@
       const payment = state.payments.find(item => String(item.id) === String(id));
       if (!payment) return;
       const step = currentApprovalStep(payment);
-      if (step && !canApproveCurrentStep(payment)) return alert(`El rechazo de esta cubicación corresponde a ${step.area}.`);
+      if (step && !canApproveCurrentStep(payment)) return alert(`El rechazo de esta cubicaciÃ³n corresponde a ${step.area}.`);
       const reason = prompt("Indique el motivo del rechazo:");
-      if (!reason || !reason.trim()) return alert("Debe indicar un motivo para rechazar la cubicación.");
+      if (!reason || !reason.trim()) return alert("Debe indicar un motivo para rechazar la cubicaciÃ³n.");
       const rejectedAt = new Date().toISOString();
       if (window.supabaseClient) {
         const updated = await window.supabaseClient.from("cubicaciones").update({
@@ -3392,14 +3360,14 @@
       payment.rechazadoPor = currentSessionEmail || activeUser()?.usuario || "";
       payment.rechazadoEn = rejectedAt;
       payment.motivoRechazo = reason.trim();
-      audit("Cubicación rechazada", `${payment.numero || "sin número"} | ${money.format(payment.monto || 0)} | ${reason.trim()}`);
+      audit("CubicaciÃ³n rechazada", `${payment.numero || "sin nÃºmero"} | ${money.format(payment.monto || 0)} | ${reason.trim()}`);
       saveState();
       renderAll();
     }
 
     function renderTechnicalLogs() {
       const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
-      renderTable("technicalLogTable", ["Fecha", "Proyecto", "Avance físico", "Usuario", "Observación"], (state.technicalLogs || []).map(row => [
+      renderTable("technicalLogTable", ["Fecha", "Proyecto", "Avance fÃ­sico", "Usuario", "ObservaciÃ³n"], (state.technicalLogs || []).map(row => [
         row.fecha || "-",
         projects[row.projectKey]?.comunidad || row.projectKey || "-",
         `${number.format(row.avance || 0)}%`,
@@ -3410,7 +3378,7 @@
 
     function renderDocuments() {
       const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
-      renderTable("documentsTable", ["Proyecto", "Tipo", "Archivo", "Descripción"], (state.documents || []).map(row => [
+      renderTable("documentsTable", ["Proyecto", "Tipo", "Archivo", "DescripciÃ³n"], (state.documents || []).map(row => [
         projects[row.projectKey]?.comunidad || row.projectKey || "-",
         row.tipo || "-",
         row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
@@ -3420,7 +3388,7 @@
 
     function renderTechnicalLogsForPayments() {
       const projects = Object.fromEntries(enrichedProjects().map(project => [project.key, project]));
-      renderTable("technicalLogTablePayments", ["Fecha", "Proyecto", "Avance físico", "Usuario", "Observación"], (state.technicalLogs || []).map(row => [
+      renderTable("technicalLogTablePayments", ["Fecha", "Proyecto", "Avance fÃ­sico", "Usuario", "ObservaciÃ³n"], (state.technicalLogs || []).map(row => [
         row.fecha || "-",
         projects[row.projectKey]?.comunidad || row.projectKey || "-",
         `${number.format(row.avance || 0)}%`,
@@ -3437,8 +3405,8 @@
         row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-"),
         row.descripcion || "-"
       ]);
-      renderTable("documentsTableProject", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
-      renderTable("documentsTablePayments", ["Proyecto", "Tipo", "Archivo", "Descripción"], rows);
+      renderTable("documentsTableProject", ["Proyecto", "Tipo", "Archivo", "DescripciÃ³n"], rows);
+      renderTable("documentsTablePayments", ["Proyecto", "Tipo", "Archivo", "DescripciÃ³n"], rows);
     }
 
     function renderNotifications() {
@@ -3446,7 +3414,7 @@
         row.emails || "-",
         row.frecuencia || "-",
         row.hora || "-",
-        [row.criticas ? "Críticas" : "", row.vencimientos ? "Vencimientos" : ""].filter(Boolean).join(", ") || "-"
+        [row.criticas ? "CrÃ­ticas" : "", row.vencimientos ? "Vencimientos" : ""].filter(Boolean).join(", ") || "-"
       ]));
     }
 
@@ -3483,19 +3451,19 @@
       const file = event.target.files[0];
       if (!file) return;
       if (!can("mass-upload")) return alert("El usuario activo no tiene permiso para carga masiva.");
-      if (!window.XLSX) return alert("No se pudo cargar la librería de Excel. Revise la conexión a internet.");
+      if (!window.XLSX) return alert("No se pudo cargar la librerÃ­a de Excel. Revise la conexiÃ³n a internet.");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
       const projects = rows.map(normalizeExcelProject).filter(project => project.comunidad || project.tipo);
-      if (!projects.length) return alert("No se encontraron proyectos válidos en el Excel.");
+      if (!projects.length) return alert("No se encontraron proyectos vÃ¡lidos en el Excel.");
       const issues = validateExcelProjects(projects);
       if (issues.length) {
         const preview = issues.slice(0, 8).map(issue => `- ${issue}`).join("\n");
         const extra = issues.length > 8 ? `\n- y ${issues.length - 8} observaciones adicionales` : "";
-        if (!confirm(`Se detectaron observaciones antes de cargar:\n${preview}${extra}\n\n¿Desea continuar de todos modos?`)) return;
-      } else if (!confirm(`Se cargarán ${projects.length} proyectos desde Excel. ¿Desea continuar?`)) return;
+        if (!confirm(`Se detectaron observaciones antes de cargar:\n${preview}${extra}\n\nÂ¿Desea continuar de todos modos?`)) return;
+      } else if (!confirm(`Se cargarÃ¡n ${projects.length} proyectos desde Excel. Â¿Desea continuar?`)) return;
       if (window.supabaseClient) {
         const payload = [];
         for (const project of projects) {
@@ -3539,9 +3507,9 @@
         const key = `${project.codigo}|${project.municipio}|${project.comunidad}|${project.tipo}`.toLowerCase();
         if (seen.has(key)) issues.push(`Fila ${row}: posible duplicado de SNIP, municipio, sector y tipo.`);
         seen.add(key);
-        if (!String(project.codigo || "").trim()) issues.push(`Fila ${row}: falta código SNIP.`);
+        if (!String(project.codigo || "").trim()) issues.push(`Fila ${row}: falta cÃ³digo SNIP.`);
         if (!String(project.municipio || "").trim() || project.municipio === "Sin municipio") issues.push(`Fila ${row}: falta municipio.`);
-        if (!Number(project.presupuesto || 0)) issues.push(`Fila ${row}: presupuesto vacío o en cero.`);
+        if (!Number(project.presupuesto || 0)) issues.push(`Fila ${row}: presupuesto vacÃ­o o en cero.`);
         if (Number(project.adjudicado || 0) > Number(project.presupuesto || 0) && Number(project.presupuesto || 0) > 0) issues.push(`Fila ${row}: adjudicado mayor al presupuesto.`);
       });
       return issues;
@@ -3549,11 +3517,11 @@
 
     function renderControls() {
       const alerts = projectAlerts();
-      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const critical = alerts.filter(alert => alert.level === "CrÃ­tico").length;
       const warning = alerts.filter(alert => alert.level === "Alerta").length;
       const ok = Math.max(state.projects.length - new Set(alerts.map(alert => `${alert.codigo}|${alert.proyecto}`)).size, 0);
       document.getElementById("controlMetrics").innerHTML = [
-        ["Alertas críticas", critical],
+        ["Alertas crÃ­ticas", critical],
         ["Alertas preventivas", warning],
         ["Proyectos sin alertas", ok]
       ].map(([label, value]) => `<div class="metric"><small>${label}</small><strong>${number.format(value)}</strong></div>`).join("");
@@ -3564,9 +3532,9 @@
       renderTechnicalLogs();
       renderDocuments();
       renderNotifications();
-      renderTable("auditTable", ["Fecha", "Usuario", "Acción", "Detalle", "Antes / después"], (state.audit || []).map(row => [
+      renderTable("auditTable", ["Fecha", "Usuario", "AcciÃ³n", "Detalle", "Antes / despuÃ©s"], (state.audit || []).map(row => [
         row.fecha, row.usuario, row.accion, row.detalle,
-        row.anterior || row.nuevo ? `${row.anterior ? "Antes registrado" : ""}${row.anterior && row.nuevo ? " / " : ""}${row.nuevo ? "Después registrado" : ""}` : "-"
+        row.anterior || row.nuevo ? `${row.anterior ? "Antes registrado" : ""}${row.anterior && row.nuevo ? " / " : ""}${row.nuevo ? "DespuÃ©s registrado" : ""}` : "-"
       ]));
       const alertForm = document.getElementById("alertConfigForm");
       if (alertForm) {
@@ -3630,7 +3598,7 @@
           return [p.fecha, project.comunidad || p.projectKey, project.municipio || "-", project.contratista || "-", p.numero || "-", p.estado || "Aprobada", money.format(p.monto)];
         });
         const totalPagos = enrichedProjects().reduce((total, p) => total + Number(p.pagadoBase || 0), 0) + state.payments.filter(p => !p.estado || p.estado === "Aprobada").reduce((total, p) => total + Number(p.monto || 0), 0);
-        renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "Cubicación", "Estado", "Monto"], [...excelPayments.map(row => [...row.slice(0, 5), "", row[5]]), ...manualPayments], ["TOTAL", "", "", "", "", "", money.format(totalPagos)]);
+        renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "CubicaciÃ³n", "Estado", "Monto"], [...excelPayments.map(row => [...row.slice(0, 5), "", row[5]]), ...manualPayments], ["TOTAL", "", "", "", "", "", money.format(totalPagos)]);
       } else if (currentReport === "inconsistencias") {
         renderAlertsTable("reportTable", projectAlerts(rows));
       } else if (currentReport === "mensual") {
@@ -3669,7 +3637,7 @@
             money.format(sum(items, "presupuesto"))
           ];
         });
-      renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Cantidad de Obra por Tipo de Obra", "Población", "Municipio", "Sector", "Monto total por SNIP"], tableRows, [
+      renderTable("reportTable", ["CÃ³digo SNIP", "Tipo de Obra", "Cantidad de Obra por Tipo de Obra", "PoblaciÃ³n", "Municipio", "Sector", "Monto total por SNIP"], tableRows, [
         "TOTAL", "", number.format(rows.length), number.format(sum(rows, "poblacion")), "", "", money.format(sum(rows, "presupuesto"))
       ]);
     }
@@ -3698,7 +3666,7 @@
         });
       const totalAdjudicado = sum(rows, "adjudicado");
       const totalPagado = sum(rows, "pagado");
-      renderTable("reportTable", ["Código SNIP", "Nombre del Proveedor", "Cantidad de Obras por Proveedor", "Tipo de Obra", "Monto total del SNIP", "Adjudicado", "Contratado", "20% Pagado", "Total Pagado", "Pendiente por pagar", "Estatus de Obras"], tableRows, [
+      renderTable("reportTable", ["CÃ³digo SNIP", "Nombre del Proveedor", "Cantidad de Obras por Proveedor", "Tipo de Obra", "Monto total del SNIP", "Adjudicado", "Contratado", "20% Pagado", "Total Pagado", "Pendiente por pagar", "Estatus de Obras"], tableRows, [
         "TOTAL", "", number.format(rows.length), "", money.format(sum(rows, "presupuesto")), money.format(totalAdjudicado), money.format(totalAdjudicado), money.format(sum(rows, "comprometido")), money.format(totalPagado), money.format(Math.max(totalAdjudicado - totalPagado, 0)), ""
       ]);
     }
@@ -3734,7 +3702,7 @@
       const tableRows = [...rows]
         .sort((a, b) => displaySnip(a).localeCompare(displaySnip(b)) || String(a.municipio || "").localeCompare(String(b.municipio || "")))
         .map(p => [displaySnip(p), ...disponibilidadValues(p)]);
-      renderTable("reportTable", ["Código SNIP", "Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, ["TOTAL"]));
+      renderTable("reportTable", ["CÃ³digo SNIP", "Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, ["TOTAL"]));
     }
 
     function renderComprasReport(rows) {
@@ -3746,7 +3714,7 @@
           p.tipo || "Sin asignar",
           ...disponibilidadValues(p)
         ]);
-      renderTable("reportTable", ["Código SNIP", "Proceso de Compras", "Tipo de Obra", "Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, ["TOTAL", "", ""]));
+      renderTable("reportTable", ["CÃ³digo SNIP", "Proceso de Compras", "Tipo de Obra", "Monto de Presupuesto", "Monto Adjudicado", "Disponibilidad Presupuesto vs Adjudicado", "Avance 20% de Obras", "Cubicaciones", "Total Pagado", "Disponibilidad Adjudicado", "Disponibilidad de Proyecto"], tableRows, disponibilidadFooter(rows, ["TOTAL", "", ""]));
     }
 
     function renderInversionPublicaReport(rows) {
@@ -3783,7 +3751,7 @@
       const uniqueAdjudicado = Object.values(snipAdjudicado).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueSinAdjudicar = Object.values(snipSinAdjudicar).reduce((total, value) => total + Number(value || 0), 0);
       const uniqueDisponibilidad = Object.values(snipDisponibilidad).reduce((total, value) => total + Number(value || 0), 0);
-      renderTable("reportTable", ["Código SNIP", "Cantidad de Obras por Código SNIP", "Total por Código SNIP", "Monto Adjudicado", "Monto sin Adjudicar", "Disponibilidad"], tableRows, [
+      renderTable("reportTable", ["CÃ³digo SNIP", "Cantidad de Obras por CÃ³digo SNIP", "Total por CÃ³digo SNIP", "Monto Adjudicado", "Monto sin Adjudicar", "Disponibilidad"], tableRows, [
         "TOTAL",
         number.format(rowsWithMoney.length),
         money.format(uniqueSnipTotal),
@@ -3795,20 +3763,20 @@
 
     function renderExecutiveReport(rows) {
       const alerts = projectAlerts(rows);
-      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const critical = alerts.filter(alert => alert.level === "CrÃ­tico").length;
       const warning = alerts.filter(alert => alert.level === "Alerta").length;
       const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
       const deadlineCount = projectDeadlineRows().filter(row => row.status === "Vencido").length;
-      renderTable("reportTable", ["Indicador", "Resultado", "Observación"], [
+      renderTable("reportTable", ["Indicador", "Resultado", "ObservaciÃ³n"], [
         ["Total de obras", number.format(rows.length), "Cantidad de registros activos"],
         ["Presupuesto general", money.format(sum(rows, "presupuesto")), "Monto total presupuestado"],
         ["Monto adjudicado", money.format(sum(rows, "adjudicado")), "Total contratado o adjudicado"],
         ["Total pagado", money.format(sum(rows, "pagado")), "Incluye avances aprobados y cubicaciones aprobadas"],
         ["Disponibilidad adjudicada", money.format(sum(rows, "disponibilidadAdjudicado")), "Saldo contra lo adjudicado"],
-        ["Alertas críticas", number.format(critical), "Requieren revisión prioritaria"],
+        ["Alertas crÃ­ticas", number.format(critical), "Requieren revisiÃ³n prioritaria"],
         ["Alertas preventivas", number.format(warning), "Requieren seguimiento"],
-        ["Cubicaciones pendientes de aprobación", number.format(pendingPayments), "No impactan el total pagado hasta aprobarse"],
-        ["Obras vencidas sin movimiento", number.format(deadlineCount), "Más de 10 días laborables sin ejecución o cubicación"]
+        ["Cubicaciones pendientes de aprobaciÃ³n", number.format(pendingPayments), "No impactan el total pagado hasta aprobarse"],
+        ["Obras vencidas sin movimiento", number.format(deadlineCount), "MÃ¡s de 10 dÃ­as laborables sin ejecuciÃ³n o cubicaciÃ³n"]
       ]);
     }
 
@@ -3827,7 +3795,7 @@
         const topProvider = Object.entries(data.proveedores).sort((a, b) => b[1] - a[1])[0] || ["-", 0];
         return [month, number.format(data.cubicaciones), money.format(data.pagos), topProvider[0], money.format(topProvider[1])];
       });
-      renderTable("reportTable", ["Mes", "Cubicaciones registradas", "Pagado aprobado", "Proveedor con mayor ejecución", "Monto proveedor"], tableRows, [
+      renderTable("reportTable", ["Mes", "Cubicaciones registradas", "Pagado aprobado", "Proveedor con mayor ejecuciÃ³n", "Monto proveedor"], tableRows, [
         "TOTAL", number.format(state.payments.length), money.format(state.payments.filter(p => !p.estado || p.estado === "Aprobada").reduce((t, p) => t + Number(p.monto || 0), 0)), "", ""
       ]);
     }
@@ -3835,16 +3803,16 @@
     function renderDireccionGeneralReport(rows) {
       const inv = investmentTotals(rows);
       const alerts = projectAlerts(rows);
-      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const critical = alerts.filter(alert => alert.level === "CrÃ­tico").length;
       const vencidas = projectDeadlineRows().filter(row => row.status === "Vencido").length;
       const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
       renderTable("reportTable", ["Indicador ejecutivo", "Valor", "Estado"], [
-        ["Total Código SNIP", money.format(inv.totalSnip), "Base presupuestaria"],
+        ["Total CÃ³digo SNIP", money.format(inv.totalSnip), "Base presupuestaria"],
         ["Monto adjudicado", money.format(inv.adjudicado), inv.adjudicado > 0 ? "Con adjudicaciones" : "Sin adjudicar"],
         ["Monto sin adjudicar", money.format(inv.sinAdjudicar), inv.sinAdjudicar > 0 ? "Seguimiento de Compras" : "Sin pendientes"],
-        ["Disponible", money.format(inv.disponible), inv.disponible < 0 ? alertLevelBadge("Crítico") : alertLevelBadge("OK")],
+        ["Disponible", money.format(inv.disponible), inv.disponible < 0 ? alertLevelBadge("CrÃ­tico") : alertLevelBadge("OK")],
         ["Obras activas", number.format(rows.length), "Registros vigentes"],
-        ["Alertas críticas", number.format(critical), critical ? alertLevelBadge("Crítico") : alertLevelBadge("OK")],
+        ["Alertas crÃ­ticas", number.format(critical), critical ? alertLevelBadge("CrÃ­tico") : alertLevelBadge("OK")],
         ["Obras vencidas sin movimiento", number.format(vencidas), vencidas ? alertLevelBadge("Alerta") : alertLevelBadge("OK")],
         ["Cubicaciones pendientes", number.format(pendingPayments), pendingPayments ? alertLevelBadge("Alerta") : alertLevelBadge("OK")]
       ]);
@@ -3873,7 +3841,7 @@
         const totalComprometido = sum(rows, "comprometido");
         const totalPaid = sum(rows, "pagado");
         const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
-        renderTable("reportTable", ["Código SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+        renderTable("reportTable", ["CÃ³digo SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por AdjudicaciÃ³n"], tableRows, [
           "TOTAL", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalComprometido), money.format(totalPaid), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(totalPendienteAdjudicacion)
         ]);
         return;
@@ -3908,7 +3876,7 @@
       const totalComprometido = sum(rows, "comprometido");
       const totalPaid = sum(rows, "pagado");
       const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
-      renderTable("reportTable", ["Código SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+      renderTable("reportTable", ["CÃ³digo SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por AdjudicaciÃ³n"], tableRows, [
         "TOTAL",
         money.format(totalSnip),
         money.format(totalAdjudicado),
@@ -3946,7 +3914,7 @@
 
     function renderEstatusReport(rows) {
       const ordered = [...rows].sort((a, b) => String(a.estatus || "").localeCompare(String(b.estatus || "")) || String(a.municipio || "").localeCompare(String(b.municipio || "")));
-      renderTable("reportTable", ["Código SNIP", "Tipo de Obra", "Municipio", "Sector", "Presupuesto", "Comprometido", "Pagado", "Disponible adjudicado", "Estatus de Obra"], ordered.map(p => [
+      renderTable("reportTable", ["CÃ³digo SNIP", "Tipo de Obra", "Municipio", "Sector", "Presupuesto", "Comprometido", "Pagado", "Disponible adjudicado", "Estatus de Obra"], ordered.map(p => [
         displaySnip(p),
         p.tipo || "Sin asignar",
         p.municipio || "Sin asignar",
@@ -4030,37 +3998,37 @@
         </div>
         <div class="detail-grid">
           <div class="detail-item"><small>Cubicaciones</small><strong>${number.format(payments.length)}</strong></div>
-          <div class="detail-item"><small>Bitácoras técnicas</small><strong>${number.format(logs.length)}</strong></div>
+          <div class="detail-item"><small>BitÃ¡coras tÃ©cnicas</small><strong>${number.format(logs.length)}</strong></div>
           <div class="detail-item"><small>Documentos</small><strong>${number.format(docs.length)}</strong></div>
-          <div class="detail-item"><small>Última actividad</small><strong>${escapeHtml(lastPayment?.fecha || lastLog?.fecha || lastDoc?.fecha || project.actualizadoEn || project.creadoEn || "Sin actividad")}</strong></div>
+          <div class="detail-item"><small>Ãšltima actividad</small><strong>${escapeHtml(lastPayment?.fecha || lastLog?.fecha || lastDoc?.fecha || project.actualizadoEn || project.creadoEn || "Sin actividad")}</strong></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
-          <h2>Bitácora técnica</h2>
-          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Avance físico</th><th>Usuario</th><th>Observación</th></tr></thead><tbody>
-            ${logs.length ? logs.map(row => `<tr><td>${row.fecha || "-"}</td><td>${number.format(row.avance || 0)}%</td><td>${escapeHtml(row.usuario || "-")}</td><td>${escapeHtml(row.observacion || "-")}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin bitácora técnica registrada.</td></tr>`}
+          <h2>BitÃ¡cora tÃ©cnica</h2>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Avance fÃ­sico</th><th>Usuario</th><th>ObservaciÃ³n</th></tr></thead><tbody>
+            ${logs.length ? logs.map(row => `<tr><td>${row.fecha || "-"}</td><td>${number.format(row.avance || 0)}%</td><td>${escapeHtml(row.usuario || "-")}</td><td>${escapeHtml(row.observacion || "-")}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin bitÃ¡cora tÃ©cnica registrada.</td></tr>`}
           </tbody></table></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
           <h2>Documentos</h2>
-          <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Archivo</th><th>Descripción</th></tr></thead><tbody>
+          <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Archivo</th><th>DescripciÃ³n</th></tr></thead><tbody>
             ${docs.length ? docs.map(row => `<tr><td>${escapeHtml(row.tipo || "-")}</td><td>${row.url ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.nombre || "Abrir")}</a>` : escapeHtml(row.nombre || "-")}</td><td>${escapeHtml(row.descripcion || "-")}</td></tr>`).join("") : `<tr><td colspan="3" class="empty">Sin documentos adjuntos.</td></tr>`}
           </tbody></table></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
           <h2>Cubicaciones</h2>
-          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Número</th><th>Monto</th><th>Estado</th><th>Observación</th></tr></thead><tbody>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>NÃºmero</th><th>Monto</th><th>Estado</th><th>ObservaciÃ³n</th></tr></thead><tbody>
             ${payments.length ? payments.map(payment => `<tr><td>${payment.fecha || "-"}</td><td>${escapeHtml(payment.numero || "-")}</td><td>${money.format(payment.monto || 0)}</td><td>${escapeHtml(payment.estado || "Aprobada")}</td><td>${escapeHtml(payment.observacion || "-")}</td></tr>`).join("") : `<tr><td colspan="5" class="empty">Sin cubicaciones registradas.</td></tr>`}
           </tbody></table></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
           <h2>Alertas del proyecto</h2>
-          <div class="table-wrap"><table><thead><tr><th>Nivel</th><th>Control</th><th>Detalle</th><th>Acción sugerida</th></tr></thead><tbody>
+          <div class="table-wrap"><table><thead><tr><th>Nivel</th><th>Control</th><th>Detalle</th><th>AcciÃ³n sugerida</th></tr></thead><tbody>
             ${alerts.length ? alerts.map(alert => `<tr><td>${alertLevelBadge(alert.level)}</td><td>${escapeHtml(alert.type)}</td><td>${escapeHtml(alert.detail)}</td><td>${escapeHtml(alert.action)}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin alertas activas.</td></tr>`}
           </tbody></table></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
           <h2>Historial</h2>
-          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>AcciÃ³n</th><th>Detalle</th></tr></thead><tbody>
             ${auditRows.length ? auditRows.map(row => `<tr><td>${escapeHtml(row.fecha || "-")}</td><td>${escapeHtml(row.usuario || "-")}</td><td>${escapeHtml(row.accion || "-")}</td><td>${escapeHtml(row.detalle || "-")}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">Sin historial adicional registrado.</td></tr>`}
           </tbody></table></div>
         </div>`;
@@ -4102,7 +4070,7 @@
         state.activeUser = matchedUser.usuario;
         saveState();
       }
-      if (email) audit("Inicio de sesión", email);
+      if (email) audit("Inicio de sesiÃ³n", email);
       renderSidebarSession();
       return matchedUser || null;
     }
@@ -4110,12 +4078,12 @@
     async function showAuthenticated(session) {
       document.body.classList.add("auth-locked");
       document.body.classList.remove("auth-ready");
-      document.getElementById("authError").textContent = "Validando sesión...";
+      document.getElementById("authError").textContent = "Validando sesiÃ³n...";
       try {
         await loadSupabaseData();
         const matchedUser = applySessionUser(session);
         if (!matchedUser && !adminEmails.includes(String(currentSessionEmail || "").toLowerCase())) {
-          throw new Error("El correo inició sesión en Supabase Auth, pero no está registrado como usuario activo del sistema.");
+          throw new Error("El correo iniciÃ³ sesiÃ³n en Supabase Auth, pero no estÃ¡ registrado como usuario activo del sistema.");
         }
         document.body.classList.remove("auth-locked");
         document.body.classList.add("auth-ready");
@@ -4129,7 +4097,7 @@
         }
       } catch (error) {
         console.error(error);
-        document.getElementById("authError").textContent = error.message || "No se pudo validar la sesión.";
+        document.getElementById("authError").textContent = error.message || "No se pudo validar la sesiÃ³n.";
         document.body.classList.add("auth-locked");
         document.body.classList.remove("auth-ready");
         await window.supabaseClient.auth.signOut();
@@ -4140,10 +4108,10 @@
       const key = `alerts-notified-${currentSessionEmail}`;
       if (sessionStorage.getItem(key)) return;
       const alerts = projectAlerts();
-      const critical = alerts.filter(alert => alert.level === "Crítico").length;
+      const critical = alerts.filter(alert => alert.level === "CrÃ­tico").length;
       const warning = alerts.filter(alert => alert.level === "Alerta").length;
       if (critical || warning) {
-        alert(`Controles activos: ${critical} alertas críticas y ${warning} alertas preventivas. Revise la sección Controles y alertas.`);
+        alert(`Controles activos: ${critical} alertas crÃ­ticas y ${warning} alertas preventivas. Revise la secciÃ³n Controles y alertas.`);
       }
       sessionStorage.setItem(key, "1");
     }
@@ -4194,7 +4162,7 @@
       passwordChangeRequired = required;
       passwordChangeUser = user;
       document.getElementById("passwordForm").reset();
-      setPasswordMessage(required ? "Debe cambiar la contraseña temporal para continuar." : "");
+      setPasswordMessage(required ? "Debe cambiar la contraseÃ±a temporal para continuar." : "");
       document.getElementById("cancelPasswordBtn").hidden = required;
       document.getElementById("passwordModal").hidden = false;
       document.getElementById("newPassword").focus();
@@ -4214,11 +4182,11 @@
       const confirmation = document.getElementById("confirmPassword").value;
       setPasswordMessage("");
       try {
-        if (!window.supabaseClient) throw new Error("No hay conexión con Supabase. Inicie sesión en línea para cambiar la contraseña.");
+        if (!window.supabaseClient) throw new Error("No hay conexiÃ³n con Supabase. Inicie sesiÃ³n en lÃ­nea para cambiar la contraseÃ±a.");
         const { data } = await window.supabaseClient.auth.getSession();
-        if (!data.session) throw new Error("Debe iniciar sesión antes de cambiar la contraseña.");
-        if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
-        if (password !== confirmation) throw new Error("Las contraseñas no coinciden.");
+        if (!data.session) throw new Error("Debe iniciar sesiÃ³n antes de cambiar la contraseÃ±a.");
+        if (password.length < 6) throw new Error("La contraseÃ±a debe tener al menos 6 caracteres.");
+        if (password !== confirmation) throw new Error("Las contraseÃ±as no coinciden.");
         saveButton.disabled = true;
         saveButton.textContent = "Guardando...";
         const { error } = await window.supabaseClient.auth.updateUser({ password });
@@ -4233,22 +4201,22 @@
         passwordChangeRequired = false;
         passwordChangeUser = null;
         document.getElementById("cancelPasswordBtn").hidden = false;
-        setPasswordMessage("Contraseña actualizada correctamente.");
+        setPasswordMessage("ContraseÃ±a actualizada correctamente.");
         document.getElementById("passwordForm").reset();
         if (document.getElementById("passwordModal")) {
           setTimeout(closePasswordModal, 900);
         }
       } catch (error) {
-        setPasswordMessage(error.message || "No fue posible cambiar la contraseña.", true);
+        setPasswordMessage(error.message || "No fue posible cambiar la contraseÃ±a.", true);
       } finally {
         saveButton.disabled = false;
-        saveButton.textContent = "Guardar contraseña";
+        saveButton.textContent = "Guardar contraseÃ±a";
       }
     }
 
     async function initAuth() {
       if (!window.supabaseClient) {
-        document.getElementById("authError").textContent = "No se pudo cargar Supabase. Verifique la conexión antes de iniciar sesión.";
+        document.getElementById("authError").textContent = "No se pudo cargar Supabase. Verifique la conexiÃ³n antes de iniciar sesiÃ³n.";
         document.body.classList.add("auth-locked");
         document.body.classList.remove("auth-ready");
         return;
@@ -4384,7 +4352,7 @@
       state.projects.push(project);
       }
       saveState();
-      audit("Proyecto creado", `${data.get("comunidadNuevo")} | SNIP ${data.get("codigo") || "sin código"} | Presupuesto ${money.format(presupuesto)}`);
+      audit("Proyecto creado", `${data.get("comunidadNuevo")} | SNIP ${data.get("codigo") || "sin cÃ³digo"} | Presupuesto ${money.format(presupuesto)}`);
       form.reset();
       setProjectMode("idle");
       renderAll();
@@ -4440,7 +4408,7 @@
         throw new Error("El presupuesto debe ser mayor que cero.");
       }
       if (Number(adjudicado || 0) > Number(presupuesto || 0)) {
-        const proceed = confirm("El monto adjudicado supera el presupuesto. ¿Desea guardar de todos modos y dejar la alerta activa?");
+        const proceed = confirm("El monto adjudicado supera el presupuesto. Â¿Desea guardar de todos modos y dejar la alerta activa?");
         if (!proceed) throw new Error("Registro cancelado por control de presupuesto.");
       }
     }
@@ -4464,20 +4432,20 @@
 
     function validatePaymentControl(data) {
       const project = enrichedProjects().find(p => p.key === data.projectKey);
-      if (!project) throw new Error("Debe seleccionar un proyecto válido.");
+      if (!project) throw new Error("Debe seleccionar un proyecto vÃ¡lido.");
       const amount = Number(data.monto || 0);
-      if (amount <= 0) throw new Error("El monto de la cubicación debe ser mayor que cero.");
+      if (amount <= 0) throw new Error("El monto de la cubicaciÃ³n debe ser mayor que cero.");
       const numberKey = String(data.numero || "").trim().toLowerCase();
       if (numberKey) {
         const duplicated = state.payments.some(payment => payment.projectKey === data.projectKey && String(payment.numero || "").trim().toLowerCase() === numberKey);
-        if (duplicated) throw new Error("Ya existe una cubicación con ese número para el mismo proyecto.");
+        if (duplicated) throw new Error("Ya existe una cubicaciÃ³n con ese nÃºmero para el mismo proyecto.");
       }
       const projectedPaid = Number(project.pagado || 0) + amount;
       if (Number(project.adjudicado || 0) > 0 && projectedPaid > Number(project.adjudicado || 0)) {
-        if (!can("payment-approve")) throw new Error("Control de sobregiro: esta cubicación supera el monto adjudicado y requiere aprobación financiera.");
-        const proceed = confirm(`Esta cubicación hará que el total pagado (${money.format(projectedPaid)}) supere el monto adjudicado (${money.format(project.adjudicado)}). ¿Desea registrarla como pendiente de aprobación?`);
-        if (!proceed) throw new Error("Cubicación cancelada por control de sobregiro.");
-        audit("Aprobación requerida", `${project.comunidad || project.tipo} supera el adjudicado con total pagado proyectado ${money.format(projectedPaid)}`);
+        if (!can("payment-approve")) throw new Error("Control de sobregiro: esta cubicaciÃ³n supera el monto adjudicado y requiere aprobaciÃ³n financiera.");
+        const proceed = confirm(`Esta cubicaciÃ³n harÃ¡ que el total pagado (${money.format(projectedPaid)}) supere el monto adjudicado (${money.format(project.adjudicado)}). Â¿Desea registrarla como pendiente de aprobaciÃ³n?`);
+        if (!proceed) throw new Error("CubicaciÃ³n cancelada por control de sobregiro.");
+        audit("AprobaciÃ³n requerida", `${project.comunidad || project.tipo} supera el adjudicado con total pagado proyectado ${money.format(projectedPaid)}`);
       }
       return project;
     }
@@ -4486,7 +4454,7 @@
 
     document.addEventListener("click", event => {
       const approveButton = event.target.closest(".approve-payment-btn");
-      if (approveButton) approvePayment(approveButton.dataset.id).catch(error => alert(error.message || "No se pudo aprobar la cubicación."));
+      if (approveButton) approvePayment(approveButton.dataset.id).catch(error => alert(error.message || "No se pudo aprobar la cubicaciÃ³n."));
       const detailButton = event.target.closest(".project-detail-btn");
       if (detailButton) openProjectDetail(detailButton.dataset.projectKey);
       const warehouseDetailButton = event.target.closest(".warehouse-detail-btn");
@@ -4496,13 +4464,13 @@
       const editEmployeeButton = event.target.closest(".edit-employee-btn");
       if (editEmployeeButton) editEmployee(editEmployeeButton.dataset.id);
       const rejectButton = event.target.closest(".reject-payment-btn");
-      if (rejectButton) rejectPayment(rejectButton.dataset.id).catch(error => alert(error.message || "No se pudo rechazar la cubicación."));
+      if (rejectButton) rejectPayment(rejectButton.dataset.id).catch(error => alert(error.message || "No se pudo rechazar la cubicaciÃ³n."));
       const noticeReadButton = event.target.closest(".notice-read-btn");
       const noticeResolveButton = event.target.closest(".notice-resolve-btn");
       if (noticeReadButton || noticeResolveButton) {
         const row = notificationRows()[Number((noticeReadButton || noticeResolveButton).dataset.index)];
         if (row) {
-          upsertInternalNotification(row, noticeResolveButton ? "Resuelta" : "Leída");
+          upsertInternalNotification(row, noticeResolveButton ? "Resuelta" : "LeÃ­da");
           renderNotificationCenter();
         }
       }
@@ -4628,17 +4596,17 @@
       button.textContent = "Validando...";
       error.textContent = "";
       try {
-        if (!window.supabaseClient) throw new Error("No se pudo cargar Supabase. Revise la conexión a internet.");
+        if (!window.supabaseClient) throw new Error("No se pudo cargar Supabase. Revise la conexiÃ³n a internet.");
         const email = document.getElementById("loginEmail").value.trim();
         const password = document.getElementById("loginPassword").value;
-        if (!email || !password) throw new Error("Debe escribir correo y contraseña.");
+        if (!email || !password) throw new Error("Debe escribir correo y contraseÃ±a.");
         const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       } catch (loginError) {
-        error.textContent = loginError.message || "No fue posible iniciar sesión.";
+        error.textContent = loginError.message || "No fue posible iniciar sesiÃ³n.";
       } finally {
         button.disabled = false;
-        button.textContent = "Iniciar sesión";
+        button.textContent = "Iniciar sesiÃ³n";
       }
     }
 
@@ -4646,7 +4614,7 @@
     document.getElementById("loginForm").addEventListener("submit", handleLogin);
 
     window.logoutSupabase = async function logoutSupabase() {
-      audit("Cierre de sesión", currentSessionEmail || state.activeUser || "Usuario");
+      audit("Cierre de sesiÃ³n", currentSessionEmail || state.activeUser || "Usuario");
       await window.supabaseClient.auth.signOut();
     };
     document.getElementById("logoutBtn").addEventListener("click", window.logoutSupabase);
@@ -4814,7 +4782,7 @@
           fecha: data.fecha,
           monto: Number(data.monto),
           observacion: data.observacion || "",
-          estado: "Pendiente técnica"
+          estado: "Pendiente tÃ©cnica"
         };
         let inserted = await window.supabaseClient.from("cubicaciones").insert(payload).select("*").single();
         if (inserted.error && String(inserted.error.message || "").includes("estado")) {
@@ -4824,20 +4792,20 @@
         if (inserted.error) throw inserted.error;
         state.payments.push({ projectKey: data.projectKey, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", estado: inserted.data.estado || "Pendiente tecnica", id: inserted.data.id });
       } else {
-        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente técnica", id: makeId() });
+        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente tÃ©cnica", id: makeId() });
       }
       saveState();
-      audit("Cubicación registrada", `${project.comunidad || project.tipo} | ${data.numero || "sin número"} | ${money.format(Number(data.monto || 0))}`);
+      audit("CubicaciÃ³n registrada", `${project.comunidad || project.tipo} | ${data.numero || "sin nÃºmero"} | ${money.format(Number(data.monto || 0))}`);
       event.currentTarget.reset();
       renderAll();
       } catch (error) {
-        alert(error.message || "No se pudo guardar la cubicación en Supabase.");
+        alert(error.message || "No se pudo guardar la cubicaciÃ³n en Supabase.");
       }
     });
 
     document.getElementById("warehouseRequestForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("warehouse-create")) return alert("El usuario activo no tiene permiso para registrar solicitudes a almacén.");
+      if (!can("warehouse-create")) return alert("El usuario activo no tiene permiso para registrar solicitudes a almacÃ©n.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const row = {
         id: makeId(),
@@ -4855,7 +4823,7 @@
         item.articulo === row.articulo &&
         String(item.fechaHora || "").slice(0, 10) === String(row.fechaHora || "").slice(0, 10)
       );
-      if (duplicateWarehouseRequest && !confirm("Ya existe una solicitud similar de este artículo para el mismo solicitante en esta fecha. ¿Desea continuar?")) return;
+      if (duplicateWarehouseRequest && !confirm("Ya existe una solicitud similar de este artÃ­culo para el mismo solicitante en esta fecha. Â¿Desea continuar?")) return;
       try {
         if (window.supabaseClient) {
           const inserted = await window.supabaseClient.from("solicitudes_almacen").insert({
@@ -4875,12 +4843,12 @@
         state.warehouseRequests = state.warehouseRequests || [];
         state.warehouseRequests.unshift(row);
         saveState();
-        audit("Solicitud a almacén registrada", `${row.articulo} | ${number.format(row.cantidad)} ${row.unidad}`);
+        audit("Solicitud a almacÃ©n registrada", `${row.articulo} | ${number.format(row.cantidad)} ${row.unidad}`);
         event.currentTarget.reset();
         prepareWarehouseForm();
         renderWarehouseRequests();
       } catch (error) {
-        alert(error.message || "No se pudo guardar la solicitud a almacén.");
+        alert(error.message || "No se pudo guardar la solicitud a almacÃ©n.");
       }
     });
 
@@ -4901,7 +4869,7 @@
 
     document.getElementById("alertConfigForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("users-admin")) return alert("Solo un administrador puede modificar los parámetros de alertas.");
+      if (!can("users-admin")) return alert("Solo un administrador puede modificar los parÃ¡metros de alertas.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       state.alertConfig = {
         diasSinMovimiento: Number(data.diasSinMovimiento || 10),
@@ -4919,14 +4887,14 @@
         }, { onConflict: "id" });
         if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
       }
-      audit("Parámetros de alertas actualizados", JSON.stringify(state.alertConfig));
+      audit("ParÃ¡metros de alertas actualizados", JSON.stringify(state.alertConfig));
       saveState();
       renderAll();
     });
 
     document.getElementById("catalogForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("users-admin")) return alert("Solo un administrador puede modificar catálogos.");
+      if (!can("users-admin")) return alert("Solo un administrador puede modificar catÃ¡logos.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const tipo = String(data.tipo || "").trim();
       const valor = String(data.valor || "").trim();
@@ -4936,7 +4904,7 @@
         const result = await window.supabaseClient.from("catalogos_sistema").upsert({ tipo, valor }, { onConflict: "tipo,valor" });
         if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
       }
-      audit("Catálogo actualizado", `${tipo}: ${valor}`);
+      audit("CatÃ¡logo actualizado", `${tipo}: ${valor}`);
       saveState();
       event.currentTarget.reset();
       renderCatalogs();
@@ -5055,7 +5023,7 @@
         renderInventory();
         renderWarehouseArticleOptions(document.getElementById("warehouseArticleSearch").value);
       } catch (error) {
-        alert(error.message || "No se pudo guardar el artículo en inventario.");
+        alert(error.message || "No se pudo guardar el artÃ­culo en inventario.");
       }
     });
 
@@ -5070,7 +5038,7 @@
       event.preventDefault();
       if (!can("users-admin")) return alert("Solo un administrador puede modificar el flujo.");
       const stages = [...event.currentTarget.querySelectorAll('input[name="approvalStages"]:checked')].map(input => input.value);
-      if (!stages.length) return alert("Debe conservar al menos una etapa de aprobación.");
+      if (!stages.length) return alert("Debe conservar al menos una etapa de aprobaciÃ³n.");
       state.workflowConfig = { approvalStages: stages };
       saveState();
       audit("Flujo actualizado", stages.join(", "));
@@ -5079,7 +5047,7 @@
 
     document.getElementById("technicalLogForm").addEventListener("submit", async event => {
       event.preventDefault();
-      if (!can("technical-log")) return alert("El usuario activo no tiene permiso para registrar bitácora técnica.");
+      if (!can("technical-log")) return alert("El usuario activo no tiene permiso para registrar bitÃ¡cora tÃ©cnica.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const row = {
         id: makeId(),
@@ -5102,7 +5070,7 @@
       }
       state.technicalLogs = state.technicalLogs || [];
       state.technicalLogs.unshift(row);
-      audit("Bitácora técnica registrada", `${row.projectKey} | ${row.avance}% | ${row.observacion}`);
+      audit("BitÃ¡cora tÃ©cnica registrada", `${row.projectKey} | ${row.avance}% | ${row.observacion}`);
       event.currentTarget.reset();
       saveState();
       renderAll();
@@ -5225,7 +5193,7 @@
       }
       state.notificationSettings = state.notificationSettings || [];
       state.notificationSettings.unshift(row);
-      audit("Notificación configurada", `${row.frecuencia} ${row.hora} | ${row.emails}`);
+      audit("NotificaciÃ³n configurada", `${row.frecuencia} ${row.hora} | ${row.emails}`);
       event.currentTarget.reset();
       saveState();
       renderAll();
@@ -5279,18 +5247,18 @@
       const fileName = `reporte-${currentReport}`;
       const filters = [
         document.getElementById("searchBox").value ? `Busqueda: ${document.getElementById("searchBox").value}` : "",
-        ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport) && document.getElementById("snipFilter").value ? `Código SNIP: ${document.getElementById("snipFilter").value}` : "",
+        ["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport) && document.getElementById("snipFilter").value ? `CÃ³digo SNIP: ${document.getElementById("snipFilter").value}` : "",
         currentReport === "contratista" && document.getElementById("providerFilter").value ? `Proveedor: ${document.getElementById("providerFilter").value}` : "",
         ["municipio", "contratista", "estatus"].includes(currentReport) && document.getElementById("typeFilter").value ? `Tipo de obra: ${document.getElementById("typeFilter").value}` : "",
         document.getElementById("processTypeFilter").value ? `Tipo de proceso: ${document.getElementById("processTypeFilter").value}` : "",
-        document.getElementById("minAmountFilter").value ? `Monto mínimo: ${money.format(Number(document.getElementById("minAmountFilter").value || 0))}` : "",
-        document.getElementById("maxAmountFilter").value ? `Monto máximo: ${money.format(Number(document.getElementById("maxAmountFilter").value || 0))}` : "",
+        document.getElementById("minAmountFilter").value ? `Monto mÃ­nimo: ${money.format(Number(document.getElementById("minAmountFilter").value || 0))}` : "",
+        document.getElementById("maxAmountFilter").value ? `Monto mÃ¡ximo: ${money.format(Number(document.getElementById("maxAmountFilter").value || 0))}` : "",
         document.getElementById("municipalityFilter").value ? `Municipio: ${document.getElementById("municipalityFilter").value}` : "",
         document.getElementById("statusFilter").value ? `Estatus: ${document.getElementById("statusFilter").value}` : ""
       ].filter(Boolean).join(" | ");
       const printWindow = window.open("about:blank", "_blank", "width=1200,height=850");
       if (!printWindow) {
-        alert("El navegador bloqueó la ventana del reporte. Permita ventanas emergentes para imprimir o exportar PDF.");
+        alert("El navegador bloqueÃ³ la ventana del reporte. Permita ventanas emergentes para imprimir o exportar PDF.");
         return;
       }
       printWindow.document.write(`<!doctype html>
@@ -5319,7 +5287,7 @@
             <div class="logo">CA</div>
           </div>
           <div class="meta">Impreso: ${printedAt} | Emitido por: ${escapeHtml(issuedBy)}${filters ? " | " + filters : ""}</div>
-          ${mode === "pdf" ? `<div class="meta">Seleccione "Guardar como PDF" en el destino de impresión.</div>` : ""}
+          ${mode === "pdf" ? `<div class="meta">Seleccione "Guardar como PDF" en el destino de impresiÃ³n.</div>` : ""}
           ${table.outerHTML}
           <div class="meta" style="margin-top:12px;border-top:1px solid #cfd9de;padding-top:8px;">CORAAMOCA | Reporte generado por el sistema institucional</div>
         </body>
@@ -5357,7 +5325,7 @@
     });
 
     document.getElementById("restoreBtn").addEventListener("click", () => {
-      if (confirm("Confirme que el archivo corresponde a este sistema. La restauración reemplazará los datos locales visibles.")) {
+      if (confirm("Confirme que el archivo corresponde a este sistema. La restauraciÃ³n reemplazarÃ¡ los datos locales visibles.")) {
         document.getElementById("restoreFile").click();
       }
     });
@@ -5368,7 +5336,7 @@
       reader.onload = () => {
         const restored = JSON.parse(reader.result);
         if (!restored || !Array.isArray(restored.projects) || !Array.isArray(restored.users)) {
-          alert("El archivo no parece ser un respaldo válido del sistema.");
+          alert("El archivo no parece ser un respaldo vÃ¡lido del sistema.");
           return;
         }
         state = restored;
@@ -5388,12 +5356,13 @@
     startInactivityWatcher();
     if (sessionStorage.getItem("coraamocaSessionExpired") === "1") {
       sessionStorage.removeItem("coraamocaSessionExpired");
-      document.getElementById("authError").textContent = "La sesión se cerró por inactividad.";
+      document.getElementById("authError").textContent = "La sesiÃ³n se cerrÃ³ por inactividad.";
     }
     initAuth();
   </script>
 </body>
 </html>
+
 
 
 
