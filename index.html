@@ -2700,29 +2700,102 @@
       ]));
     }
 
+    function firstValue(row, keys) {
+      for (const key of keys) {
+        const value = row[key];
+        if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+      }
+      return "";
+    }
+
+    function numberFromImport(value) {
+      const normalized = String(value ?? "").replace(/,/g, "").trim();
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function dateFromImport(value) {
+      if (value === undefined || value === null || String(value).trim() === "") return "";
+      if (typeof value === "number" || /^\d+(\.\d+)?$/.test(String(value).trim())) {
+        const serial = Number(value);
+        if (serial > 20000) {
+          const date = new Date(Date.UTC(1899, 11, 30));
+          date.setUTCDate(date.getUTCDate() + serial);
+          return date.toISOString().slice(0, 10);
+        }
+      }
+      const text = String(value).trim();
+      const match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (match) {
+        const first = Number(match[1]);
+        const second = Number(match[2]);
+        const month = String(first > 12 ? second : first).padStart(2, "0");
+        const day = String(first > 12 ? first : second).padStart(2, "0");
+        return `${match[3]}-${month}-${day}`;
+      }
+      return text;
+    }
+
+    function employeeStructureFromParts(parts) {
+      return parts.map(part => String(part || "").trim()).filter(Boolean).join(" > ");
+    }
+
+    function employeeFromImportRow(row) {
+      const direccionOrg = String(firstValue(row, ["Direccion", "Dirección", "direccionOrg"]) || "").trim();
+      const departamento = String(firstValue(row, ["Departamento", "departamento"]) || "").trim();
+      const division = String(firstValue(row, ["Division", "División", "division"]) || "").trim();
+      const seccion = String(firstValue(row, ["Seccion", "Sección", "seccion"]) || "").trim();
+      const salarioTotal = numberFromImport(firstValue(row, ["Total de Salario", "Salario", "salario"]));
+      const fechaSalida = dateFromImport(firstValue(row, ["Fecha Salida", "fechaSalida"]));
+      const tipoSalida = String(firstValue(row, ["Tipo de Salida", "tipoSalida"]) || "").trim();
+      const activoTexto = String(firstValue(row, ["Activo", "activo"]) || "").toLowerCase();
+      const activo = activoTexto
+        ? !["no", "false", "0", "inactivo"].includes(activoTexto)
+        : (!fechaSalida || tipoSalida.toLowerCase().includes("re-integro"));
+      return {
+        id: makeId(),
+        nombre: String(firstValue(row, ["Empleado", "Nombre", "nombre"]) || "").trim(),
+        apellido: String(firstValue(row, ["Apellido", "apellido"]) || "").trim(),
+        genero: String(firstValue(row, ["Genero", "Género", "genero"]) || "").trim(),
+        fechaNacimiento: dateFromImport(firstValue(row, ["Fecha Nacimiento", "fechaNacimiento"])),
+        edad: numberFromImport(firstValue(row, ["Edad", "edad"])),
+        cedula: String(firstValue(row, ["Cedula", "Cédula", "cedula"]) || "").trim(),
+        telefono: String(firstValue(row, ["Telefono", "Teléfono", "telefono"]) || "").trim(),
+        nivelEscolaridad: String(firstValue(row, ["Nivel Academico", "Nivel Académico", "Nivel de escolaridad", "nivelEscolaridad"]) || "").trim(),
+        fechaIngreso: dateFromImport(firstValue(row, ["Fecha Entrada", "Fecha de ingreso", "fechaIngreso"])),
+        anosServicio: numberFromImport(firstValue(row, ["Años de Servicio", "Anos de Servicio", "anosServicio"])),
+        fechaSalida,
+        tipoSalida,
+        cuentaBanco: String(firstValue(row, ["Cuenta Banco", "Cuenta de banco", "cuentaBanco"]) || "").trim(),
+        grupoOcupacional: String(firstValue(row, ["Grupo", "Grupo ocupacional", "grupoOcupacional"]) || "").trim(),
+        cargo: String(firstValue(row, ["Cargo", "cargo"]) || "").trim(),
+        tipoIngreso: String(firstValue(row, ["Estatus", "Tipo de ingreso", "tipoIngreso"]) || "").trim(),
+        estatusLaboral: String(firstValue(row, ["Estatus", "estatusLaboral"]) || "").trim(),
+        direccionOrg,
+        departamento,
+        division,
+        seccion,
+        estructura: String(firstValue(row, ["Estructura organizacional", "estructura"]) || "").trim() || employeeStructureFromParts([direccionOrg, departamento, division, seccion]),
+        centroServicio: String(firstValue(row, ["Centro de Servicio", "centroServicio"]) || "").trim(),
+        sueldoBruto: numberFromImport(firstValue(row, ["Sueldo Bruto", "sueldoBruto"])),
+        suplencia: numberFromImport(firstValue(row, ["Suplencia", "suplencia"])),
+        interinato: numberFromImport(firstValue(row, ["Interinato", "interinato"])),
+        totalSalario: salarioTotal,
+        salario: salarioTotal,
+        dependientesAdicionales: numberFromImport(firstValue(row, ["Depend. Adicionales", "dependientesAdicionales"])),
+        activo
+      };
+    }
+
     async function importEmployeesFile(file) {
       if (!file) return;
       if (!window.XLSX) return alert("No se pudo cargar la libreria de Excel. Revise la conexion a internet.");
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }).map(row => ({
-        id: makeId(),
-        nombre: row.Nombre || row.nombre || "",
-        apellido: row.Apellido || row.apellido || "",
-        cedula: row.Cedula || row["Cedula"] || row.cedula || "",
-        grupoOcupacional: row["Grupo ocupacional"] || "",
-        cargo: row.Cargo || row.cargo || "",
-        salario: Number(row.Salario || row.salario || 0),
-        fechaIngreso: row["Fecha de ingreso"] || "",
-        tipoIngreso: row["Tipo de ingreso"] || "",
-        estructura: row["Estructura organizacional"] || "",
-        centroServicio: row["Centro de Servicio"] || "",
-        activo: String(row.Activo || "Si").toLowerCase() !== "no"
-      })).filter(row => row.nombre || row.apellido || row.cedula);
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: true }).map(employeeFromImportRow).filter(row => row.nombre || row.apellido || row.cedula);
       let savedRows = rows;
       if (window.supabaseClient && rows.length) {
         const payload = rows.map(employee => ({
-          id: employee.id,
           nombre: employee.nombre,
           apellido: employee.apellido,
           cedula: employee.cedula,
@@ -2734,7 +2807,7 @@
           activo: employee.activo,
           datos: employee
         }));
-        const result = await window.supabaseClient.from("rrhh_empleados").upsert(payload).select("*");
+        const result = await window.supabaseClient.from("rrhh_empleados").upsert(payload, { onConflict: "cedula" }).select("*");
         if (result.error && !String(result.error.message || "").toLowerCase().includes("relation")) throw result.error;
         if (Array.isArray(result.data)) {
           savedRows = rows.map(employee => {
@@ -2743,8 +2816,8 @@
           });
         }
       }
-      const existing = new Map((state.employees || []).map(employee => [String(employee.id), employee]));
-      savedRows.forEach(employee => existing.set(String(employee.id), employee));
+      const existing = new Map((state.employees || []).map(employee => [String(employee.cedula || employee.id), employee]));
+      savedRows.forEach(employee => existing.set(String(employee.cedula || employee.id), employee));
       state.employees = Array.from(existing.values());
       saveState();
       renderEmployees();
