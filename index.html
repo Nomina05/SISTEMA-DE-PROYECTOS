@@ -1957,7 +1957,47 @@
         if (scored[0]?.candidate?.id && scored[0].score >= 45) return scored[0].candidate.id;
       }
 
-      throw new Error("No se pudo identificar el proyecto seleccionado para registrar la cubicacion. Revise que el SNIP, tipo de obra, municipio y comunidad coincidan con Supabase.");
+      const source = project || {
+        key: String(projectKey || `AUTO-${Date.now()}`),
+        codigo: parsedLabel.snip,
+        no: parsedLabel.no || state.projects.length + 1,
+        tipo: parsedLabel.tipo,
+        comunidad: parsedLabel.comunidad,
+        municipio: parsedLabel.municipio,
+        contratista: "Sin asignar"
+      };
+      const contractorId = await findOrCreateContractor(source.contratista);
+      const fallbackPayload = {
+        codigo_interno: String(source.key || `AUTO-${parsedLabel.snip || "SIN-SNIP"}-${parsedLabel.no || Date.now()}`).slice(0, 180),
+        no_excel: Number(source.no || parsedLabel.no || state.projects.length + 1),
+        snip: parsedLabel.snip || normalizeSnip(source.codigo) || "00001",
+        item: source.item || "Sincronizado desde cubicacion",
+        tipo: source.tipo || parsedLabel.tipo || "Proyecto sin tipo",
+        comunidad: source.comunidad || parsedLabel.comunidad || "Sin comunidad",
+        municipio: source.municipio || parsedLabel.municipio || "Sin municipio",
+        poblacion: Number(source.poblacion || 0),
+        presupuesto: Number(source.presupuesto || 0),
+        adjudicado: Number(source.adjudicado || 0),
+        comprometido: Number(source.comprometido || 0),
+        pagado_base: Number(source.pagadoBase || 0),
+        total_cubicado_base: Number(source.totalCubicadoBase || 0),
+        disponibilidad_adjudicado_base: Number(source.disponibilidadAdjudicadoBase || 0),
+        disponibilidad_proyecto_base: Number(source.disponibilidadProyectoBase || 0),
+        estatus: source.estatus || "En proceso"
+      };
+      if (contractorId) fallbackPayload.contratista_id = contractorId;
+      const synced = await window.supabaseClient
+        .from("proyectos")
+        .upsert(fallbackPayload, { onConflict: "codigo_interno" })
+        .select("*, contratistas(nombre)")
+        .single();
+      if (synced.error) throw synced.error;
+      if (project) {
+        project.dbId = synced.data.id;
+        project.contratistaId = synced.data.contratista_id || project.contratistaId || "";
+        project.contratista = synced.data.contratistas?.nombre || project.contratista || "Sin asignar";
+      }
+      return synced.data.id;
     }
 
     function enrichedProjects() {
