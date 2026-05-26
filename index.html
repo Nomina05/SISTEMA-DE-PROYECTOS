@@ -41,14 +41,20 @@
     .auth-card form { display: grid; gap: 12px; margin-top: 18px; }
     .auth-error { min-height: 20px; color: var(--red); font-weight: 700; font-size: 13px; }
     .session-badge { display: inline-flex; align-items: center; min-height: 38px; padding: 8px 10px; border-radius: 6px; background: #eef3f5; color: var(--ink); font-size: 12px; font-weight: 800; }
-    aside { background: #10212b; color: #fff; padding: 22px 14px; position: sticky; top: 0; height: 100vh; border-right: 1px solid rgba(255,255,255,.08); }
+    aside { display: flex; flex-direction: column; background: #10212b; color: #fff; padding: 22px 14px; position: sticky; top: 0; height: 100vh; border-right: 1px solid rgba(255,255,255,.08); }
     .brand { font-size: 19px; font-weight: 800; line-height: 1.2; margin-bottom: 24px; padding: 0 8px; }
     .brand span { display: block; color: #9fd6c8; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-top: 6px; }
-    nav { display: grid; gap: 6px; }
+    nav { display: grid; gap: 6px; overflow: auto; padding-right: 2px; }
     .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px; padding: 10px 12px; border-radius: 8px; color: #d8e6eb; background: transparent; text-align: left; font-weight: 700; }
     .nav-btn::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.28); flex: 0 0 auto; }
     .nav-btn.active, .nav-btn:hover { background: #1d3441; color: #fff; }
     .nav-btn.active::before { background: #7bc8b6; box-shadow: 0 0 0 4px rgba(123,200,182,.16); }
+    .sidebar-session { margin-top: auto; padding: 13px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: #152c38; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .sidebar-session small { display: block; color: #9fd6c8; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .sidebar-session strong { display: block; margin-top: 7px; color: #fff; font-size: 13px; line-height: 1.25; overflow-wrap: anywhere; }
+    .sidebar-session span { display: block; margin-top: 4px; color: #c7d7dd; font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
+    .sidebar-session button { width: 100%; min-height: 38px; margin-top: 12px; border-radius: 6px; background: #c95f00; color: #fff; font-weight: 800; }
+    .sidebar-session button:hover { background: #b45309; }
     main { width: min(100%, 1680px); padding: clamp(12px, 2vw, 28px); min-width: 0; margin: 0 auto; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
     .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 4px 0 16px; }
@@ -261,6 +267,7 @@
       .brand { margin-bottom: 12px; }
       nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .nav-btn { justify-content: center; text-align: center; min-height: 42px; }
+      .sidebar-session { margin-top: 12px; }
       main { padding: 16px; }
       .dashboard-layout { grid-template-columns: 1fr; }
       .panel { padding: 14px; }
@@ -363,6 +370,13 @@
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
         <button class="nav-btn" data-view="controles" onclick="showView('controles')">Controles y alertas</button>
       </nav>
+      <div class="sidebar-session" id="sidebarSession">
+        <small>Usuario activo</small>
+        <strong id="sidebarUserName">Sin usuario activo</strong>
+        <span id="sidebarUserRole">Cargo no asignado</span>
+        <span id="sidebarUserEmail"></span>
+        <button id="sidebarLogoutBtn" type="button">Cerrar sesion</button>
+      </div>
     </aside>
 
     <main>
@@ -1580,6 +1594,31 @@
       return Boolean(normalized && (normalized.rol === "Administrador" || normalized.permissions.includes(permission)));
     }
 
+    function sessionUserProfile() {
+      const email = String(currentSessionEmail || "").toLowerCase();
+      const matched = normalizedUser((state.users || []).find(user => {
+        const userName = String(user.usuario || "").toLowerCase();
+        const userEmail = String(user.correo || "").toLowerCase();
+        return userName === email || userEmail === email || userName === String(state.activeUser || "").toLowerCase();
+      })) || activeUser();
+      const isAdmin = adminEmails.includes(email);
+      return {
+        name: matched?.nombre || matched?.usuario || email || "Sin usuario activo",
+        role: matched?.cargo || matched?.rolComercial || matched?.rol || matched?.area || (isAdmin ? "Administrador" : "Cargo no asignado"),
+        email: matched?.correo || email || ""
+      };
+    }
+
+    function renderSidebarSession() {
+      const profile = sessionUserProfile();
+      const nameEl = document.getElementById("sidebarUserName");
+      const roleEl = document.getElementById("sidebarUserRole");
+      const emailEl = document.getElementById("sidebarUserEmail");
+      if (nameEl) nameEl.textContent = profile.name;
+      if (roleEl) roleEl.textContent = profile.role;
+      if (emailEl) emailEl.textContent = profile.email;
+    }
+
     const defaultPaymentApprovalFlow = [
       { estado: "Pendiente técnica", area: "Dirección Técnica", label: "Aprobar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
       { estado: "Pendiente presupuesto", area: "Presupuesto", label: "Aprobar presupuesto", actorKey: "aprobacionPresupuestoPor", dateKey: "aprobacionPresupuestoEn", dbActor: "aprobacion_presupuesto_por", dbDate: "aprobacion_presupuesto_en" },
@@ -2025,6 +2064,7 @@
     function renderAll() {
       populateSelects();
       syncCatalogOptions();
+      renderSidebarSession();
       renderMetrics();
       renderExecutiveDashboard();
       renderAreaInsights();
@@ -4063,6 +4103,7 @@
         saveState();
       }
       if (email) audit("Inicio de sesión", email);
+      renderSidebarSession();
       return matchedUser || null;
     }
 
@@ -4110,7 +4151,9 @@
     function showLogin() {
       document.body.classList.remove("auth-ready");
       document.body.classList.add("auth-locked");
+      currentSessionEmail = "";
       document.getElementById("sessionUser").textContent = "";
+      renderSidebarSession();
       document.getElementById("loginEmail").value = "";
       document.getElementById("loginPassword").value = "";
     }
@@ -4607,6 +4650,7 @@
       await window.supabaseClient.auth.signOut();
     };
     document.getElementById("logoutBtn").addEventListener("click", window.logoutSupabase);
+    document.getElementById("sidebarLogoutBtn").addEventListener("click", window.logoutSupabase);
 
     document.getElementById("changePasswordBtn").addEventListener("click", openPasswordModal);
     document.getElementById("cancelPasswordBtn").addEventListener("click", closePasswordModal);
