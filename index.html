@@ -846,7 +846,32 @@
           </div>
         </div>
         <div class="subsection" id="rhTab-asistencia"><div class="rh-panels" data-rh-panel="asistencia"></div></div>
-        <div class="subsection" id="rhTab-nomina"><div class="rh-panels" data-rh-panel="nomina"></div></div>
+        <div class="subsection" id="rhTab-nomina">
+          <div class="page-heading">
+            <div><span class="eyebrow">Recursos Humanos</span><h1>Panel de Nomina</h1><p class="sub">Presupuesto programado, topes por fondo, control de salarios y clasificacion presupuestaria.</p></div>
+          </div>
+          <div class="rh-kpis" id="payrollBudgetKpis"></div>
+          <div class="grid cards" style="margin-top:12px;">
+            <div class="panel wide">
+              <div class="panel-head"><div><h2>Programado 2026</h2><p class="sub">Distribucion por fondo, programa, actividad y tipo de nomina.</p></div><span class="badge">Presupuesto</span></div>
+              <div class="table-wrap"><table id="payrollBudgetTable"></table></div>
+            </div>
+            <div class="panel">
+              <h2>Resumen por fondo</h2>
+              <div class="table-wrap"><table id="payrollFundSummaryTable"></table></div>
+            </div>
+          </div>
+          <div class="grid cards" style="margin-top:12px;">
+            <div class="panel">
+              <h2>Tipos de nomina</h2>
+              <div class="table-wrap"><table id="payrollTypeTable"></table></div>
+            </div>
+            <div class="panel">
+              <h2>Control de ejecucion</h2>
+              <div class="table-wrap"><table id="payrollExecutionTable"></table></div>
+            </div>
+          </div>
+        </div>
         <div class="subsection" id="rhTab-vacaciones">
           <div class="page-heading">
             <div><span class="eyebrow">Organizacion del Trabajo y Compensaciones</span><h1>Panel de Vacaciones y Licencias</h1></div>
@@ -1158,6 +1183,7 @@
             <button class="tab" data-report="snip">Por cÃ³digo SNIP</button>
             <button class="tab" data-report="inconsistencias">Inconsistencias</button>
             <button class="tab" data-report="rrhh-reclutamiento">Reclutamiento RRHH</button>
+            <button class="tab" data-report="rrhh-nomina-2026">Nomina 2026</button>
           </div>
           <div class="table-tools">
             <div class="filters">
@@ -1266,7 +1292,8 @@
       estatus: "report-estatus",
       snip: "report-snip",
       inconsistencias: "report-inconsistencias",
-      "rrhh-reclutamiento": "recursos-humanos"
+      "rrhh-reclutamiento": "recursos-humanos",
+      "rrhh-nomina-2026": "recursos-humanos"
     };
 
     let state = loadState();
@@ -2991,6 +3018,71 @@
       </div>`;
     }
 
+    const payrollBudget2026 = [
+      { grupo: "Sueldos fijos", fondo: "30", programa: "Programa 1", actividad: "Actividad 1", concepto: "Sueldo", monto: 857250 },
+      { grupo: "Sueldos fijos", fondo: "30", programa: "Programa 1", actividad: "Actividad 2", concepto: "Sueldo", monto: 4336105 },
+      { grupo: "Sueldos fijos", fondo: "30", programa: "Programa 1", actividad: "Actividad 3", concepto: "Sueldo", monto: 20000 },
+      { grupo: "Sueldos fijos", fondo: "30", programa: "Programa 1", actividad: "Actividad 4", concepto: "Sueldo", monto: 30000 },
+      { grupo: "Tipos de nomina", fondo: "30", programa: "Programa 1", actividad: "SUPLENCIA", concepto: "Suplencia", monto: 10000 },
+      { grupo: "Tipos de nomina", fondo: "30", programa: "Programa 1", actividad: "INTERINATO", concepto: "Interinato", monto: 150000 },
+      { grupo: "Tipos de nomina", fondo: "30", programa: "Programa 1", actividad: "TEMPORAL", concepto: "Temporal", monto: 326750 },
+      { grupo: "Programa 11", fondo: "30", programa: "Programa 11", actividad: "Act. 1 - P3", concepto: "Nomina", monto: 1913989 },
+      { grupo: "Programa 11", fondo: "30", programa: "Programa 11", actividad: "Act. 2 - P3", concepto: "Nomina", monto: 455000 },
+      { grupo: "Programa 11", fondo: "30", programa: "Programa 11", actividad: "Act. 3 - P3", concepto: "Nomina", monto: 632550 },
+      { grupo: "Programa 12", fondo: "30", programa: "Programa 12", actividad: "Act. 1 - P3", concepto: "Nomina", monto: 108000 },
+      { grupo: "Programa 12", fondo: "30", programa: "Programa 12", actividad: "Act. 2 - P3", concepto: "Nomina", monto: 202000 },
+      { grupo: "Programa 13", fondo: "30", programa: "Programa 13", actividad: "Act. 1 - P3", concepto: "Nomina", monto: 363663.73 },
+      { grupo: "Fondo 10", fondo: "10", programa: "Programa 13", actividad: "Act. 1 - P3", concepto: "Nomina", monto: 3378618.60 }
+    ];
+
+    function payrollBudgetTotals() {
+      const total = payrollBudget2026.reduce((sum, row) => sum + Number(row.monto || 0), 0);
+      const fondo30 = payrollBudget2026.filter(row => row.fondo === "30").reduce((sum, row) => sum + Number(row.monto || 0), 0);
+      const fondo10 = payrollBudget2026.filter(row => row.fondo === "10").reduce((sum, row) => sum + Number(row.monto || 0), 0);
+      const payroll = (state.employees || []).filter(employee => employee.activo !== false).reduce((sum, employee) => sum + Number(employee.salario || employee.data?.salario || 0), 0);
+      return { total, fondo30, fondo10, payroll, disponible: total - payroll };
+    }
+
+    function payrollBudgetRows() {
+      return payrollBudget2026.map(row => [
+        escapeHtml(row.fondo),
+        escapeHtml(row.programa),
+        escapeHtml(row.actividad),
+        escapeHtml(row.concepto),
+        escapeHtml(row.grupo),
+        money.format(row.monto)
+      ]);
+    }
+
+    function payrollFundSummaryRows() {
+      const groups = payrollBudget2026.reduce((acc, row) => {
+        acc[row.fondo] = (acc[row.fondo] || 0) + Number(row.monto || 0);
+        return acc;
+      }, {});
+      return Object.entries(groups).map(([fondo, total]) => [`Fondo ${escapeHtml(fondo)}`, money.format(total), `${((total / payrollBudgetTotals().total) * 100).toFixed(2)}%`]);
+    }
+
+    function renderPayrollBudget() {
+      const kpiEl = document.getElementById("payrollBudgetKpis");
+      const totals = payrollBudgetTotals();
+      if (kpiEl) {
+        kpiEl.innerHTML = [
+          ["Total programado 2026", money.format(totals.total), "ok"],
+          ["Tope Fondo 30", money.format(totals.fondo30), "ok"],
+          ["Fondo 10", money.format(totals.fondo10), "ok"],
+          ["Nomina activa registrada", money.format(totals.payroll), totals.payroll > totals.total ? "bad" : "warn"]
+        ].map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join("");
+      }
+      renderTable("payrollBudgetTable", ["Fondo", "Programa", "Actividad", "Concepto", "Grupo", "Monto programado"], payrollBudgetRows(), ["TOTAL", "", "", "", "", money.format(totals.total)]);
+      renderTable("payrollFundSummaryTable", ["Fondo", "Monto", "Participacion"], payrollFundSummaryRows(), ["TOTAL", money.format(totals.total), "100.00%"]);
+      renderTable("payrollTypeTable", ["Tipo", "Monto"], payrollBudget2026.filter(row => row.grupo === "Tipos de nomina").map(row => [escapeHtml(row.concepto), money.format(row.monto)]), ["TOTAL", money.format(486750)]);
+      renderTable("payrollExecutionTable", ["Indicador", "Monto", "Estado"], [
+        ["Programado 2026", money.format(totals.total), alertLevelBadge("Correcto")],
+        ["Nomina activa registrada", money.format(totals.payroll), alertLevelBadge(totals.payroll > totals.total ? "Critico" : "Alerta")],
+        ["Disponibilidad estimada", money.format(totals.disponible), alertLevelBadge(totals.disponible >= 0 ? "Correcto" : "Critico")]
+      ]);
+    }
+
     const recruitmentStages = ["Recepcion de CV", "Evaluacion tecnica", "Prueba psicometrica", "Entrevista", "Oferta", "Contratacion", "Onboarding", "Descartado"];
 
     function vacancyName(vacancyId) {
@@ -3127,6 +3219,7 @@
         const target = document.querySelector(`[data-rh-panel="${key}"]`);
         if (target) target.innerHTML = renderRhModulePanel(key, config);
       });
+      renderPayrollBudget();
       renderRecruitment();
       renderEmployeeSelfService();
       renderLeavePanel();
@@ -3847,18 +3940,34 @@
       ]);
     }
 
+    function renderPayrollBudgetReport() {
+      const totals = payrollBudgetTotals();
+      renderTable("reportTable", ["Fondo", "Programa", "Actividad", "Concepto", "Grupo", "Monto programado"], payrollBudgetRows(), [
+        "TOTAL",
+        `Fondo 30: ${money.format(totals.fondo30)}`,
+        `Fondo 10: ${money.format(totals.fondo10)}`,
+        "",
+        `Nomina activa: ${money.format(totals.payroll)}`,
+        money.format(totals.total)
+      ]);
+    }
+
     function renderReport() {
-      const isRecruitmentReport = currentReport === "rrhh-reclutamiento";
-      document.getElementById("snipFilter").hidden = isRecruitmentReport || !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport);
+      const isRhReport = ["rrhh-reclutamiento", "rrhh-nomina-2026"].includes(currentReport);
+      document.getElementById("snipFilter").hidden = isRhReport || !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport);
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       document.getElementById("providerFilter").hidden = currentReport !== "contratista";
-      document.getElementById("typeFilter").hidden = isRecruitmentReport || !["municipio", "contratista", "estatus"].includes(currentReport);
+      document.getElementById("typeFilter").hidden = isRhReport || !["municipio", "contratista", "estatus"].includes(currentReport);
       ["processTypeFilter", "minAmountFilter", "maxAmountFilter", "municipalityFilter", "statusFilter"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.hidden = isRecruitmentReport;
+        if (el) el.hidden = isRhReport;
       });
-      if (isRecruitmentReport) {
+      if (currentReport === "rrhh-reclutamiento") {
         renderRecruitmentReport();
+        return;
+      }
+      if (currentReport === "rrhh-nomina-2026") {
+        renderPayrollBudgetReport();
         return;
       }
       const rows = filteredProjects();
