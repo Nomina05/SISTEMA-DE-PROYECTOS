@@ -1728,11 +1728,14 @@
       const snipMatch = text.match(/SNIP\s*:?\s*([A-Z0-9-]+)/i);
       const noMatch = text.match(/\bNO\.?\s*([0-9]+)/i);
       const parts = text.split(/\s+-\s+/).map(part => part.trim()).filter(Boolean);
+      const place = parts[3] || "";
+      const placeMatch = place.match(/^(.*?)\s*\((.*?)\)\s*$/);
       return {
         snip: snipMatch ? normalizeSnip(snipMatch[1]) : normalizeSnip(parts[0] || ""),
         no: noMatch ? Number(noMatch[1]) : 0,
         tipo: parts[2] || "",
-        comunidad: parts[3] || "",
+        comunidad: placeMatch ? placeMatch[1].trim() : place,
+        municipio: placeMatch ? placeMatch[2].trim() : "",
         raw: text
       };
     }
@@ -1860,7 +1863,7 @@
       }
 
       if (project) {
-        const projectSnip = normalizeSnip(project.codigo || displaySnip(project)) || parsedLabel.snip;
+        const projectSnip = parsedLabel.snip || normalizeSnip(project.codigo || displaySnip(project));
         const projectNo = Number(project.no || parsedLabel.no || 0);
         if (projectSnip && projectNo) {
           const snipVariants = [...new Set([project.codigo, projectSnip, `SNIP:${projectSnip}`, `SNIP: ${projectSnip}`].filter(Boolean))];
@@ -1897,7 +1900,7 @@
           snip: projectSnip,
           no: projectNo,
           tipo: normalizeMatchText(project.tipo || parsedLabel.tipo),
-          municipio: normalizeMatchText(project.municipio),
+          municipio: normalizeMatchText(parsedLabel.municipio || project.municipio),
           comunidad: normalizeMatchText(project.comunidad || parsedLabel.comunidad),
           label: normalizeMatchText(parsedLabel.raw)
         };
@@ -1905,17 +1908,20 @@
           let score = 0;
           if (target.snip && normalizeSnip(candidate.snip) === target.snip) score += 60;
           if (target.no && Number(candidate.no_excel || 0) === target.no) score += 25;
-          if (target.tipo && normalizeMatchText(candidate.tipo) === target.tipo) score += 20;
-          if (target.municipio && normalizeMatchText(candidate.municipio) === target.municipio) score += 15;
-          if (target.comunidad && normalizeMatchText(candidate.comunidad) === target.comunidad) score += 25;
-          if (target.comunidad && normalizeMatchText(candidate.comunidad).includes(target.comunidad)) score += 10;
-          if (target.tipo && normalizeMatchText(candidate.tipo).includes(target.tipo)) score += 8;
+          const candidateTipo = normalizeMatchText(candidate.tipo);
+          const candidateMunicipio = normalizeMatchText(candidate.municipio);
+          const candidateComunidad = normalizeMatchText(candidate.comunidad);
+          if (target.tipo && candidateTipo === target.tipo) score += 20;
+          if (target.municipio && candidateMunicipio === target.municipio) score += 15;
+          if (target.comunidad && candidateComunidad === target.comunidad) score += 25;
+          if (target.comunidad && (candidateComunidad.includes(target.comunidad) || target.comunidad.includes(candidateComunidad))) score += 12;
+          if (target.tipo && (candidateTipo.includes(target.tipo) || target.tipo.includes(candidateTipo))) score += 10;
           if (target.label && target.label.includes(normalizeMatchText(candidate.tipo))) score += 8;
           if (target.label && target.label.includes(normalizeMatchText(candidate.comunidad))) score += 8;
           return { candidate, score };
         }).sort((a, b) => b.score - a.score);
 
-        if (scored[0]?.candidate?.id && scored[0].score >= 60) {
+        if (scored[0]?.candidate?.id && scored[0].score >= 45) {
           const match = scored[0].candidate;
           project.dbId = match.id;
           project.contratistaId = match.contratista_id || project.contratistaId || "";
@@ -1925,12 +1931,19 @@
       }
 
       if (!project && parsedLabel.snip) {
-        const candidatesResult = await window.supabaseClient
+        let candidatesResult = await window.supabaseClient
           .from("proyectos")
           .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
           .ilike("snip", `%${parsedLabel.snip}%`)
           .limit(100);
         if (candidatesResult.error) throw candidatesResult.error;
+        if (!candidatesResult.data?.length) {
+          candidatesResult = await window.supabaseClient
+            .from("proyectos")
+            .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+            .limit(1000);
+          if (candidatesResult.error) throw candidatesResult.error;
+        }
         const labelText = normalizeMatchText(parsedLabel.raw);
         const scored = (candidatesResult.data || []).map(candidate => {
           let score = 0;
@@ -1941,7 +1954,7 @@
           if (labelText.includes(normalizeMatchText(candidate.municipio))) score += 10;
           return { candidate, score };
         }).sort((a, b) => b.score - a.score);
-        if (scored[0]?.candidate?.id && scored[0].score >= 60) return scored[0].candidate.id;
+        if (scored[0]?.candidate?.id && scored[0].score >= 45) return scored[0].candidate.id;
       }
 
       throw new Error("No se pudo identificar el proyecto seleccionado para registrar la cubicacion. Revise que el SNIP, tipo de obra, municipio y comunidad coincidan con Supabase.");
