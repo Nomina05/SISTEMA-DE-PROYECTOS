@@ -759,7 +759,38 @@
         <div class="subsection" id="rhTab-reclutamiento"><div class="rh-panels" data-rh-panel="reclutamiento"></div></div>
         <div class="subsection" id="rhTab-asistencia"><div class="rh-panels" data-rh-panel="asistencia"></div></div>
         <div class="subsection" id="rhTab-nomina"><div class="rh-panels" data-rh-panel="nomina"></div></div>
-        <div class="subsection" id="rhTab-vacaciones"><div class="rh-panels" data-rh-panel="vacaciones"></div></div>
+        <div class="subsection" id="rhTab-vacaciones">
+          <div class="page-heading">
+            <div><span class="eyebrow">Organizacion del Trabajo y Compensaciones</span><h1>Panel de Vacaciones y Licencias</h1></div>
+          </div>
+          <div class="rh-kpis" id="leaveKpis"></div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Solicitud de vacaciones, licencias y permisos</h2>
+            <form id="leaveRequestForm" class="form-grid employee-form">
+              <label class="span-2">Empleado<select name="employeeId" id="leaveEmployeeSelect" required></select></label>
+              <label>Tipo<select name="tipo"><option>Vacaciones</option><option>Licencia medica</option><option>Licencia maternidad/paternidad</option><option>Permiso especial</option><option>Ausencia justificada</option></select></label>
+              <label>Solicitud<input name="solicitud" type="date" required></label>
+              <label>Desde<input name="desde" type="date" required></label>
+              <label>Hasta<input name="hasta" type="date" required></label>
+              <label>Dias solicitados<input name="dias" type="number" min="0.5" step="0.5" required></label>
+              <label>Estado<select name="estado"><option>Pendiente</option><option>Aprobada</option><option>Rechazada</option><option>En revision</option></select></label>
+              <label>Aprobador<input name="aprobador" placeholder="Aprobador"></label>
+              <label class="span-2">Motivo / diagnostico / observacion<textarea name="motivo" required></textarea></label>
+              <div class="actions span-4">
+                <button class="btn" type="submit">Guardar solicitud</button>
+                <button class="btn secondary" id="newLeaveRequestBtn" type="button">Nueva</button>
+              </div>
+            </form>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Aprobaciones</h2>
+            <div class="table-wrap"><table id="leaveApprovalsTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Balance disponible</h2>
+            <div class="table-wrap"><table id="leaveBalanceTable"></table></div>
+          </div>
+        </div>
         <div class="subsection" id="rhTab-desempeno"><div class="rh-panels" data-rh-panel="desempeno"></div></div>
         <div class="subsection" id="rhTab-capacitacion"><div class="rh-panels" data-rh-panel="capacitacion"></div></div>
         <div class="subsection" id="rhTab-beneficios"><div class="rh-panels" data-rh-panel="beneficios"></div></div>
@@ -1382,9 +1413,10 @@
         }));
       }
       state.audit = state.audit || [];
+      const projectKeyByDbId = Object.fromEntries((state.projects || []).map(project => [String(project.dbId || project.id || project.key), project.key]));
       state.payments = (cubicacionesResult.data || []).map(payment => ({
         id: payment.id,
-        projectKey: payment.proyecto_id,
+        projectKey: projectKeyByDbId[String(payment.proyecto_id)] || payment.proyecto_id,
         fecha: payment.fecha,
         monto: Number(payment.monto || 0),
         numero: payment.numero || "",
@@ -1447,9 +1479,10 @@
         }));
       }
       if (!logsResult.error && logsResult.data) {
+        const projectKeyByDbId = Object.fromEntries((state.projects || []).map(project => [String(project.dbId || project.id || project.key), project.key]));
         state.technicalLogs = logsResult.data.map(row => ({
           id: row.id,
-          projectKey: row.proyecto_id,
+          projectKey: projectKeyByDbId[String(row.proyecto_id)] || row.proyecto_id,
           fecha: row.fecha,
           avance: Number(row.avance_fisico || 0),
           observacion: row.observacion || "",
@@ -1457,9 +1490,10 @@
         }));
       }
       if (!docsResult.error && docsResult.data) {
+        const projectKeyByDbId = Object.fromEntries((state.projects || []).map(project => [String(project.dbId || project.id || project.key), project.key]));
         state.documents = docsResult.data.map(row => ({
           id: row.id,
-          projectKey: row.proyecto_id,
+          projectKey: projectKeyByDbId[String(row.proyecto_id)] || row.proyecto_id,
           tipo: row.tipo || "",
           nombre: row.nombre_archivo || "",
           url: row.url || "",
@@ -1768,6 +1802,11 @@
         .filter(p => p.projectKey === projectKey && (!p.estado || p.estado === "Aprobada"))
         .reduce((t, p) => t + Number(p.monto || 0), 0);
       return cubicadoBase + cubicadoManual;
+    }
+
+    function projectDbId(projectKey) {
+      const project = state.projects.find(item => String(item.key) === String(projectKey) || String(item.dbId) === String(projectKey));
+      return project?.dbId || project?.id || projectKey;
     }
 
     function enrichedProjects() {
@@ -2650,6 +2689,83 @@
         if (target) target.innerHTML = renderRhModulePanel(key, config);
       });
       renderEmployeeSelfService();
+      renderLeavePanel();
+    }
+
+    function employeeCode(employee, index = 0) {
+      if (employee.codigo) return employee.codigo;
+      if (employee.id && String(employee.id).startsWith("EMP")) return employee.id;
+      return `EMP${String(737 + index).padStart(3, "0")}`;
+    }
+
+    function leaveEmployees() {
+      const employees = state.employees || [];
+      if (employees.length) return employees;
+      return [
+        { id: "EMP737", codigo: "EMP737", nombre: "Abigail", apellido: "Casta\u00f1os Ramirez", fechaIngreso: "2025-03-25" },
+        { id: "EMP589", codigo: "EMP589", nombre: "Adalgisa De Los Angeles", apellido: "Tejada Sanchez", fechaIngreso: "2022-08-25" },
+        { id: "EMP693", codigo: "EMP693", nombre: "Adameris", apellido: "Perez Polanco", fechaIngreso: "2024-06-25" }
+      ];
+    }
+
+    function renderLeavePanel() {
+      const employeeSelect = document.getElementById("leaveEmployeeSelect");
+      if (!employeeSelect) return;
+      const employees = leaveEmployees();
+      employeeSelect.innerHTML = `<option value="">Empleado</option>` + employees.map((employee, index) => `<option value="${escapeHtml(employee.id)}">${escapeHtml(employeeCode(employee, index))} - ${escapeHtml(employeeFullName(employee))}</option>`).join("");
+      const form = document.getElementById("leaveRequestForm");
+      if (form && !form.elements.solicitud.value) form.elements.solicitud.value = new Date().toISOString().slice(0, 10);
+      const rows = state.essLeaveRequests || [];
+      const pending = rows.filter(row => row.estado === "Pendiente").length;
+      const approved = rows.filter(row => row.estado === "Aprobada").length;
+      const activeLicenses = rows.filter(row => String(row.tipo || "").toLowerCase().includes("licencia") && row.estado !== "Rechazada").length;
+      const balances = employees.map((employee, index) => {
+        const employeeId = String(employee.id);
+        const used = rows
+          .filter(row => String(row.employeeId) === employeeId && row.estado === "Aprobada")
+          .reduce((total, row) => total + Number(row.dias || 0), 0);
+        return {
+          codigo: employeeCode(employee, index),
+          empleado: employeeFullName(employee),
+          fechaIngreso: employee.fechaIngreso || employee.data?.fechaIngreso || "-",
+          diasAnuales: 15,
+          usados: used,
+          balance: Math.max(15 - used, 0)
+        };
+      });
+      const totalBalance = balances.reduce((total, row) => total + row.balance, 0);
+      const kpiBox = document.getElementById("leaveKpis");
+      if (kpiBox) {
+        kpiBox.innerHTML = [
+          ["Solicitudes pendientes", pending, "warn"],
+          ["Aprobadas", approved, "ok"],
+          ["Licencias activas", activeLicenses, "bad"],
+          ["Dias disponibles", totalBalance, "ok"]
+        ].map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${number.format(value)}</strong></div>`).join("");
+      }
+      renderTable("leaveApprovalsTable", ["Empleado", "Tipo", "Solicitud", "Desde", "Hasta", "Dias", "Estado", "Aprobador", "Motivo", "Accion"], rows.map(row => {
+        const employee = employees.find(item => String(item.id) === String(row.employeeId));
+        return [
+          escapeHtml(employee ? employeeFullName(employee) : row.employeeId || "-"),
+          escapeHtml(row.tipo || "-"),
+          escapeHtml(row.solicitud || row.fecha || "-"),
+          escapeHtml(row.desde || "-"),
+          escapeHtml(row.hasta || "-"),
+          number.format(Number(row.dias || 0)),
+          alertLevelBadge(row.estado || "Pendiente"),
+          escapeHtml(row.aprobador || "-"),
+          escapeHtml(row.motivo || "-"),
+          `<button class="mini-btn approve-leave-btn" type="button" data-id="${escapeHtml(row.id)}">Aprobar</button>`
+        ];
+      }));
+      renderTable("leaveBalanceTable", ["Codigo", "Empleado", "Fecha ingreso", "Dias anuales", "Dias usados", "Balance disponible"], balances.map(row => [
+        escapeHtml(row.codigo),
+        escapeHtml(row.empleado),
+        escapeHtml(row.fechaIngreso),
+        number.format(row.diasAnuales),
+        number.format(row.usados),
+        number.format(row.balance)
+      ]));
     }
 
     function essCurrentEmployee() {
@@ -4214,6 +4330,33 @@
       event.currentTarget.reset();
       renderEmployeeSelfService();
     });
+    document.getElementById("leaveRequestForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      state.essLeaveRequests = state.essLeaveRequests || [];
+      state.essLeaveRequests.unshift({ id: makeId(), employeeId: data.employeeId, fecha: new Date().toISOString(), ...data });
+      audit("Solicitud de vacaciones registrada", `${data.employeeId} | ${data.tipo} | ${data.dias} dias`);
+      saveState();
+      event.currentTarget.reset();
+      renderLeavePanel();
+      renderEmployeeSelfService();
+    });
+    document.getElementById("newLeaveRequestBtn").addEventListener("click", () => {
+      document.getElementById("leaveRequestForm").reset();
+      renderLeavePanel();
+    });
+    document.addEventListener("click", event => {
+      const approveLeaveButton = event.target.closest(".approve-leave-btn");
+      if (!approveLeaveButton) return;
+      const row = (state.essLeaveRequests || []).find(item => item.id === approveLeaveButton.dataset.id);
+      if (row) {
+        row.estado = "Aprobada";
+        row.aprobador = row.aprobador || state.activeUser || "Administrador";
+        saveState();
+        renderLeavePanel();
+        renderEmployeeSelfService();
+      }
+    });
     document.addEventListener("click", event => {
       const jumpButton = event.target.closest("[data-rh-jump]");
       if (jumpButton) showRhTab(jumpButton.dataset.rhJump);
@@ -4428,7 +4571,7 @@
       const project = validatePaymentControl(data);
       if (window.supabaseClient) {
         const payload = {
-          proyecto_id: data.projectKey,
+          proyecto_id: projectDbId(data.projectKey),
           numero: data.numero || "",
           fecha: data.fecha,
           monto: Number(data.monto),
@@ -4441,7 +4584,7 @@
           inserted = await window.supabaseClient.from("cubicaciones").insert(fallbackPayload).select("*").single();
         }
         if (inserted.error) throw inserted.error;
-        state.payments.push({ projectKey: inserted.data.proyecto_id, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", estado: inserted.data.estado || "Pendiente técnica", id: inserted.data.id });
+        state.payments.push({ projectKey: data.projectKey, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", estado: inserted.data.estado || "Pendiente tecnica", id: inserted.data.id });
       } else {
         state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente técnica", id: makeId() });
       }
@@ -4710,7 +4853,7 @@
       };
       if (window.supabaseClient) {
         const inserted = await window.supabaseClient.from("bitacora_tecnica").insert({
-          proyecto_id: row.projectKey,
+          proyecto_id: projectDbId(row.projectKey),
           fecha: row.fecha,
           avance_fisico: row.avance,
           observacion: row.observacion,
@@ -4763,7 +4906,7 @@
           row.url = publicUrl.data?.publicUrl || "";
         }
         const inserted = await window.supabaseClient.from("documentos_proyecto").insert({
-          proyecto_id: row.projectKey,
+          proyecto_id: projectDbId(row.projectKey),
           tipo: row.tipo,
           nombre_archivo: row.nombre,
           url: row.url,
