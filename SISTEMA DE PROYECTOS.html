@@ -1809,6 +1809,29 @@
       return project?.dbId || project?.id || projectKey;
     }
 
+    function isUuid(value) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+    }
+
+    async function resolveProjectDbId(projectKey) {
+      const project = state.projects.find(item => String(item.key) === String(projectKey) || String(item.dbId) === String(projectKey));
+      const localId = project?.dbId || project?.id || "";
+      if (isUuid(localId)) return localId;
+      if (isUuid(projectKey)) return projectKey;
+      if (!window.supabaseClient) return projectKey;
+      const lookup = await window.supabaseClient
+        .from("proyectos")
+        .select("id,codigo_interno")
+        .eq("codigo_interno", projectKey)
+        .maybeSingle();
+      if (lookup.error) throw lookup.error;
+      if (lookup.data?.id) {
+        if (project) project.dbId = lookup.data.id;
+        return lookup.data.id;
+      }
+      throw new Error(`No se encontró el UUID del proyecto ${projectKey}. Verifique que exista en Supabase con codigo_interno ${projectKey}.`);
+    }
+
     function enrichedProjects() {
       return state.projects.map(project => {
         const pagado = projectPaid(project.key);
@@ -4570,8 +4593,9 @@
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const project = validatePaymentControl(data);
       if (window.supabaseClient) {
+        const resolvedProjectId = await resolveProjectDbId(data.projectKey);
         const payload = {
-          proyecto_id: projectDbId(data.projectKey),
+          proyecto_id: resolvedProjectId,
           numero: data.numero || "",
           fecha: data.fecha,
           monto: Number(data.monto),
@@ -4853,7 +4877,7 @@
       };
       if (window.supabaseClient) {
         const inserted = await window.supabaseClient.from("bitacora_tecnica").insert({
-          proyecto_id: projectDbId(row.projectKey),
+          proyecto_id: await resolveProjectDbId(row.projectKey),
           fecha: row.fecha,
           avance_fisico: row.avance,
           observacion: row.observacion,
@@ -4906,7 +4930,7 @@
           row.url = publicUrl.data?.publicUrl || "";
         }
         const inserted = await window.supabaseClient.from("documentos_proyecto").insert({
-          proyecto_id: projectDbId(row.projectKey),
+          proyecto_id: await resolveProjectDbId(row.projectKey),
           tipo: row.tipo,
           nombre_archivo: row.nombre,
           url: row.url,
