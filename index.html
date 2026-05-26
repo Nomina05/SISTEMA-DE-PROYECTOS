@@ -138,6 +138,10 @@
     .rh-card p { margin: 0 0 9px; color: var(--muted); font-size: 12px; line-height: 1.4; }
     .rh-module-list { display: flex; flex-wrap: wrap; gap: 6px; }
     .rh-module-list span { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 8px; border-radius: 999px; background: #edf3f6; color: var(--ink); font-size: 11px; font-weight: 800; }
+    .pipeline-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 10px; }
+    .pipeline-stage { min-height: 96px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f8fbfd; }
+    .pipeline-stage strong { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #102b4a; }
+    .pipeline-stage span { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.3; }
     .rh-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 360px); gap: 14px; align-items: start; }
     .rh-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 8px; }
     .rh-action { min-height: 58px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f9fbfc; text-align: left; font-weight: 800; }
@@ -781,7 +785,66 @@
           <div class="table-wrap" id="employeesTableWrap" style="margin-top:14px;"><table id="employeesTable"></table></div>
         </div>
         </div>
-        <div class="subsection" id="rhTab-reclutamiento"><div class="rh-panels" data-rh-panel="reclutamiento"></div></div>
+        <div class="subsection" id="rhTab-reclutamiento">
+          <div class="page-heading">
+            <div><span class="eyebrow">Recursos Humanos</span><h1>Panel de Reclutamiento y Seleccion</h1><p class="sub">Gestion operativa de vacantes, candidatos, entrevistas, evaluaciones y contratacion.</p></div>
+          </div>
+          <div class="rh-kpis" id="recruitmentKpis"></div>
+          <div class="grid cards" style="margin-top:12px;">
+            <div class="panel">
+              <div class="panel-head"><div><h2>Publicacion de vacantes</h2><p class="sub">Registra la necesidad, controla el estado y alimenta el portal de empleo.</p></div><span class="badge">Operativo</span></div>
+              <form id="vacancyForm" class="form-grid">
+                <label>Vacante<input name="titulo" required placeholder="Nombre de la vacante"></label>
+                <label>Unidad<select name="unidad" id="vacancyUnitSelect"></select></label>
+                <label>Cargo<input name="cargo" required placeholder="Cargo solicitado"></label>
+                <label>Tipo<select name="tipo"><option>Fijo</option><option>Temporal</option><option>Interinato</option><option>Contratado</option></select></label>
+                <label>Fecha publicacion<input name="fecha" type="date" required></label>
+                <label>Estado<select name="estado"><option>Abierta</option><option>En entrevistas</option><option>Oferta enviada</option><option>Cerrada</option><option>Cancelada</option></select></label>
+                <label class="span-2">Requisitos<textarea name="requisitos" placeholder="Requisitos principales"></textarea></label>
+                <div class="actions span-4"><button class="btn" type="submit">Guardar vacante</button><button class="btn secondary" id="newVacancyBtn" type="button">Nueva</button></div>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div><h2>Recepcion de CV y banco de candidatos</h2><p class="sub">Centraliza candidatos, fuente, evaluacion y etapa del proceso.</p></div><span class="badge">Pipeline</span></div>
+              <form id="candidateForm" class="form-grid">
+                <label>Vacante<select name="vacancyId" id="candidateVacancySelect" required></select></label>
+                <label>Nombre candidato<input name="nombre" required></label>
+                <label>Documento<input name="documento"></label>
+                <label>Telefono<input name="telefono"></label>
+                <label>Correo<input name="correo" type="email"></label>
+                <label>Fuente<select name="fuente"><option>Portal de empleo</option><option>Recepcion de CV</option><option>Referido</option><option>Banco de candidatos</option><option>Otro</option></select></label>
+                <label>Etapa<select name="etapa"><option>Recepcion de CV</option><option>Evaluacion tecnica</option><option>Prueba psicometrica</option><option>Entrevista</option><option>Oferta</option><option>Contratacion</option><option>Onboarding</option><option>Descartado</option></select></label>
+                <label>Resultado<select name="resultado"><option>En proceso</option><option>Preseleccionado</option><option>Aprobado</option><option>No califica</option><option>Contratado</option></select></label>
+                <label class="span-2">Observacion<textarea name="observacion"></textarea></label>
+                <div class="actions span-4"><button class="btn" type="submit">Guardar candidato</button><button class="btn secondary" id="newCandidateBtn" type="button">Nuevo</button></div>
+              </form>
+            </div>
+          </div>
+          <div class="grid cards" style="margin-top:12px;">
+            <div class="panel">
+              <h2>Entrevistas, evaluaciones y cartas de oferta</h2>
+              <form id="interviewForm" class="form-grid">
+                <label>Candidato<select name="candidateId" id="interviewCandidateSelect" required></select></label>
+                <label>Tipo<select name="tipo"><option>Entrevista</option><option>Evaluacion tecnica</option><option>Prueba psicometrica</option><option>Carta de oferta</option><option>Onboarding</option></select></label>
+                <label>Fecha<input name="fecha" type="date" required></label>
+                <label>Evaluador<input name="evaluador"></label>
+                <label>Resultado<select name="resultado"><option>Pendiente</option><option>Aprobado</option><option>Rechazado</option><option>Reprogramar</option></select></label>
+                <label class="span-2">Feedback<textarea name="feedback"></textarea></label>
+                <button class="btn span-2" type="submit">Guardar evaluacion</button>
+              </form>
+            </div>
+            <div class="panel">
+              <h2>Pipeline de candidatos</h2>
+              <div class="pipeline-board" id="recruitmentPipeline"></div>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:12px;">
+            <div class="panel-head"><h2>Vacantes y candidatos registrados</h2><span class="badge">Reportes en panel de Reportes</span></div>
+            <div class="table-wrap"><table id="vacanciesTable"></table></div>
+            <div class="table-wrap" style="margin-top:12px;"><table id="candidatesTable"></table></div>
+            <div class="table-wrap" style="margin-top:12px;"><table id="interviewsTable"></table></div>
+          </div>
+        </div>
         <div class="subsection" id="rhTab-asistencia"><div class="rh-panels" data-rh-panel="asistencia"></div></div>
         <div class="subsection" id="rhTab-nomina"><div class="rh-panels" data-rh-panel="nomina"></div></div>
         <div class="subsection" id="rhTab-vacaciones">
@@ -1094,6 +1157,7 @@
             <button class="tab" data-report="estatus">Estatus de obras</button>
             <button class="tab" data-report="snip">Por cÃ³digo SNIP</button>
             <button class="tab" data-report="inconsistencias">Inconsistencias</button>
+            <button class="tab" data-report="rrhh-reclutamiento">Reclutamiento RRHH</button>
           </div>
           <div class="table-tools">
             <div class="filters">
@@ -1186,7 +1250,7 @@
       "DirecciÃ³n TÃ©cnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
       "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
       "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos"],
+      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes"],
       "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
@@ -1201,7 +1265,8 @@
       pagos: "report-pagos",
       estatus: "report-estatus",
       snip: "report-snip",
-      inconsistencias: "report-inconsistencias"
+      inconsistencias: "report-inconsistencias",
+      "rrhh-reclutamiento": "recursos-humanos"
     };
 
     let state = loadState();
@@ -1244,12 +1309,15 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: [], users: [], employees: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente tÃ©cnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], payments: [], warehouseRequests: [], warehouseArticles: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente tÃ©cnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: [],
         users: parsed.users || [],
         employees: parsed.employees || [],
+        recruitmentVacancies: parsed.recruitmentVacancies || [],
+        recruitmentCandidates: parsed.recruitmentCandidates || [],
+        recruitmentInterviews: parsed.recruitmentInterviews || [],
         payments: parsed.payments || [],
         warehouseRequests: parsed.warehouseRequests || [],
         warehouseArticles: parsed.warehouseArticles || [],
@@ -2918,9 +2986,97 @@
       return `<div class="panel">
         <div class="panel-head"><div><h2>${escapeHtml(config.title)}</h2><p class="sub">${escapeHtml(config.description)}</p></div><span class="badge">Configurado</span></div>
         <div class="rh-panels">
-          ${config.modules.map(module => `<div class="rh-card"><h3>${escapeHtml(module)}</h3><p>Modulo preparado para registrar, consultar, aprobar y reportar informacion de ${escapeHtml(config.title.toLowerCase())}.</p><div class="notice-actions"><button class="mini-btn" type="button">Nuevo</button><button class="mini-btn" type="button">Ver registros</button><button class="mini-btn" type="button">Reportes</button></div></div>`).join("")}
+          ${config.modules.map(module => `<div class="rh-card"><h3>${escapeHtml(module)}</h3><p>Modulo preparado para registrar, consultar y aprobar informacion de ${escapeHtml(config.title.toLowerCase())}.</p><div class="notice-actions"><button class="mini-btn" type="button">Nuevo</button><button class="mini-btn" type="button">Ver registros</button></div></div>`).join("")}
         </div>
       </div>`;
+    }
+
+    const recruitmentStages = ["Recepcion de CV", "Evaluacion tecnica", "Prueba psicometrica", "Entrevista", "Oferta", "Contratacion", "Onboarding", "Descartado"];
+
+    function vacancyName(vacancyId) {
+      const vacancy = (state.recruitmentVacancies || []).find(item => String(item.id) === String(vacancyId));
+      return vacancy ? vacancy.titulo : "Sin vacante";
+    }
+
+    function candidateName(candidateId) {
+      const candidate = (state.recruitmentCandidates || []).find(item => String(item.id) === String(candidateId));
+      return candidate ? candidate.nombre : "Sin candidato";
+    }
+
+    function populateRecruitmentSelects() {
+      const unitSelect = document.getElementById("vacancyUnitSelect");
+      const vacancySelect = document.getElementById("candidateVacancySelect");
+      const interviewCandidateSelect = document.getElementById("interviewCandidateSelect");
+      if (unitSelect) {
+        const units = [...new Set((state.organizationUnits || []).map(unit => unit.ruta || unit.nombre).filter(Boolean))];
+        unitSelect.innerHTML = `<option value="">Sin unidad asignada</option>` + units.map(unit => `<option value="${escapeHtml(unit)}">${escapeHtml(unit)}</option>`).join("");
+      }
+      if (vacancySelect) {
+        const vacancies = state.recruitmentVacancies || [];
+        vacancySelect.innerHTML = `<option value="">Seleccione vacante</option>` + vacancies.map(vacancy => `<option value="${escapeHtml(vacancy.id)}">${escapeHtml(vacancy.titulo)} - ${escapeHtml(vacancy.estado || "Abierta")}</option>`).join("");
+      }
+      if (interviewCandidateSelect) {
+        const candidates = state.recruitmentCandidates || [];
+        interviewCandidateSelect.innerHTML = `<option value="">Seleccione candidato</option>` + candidates.map(candidate => `<option value="${escapeHtml(candidate.id)}">${escapeHtml(candidate.nombre)} - ${escapeHtml(vacancyName(candidate.vacancyId))}</option>`).join("");
+      }
+    }
+
+    function renderRecruitment() {
+      state.recruitmentVacancies = state.recruitmentVacancies || [];
+      state.recruitmentCandidates = state.recruitmentCandidates || [];
+      state.recruitmentInterviews = state.recruitmentInterviews || [];
+      populateRecruitmentSelects();
+      const vacancies = state.recruitmentVacancies;
+      const candidates = state.recruitmentCandidates;
+      const interviews = state.recruitmentInterviews;
+      const openVacancies = vacancies.filter(item => !["Cerrada", "Cancelada"].includes(item.estado)).length;
+      const activeCandidates = candidates.filter(item => !["Contratado", "No califica"].includes(item.resultado)).length;
+      const hired = candidates.filter(item => item.resultado === "Contratado" || item.etapa === "Contratacion").length;
+      const pendingInterviews = interviews.filter(item => item.resultado === "Pendiente").length;
+      const kpiEl = document.getElementById("recruitmentKpis");
+      if (kpiEl) {
+        kpiEl.innerHTML = [
+          ["Vacantes abiertas", openVacancies, "ok"],
+          ["Candidatos activos", activeCandidates, "warn"],
+          ["Contrataciones", hired, "ok"],
+          ["Evaluaciones pendientes", pendingInterviews, "bad"]
+        ].map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${label}</small><strong>${number.format(value)}</strong></div>`).join("");
+      }
+      const pipeline = document.getElementById("recruitmentPipeline");
+      if (pipeline) {
+        pipeline.innerHTML = recruitmentStages.map(stage => {
+          const stageCandidates = candidates.filter(candidate => candidate.etapa === stage);
+          const names = stageCandidates.slice(0, 4).map(candidate => candidate.nombre).join(", ") || "Sin candidatos en esta etapa";
+          return `<div class="pipeline-stage"><strong>${escapeHtml(stage)} <em>${number.format(stageCandidates.length)}</em></strong><span>${escapeHtml(names)}</span></div>`;
+        }).join("");
+      }
+      renderTable("vacanciesTable", ["Vacante", "Unidad", "Cargo", "Tipo", "Publicacion", "Estado", "Requisitos"], vacancies.map(vacancy => [
+        escapeHtml(vacancy.titulo || "-"),
+        escapeHtml(vacancy.unidad || "-"),
+        escapeHtml(vacancy.cargo || "-"),
+        escapeHtml(vacancy.tipo || "-"),
+        escapeHtml(vacancy.fecha || "-"),
+        escapeHtml(vacancy.estado || "-"),
+        escapeHtml(vacancy.requisitos || "-")
+      ]));
+      renderTable("candidatesTable", ["Candidato", "Vacante", "Documento", "Telefono", "Correo", "Fuente", "Etapa", "Resultado"], candidates.map(candidate => [
+        escapeHtml(candidate.nombre || "-"),
+        escapeHtml(vacancyName(candidate.vacancyId)),
+        escapeHtml(candidate.documento || "-"),
+        escapeHtml(candidate.telefono || "-"),
+        escapeHtml(candidate.correo || "-"),
+        escapeHtml(candidate.fuente || "-"),
+        escapeHtml(candidate.etapa || "-"),
+        escapeHtml(candidate.resultado || "-")
+      ]));
+      renderTable("interviewsTable", ["Fecha", "Candidato", "Tipo", "Evaluador", "Resultado", "Feedback"], interviews.map(interview => [
+        escapeHtml(interview.fecha || "-"),
+        escapeHtml(candidateName(interview.candidateId)),
+        escapeHtml(interview.tipo || "-"),
+        escapeHtml(interview.evaluador || "-"),
+        escapeHtml(interview.resultado || "-"),
+        escapeHtml(interview.feedback || "-")
+      ]));
     }
 
     function renderHumanResources() {
@@ -2971,6 +3127,7 @@
         const target = document.querySelector(`[data-rh-panel="${key}"]`);
         if (target) target.innerHTML = renderRhModulePanel(key, config);
       });
+      renderRecruitment();
       renderEmployeeSelfService();
       renderLeavePanel();
     }
@@ -3654,11 +3811,56 @@
       });
     }
 
+    function renderRecruitmentReport() {
+      const q = document.getElementById("searchBox").value.toLowerCase();
+      const vacancies = state.recruitmentVacancies || [];
+      const candidates = state.recruitmentCandidates || [];
+      const interviews = state.recruitmentInterviews || [];
+      const rows = candidates.filter(candidate => {
+        const vacancy = vacancyName(candidate.vacancyId);
+        const haystack = `${candidate.nombre} ${candidate.documento} ${candidate.telefono} ${candidate.correo} ${candidate.fuente} ${candidate.etapa} ${candidate.resultado} ${vacancy}`.toLowerCase();
+        return !q || haystack.includes(q);
+      }).map(candidate => {
+        const candidateInterviews = interviews.filter(interview => String(interview.candidateId) === String(candidate.id));
+        const lastInterview = candidateInterviews[candidateInterviews.length - 1] || {};
+        return [
+          escapeHtml(vacancyName(candidate.vacancyId)),
+          escapeHtml(candidate.nombre || "-"),
+          escapeHtml(candidate.fuente || "-"),
+          escapeHtml(candidate.etapa || "-"),
+          escapeHtml(candidate.resultado || "-"),
+          escapeHtml(lastInterview.tipo || "-"),
+          escapeHtml(lastInterview.resultado || "-"),
+          escapeHtml(lastInterview.fecha || "-")
+        ];
+      });
+      const openVacancies = vacancies.filter(vacancy => !["Cerrada", "Cancelada"].includes(vacancy.estado)).length;
+      renderTable("reportTable", ["Vacante", "Candidato", "Fuente", "Etapa", "Resultado candidato", "Ultima evaluacion", "Resultado evaluacion", "Fecha"], rows, [
+        "Resumen",
+        `Vacantes abiertas: ${number.format(openVacancies)}`,
+        `Candidatos: ${number.format(candidates.length)}`,
+        `Entrevistas/evaluaciones: ${number.format(interviews.length)}`,
+        "",
+        "",
+        "",
+        ""
+      ]);
+    }
+
     function renderReport() {
-      document.getElementById("snipFilter").hidden = !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport);
+      const isRecruitmentReport = currentReport === "rrhh-reclutamiento";
+      document.getElementById("snipFilter").hidden = isRecruitmentReport || !["municipio", "contratista", "disponibilidad", "estatus", "snip", "inconsistencias", "inversion"].includes(currentReport);
       document.getElementById("snipModeFilter").hidden = currentReport !== "snip";
       document.getElementById("providerFilter").hidden = currentReport !== "contratista";
-      document.getElementById("typeFilter").hidden = !["municipio", "contratista", "estatus"].includes(currentReport);
+      document.getElementById("typeFilter").hidden = isRecruitmentReport || !["municipio", "contratista", "estatus"].includes(currentReport);
+      ["processTypeFilter", "minAmountFilter", "maxAmountFilter", "municipalityFilter", "statusFilter"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = isRecruitmentReport;
+      });
+      if (isRecruitmentReport) {
+        renderRecruitmentReport();
+        return;
+      }
       const rows = filteredProjects();
       if (currentReport === "municipio") {
         renderMunicipioReport(rows);
@@ -5074,6 +5276,49 @@
     document.getElementById("employeeTemplateBtn").addEventListener("click", downloadEmployeeTemplate);
     document.getElementById("employeeImportInput").addEventListener("change", event => {
       importEmployeesFile(event.target.files[0]).catch(error => alert(error.message || "No se pudo importar el Excel."));
+    });
+
+    document.getElementById("vacancyForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("recursos-humanos")) return alert("El usuario activo no tiene permiso para gestionar reclutamiento.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const row = { id: makeId(), ...data, creadoEn: new Date().toISOString(), creadoPor: currentSessionEmail || activeUser()?.usuario || "Sistema" };
+      state.recruitmentVacancies = [row, ...(state.recruitmentVacancies || [])];
+      audit("Vacante registrada", `${row.titulo} | ${row.estado}`);
+      event.currentTarget.reset();
+      saveState();
+      renderRecruitment();
+      renderReport();
+    });
+
+    document.getElementById("newVacancyBtn").addEventListener("click", () => document.getElementById("vacancyForm").reset());
+
+    document.getElementById("candidateForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("recursos-humanos")) return alert("El usuario activo no tiene permiso para gestionar candidatos.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const row = { id: makeId(), ...data, creadoEn: new Date().toISOString(), creadoPor: currentSessionEmail || activeUser()?.usuario || "Sistema" };
+      state.recruitmentCandidates = [row, ...(state.recruitmentCandidates || [])];
+      audit("Candidato registrado", `${row.nombre} | ${vacancyName(row.vacancyId)} | ${row.etapa}`);
+      event.currentTarget.reset();
+      saveState();
+      renderRecruitment();
+      renderReport();
+    });
+
+    document.getElementById("newCandidateBtn").addEventListener("click", () => document.getElementById("candidateForm").reset());
+
+    document.getElementById("interviewForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!can("recursos-humanos")) return alert("El usuario activo no tiene permiso para registrar evaluaciones.");
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const row = { id: makeId(), ...data, creadoEn: new Date().toISOString(), creadoPor: currentSessionEmail || activeUser()?.usuario || "Sistema" };
+      state.recruitmentInterviews = [row, ...(state.recruitmentInterviews || [])];
+      audit("Evaluacion de candidato", `${candidateName(row.candidateId)} | ${row.tipo} | ${row.resultado}`);
+      event.currentTarget.reset();
+      saveState();
+      renderRecruitment();
+      renderReport();
     });
 
     document.getElementById("inventoryForm").addEventListener("submit", async event => {
