@@ -1710,6 +1710,19 @@
       return String(project.codigo || "").trim() || "SNIP: 00001";
     }
 
+    function normalizeSnip(value) {
+      return String(value || "").toUpperCase().replace("SNIP", "").replace(/[^0-9A-Z]/g, "").trim();
+    }
+
+    function normalizeMatchText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, " ")
+        .trim();
+    }
+
     function sum(rows, field) {
       return rows.reduce((total, item) => total + (Number(item[field]) || 0), 0);
     }
@@ -1819,6 +1832,7 @@
       if (isUuid(localId)) return localId;
       if (isUuid(projectKey)) return projectKey;
       if (!window.supabaseClient) return projectKey;
+
       const lookup = await window.supabaseClient
         .from("proyectos")
         .select("id,codigo_interno")
@@ -1829,7 +1843,69 @@
         if (project) project.dbId = lookup.data.id;
         return lookup.data.id;
       }
-      throw new Error(`No se encontró el UUID del proyecto ${projectKey}. Verifique que exista en Supabase con codigo_interno ${projectKey}.`);
+
+      if (project) {
+        const projectSnip = normalizeSnip(project.codigo || displaySnip(project));
+        if (projectSnip && project.no) {
+          const snipVariants = [...new Set([project.codigo, projectSnip, `SNIP:${projectSnip}`, `SNIP: ${projectSnip}`].filter(Boolean))];
+          const bySnipAndNo = await window.supabaseClient
+            .from("proyectos")
+            .select("id,codigo_interno")
+            .in("snip", snipVariants)
+            .eq("no_excel", Number(project.no))
+            .limit(1);
+          if (bySnipAndNo.error) throw bySnipAndNo.error;
+          if (bySnipAndNo.data?.[0]?.id) {
+            project.dbId = bySnipAndNo.data[0].id;
+            return bySnipAndNo.data[0].id;
+          }
+        }
+
+        let candidatesResult = null;
+        if (projectSnip) {
+          candidatesResult = await window.supabaseClient
+            .from("proyectos")
+            .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+            .ilike("snip", `%${projectSnip}%`)
+            .limit(100);
+        }
+        if (!candidatesResult || candidatesResult.error || !candidatesResult.data?.length) {
+          candidatesResult = await window.supabaseClient
+            .from("proyectos")
+            .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+            .limit(1000);
+        }
+        if (candidatesResult.error) throw candidatesResult.error;
+
+        const target = {
+          snip: projectSnip,
+          no: Number(project.no || 0),
+          tipo: normalizeMatchText(project.tipo),
+          municipio: normalizeMatchText(project.municipio),
+          comunidad: normalizeMatchText(project.comunidad)
+        };
+        const scored = (candidatesResult.data || []).map(candidate => {
+          let score = 0;
+          if (target.snip && normalizeSnip(candidate.snip) === target.snip) score += 60;
+          if (target.no && Number(candidate.no_excel || 0) === target.no) score += 25;
+          if (target.tipo && normalizeMatchText(candidate.tipo) === target.tipo) score += 20;
+          if (target.municipio && normalizeMatchText(candidate.municipio) === target.municipio) score += 15;
+          if (target.comunidad && normalizeMatchText(candidate.comunidad) === target.comunidad) score += 25;
+          if (target.comunidad && normalizeMatchText(candidate.comunidad).includes(target.comunidad)) score += 10;
+          if (target.tipo && normalizeMatchText(candidate.tipo).includes(target.tipo)) score += 8;
+          return { candidate, score };
+        }).sort((a, b) => b.score - a.score);
+
+        if (scored[0]?.candidate?.id && scored[0].score >= 60) {
+          const match = scored[0].candidate;
+          project.dbId = match.id;
+          project.contratistaId = match.contratista_id || project.contratistaId || "";
+          project.contratista = match.contratistas?.nombre || project.contratista || "Sin asignar";
+          return match.id;
+        }
+      }
+
+      throw new Error("No se pudo identificar el proyecto seleccionado para registrar la cubicacion. Revise que el SNIP, tipo de obra, municipio y comunidad coincidan con Supabase.");
     }
 
     function enrichedProjects() {
