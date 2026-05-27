@@ -1859,19 +1859,36 @@
       return `${code} - ${name} | ${cedula} | ${cargo}`;
     }
 
+    function employeeSearchTokens(employee) {
+      const cedula = employee?.cedula || employee?.data?.cedula || "";
+      return {
+        id: normalizeSearch(employeeRequestKey(employee)),
+        code: normalizeSearch(employeeDisplayCode(employee)),
+        label: normalizeSearch(employeeOptionLabel(employee)),
+        name: normalizeSearch(employeeFullName(employee)),
+        cedula: normalizeSearch(cedula),
+        cedulaDigits: String(cedula || "").replace(/\D/g, "")
+      };
+    }
+
+    function employeeCodeFromSearch(value) {
+      const match = String(value || "").match(/\bEMP\d+\b/i);
+      return match ? normalizeSearch(match[0]) : "";
+    }
+
     function linkedEmployeeForUser(user) {
       const linked = normalizeSearch(user?.empleadoRrhh || "");
       if (!linked) return null;
-      return (state.employees || []).find(employee => {
-        const values = [
-          employeeRequestKey(employee),
-          employeeDisplayCode(employee),
-          employeeFullName(employee),
-          employee?.cedula || employee?.data?.cedula || "",
-          employeeOptionLabel(employee)
-        ].map(normalizeSearch);
-        return values.some(value => value && (value === linked || value.includes(linked) || linked.includes(value)));
-      }) || null;
+      const linkedCode = employeeCodeFromSearch(user?.empleadoRrhh || "");
+      const linkedDigits = String(user?.empleadoRrhh || "").replace(/\D/g, "");
+      const employees = state.employees || [];
+      return employees.find(employee => {
+        const tokens = employeeSearchTokens(employee);
+        return Boolean(linkedCode && tokens.code === linkedCode);
+      }) || employees.find(employee => {
+        const tokens = employeeSearchTokens(employee);
+        return Boolean(tokens.label === linked || tokens.id === linked || tokens.cedula === linked || (linkedDigits && tokens.cedulaDigits === linkedDigits));
+      }) || employees.find(employee => employeeSearchTokens(employee).label.includes(linked)) || null;
     }
 
     function userHasLineAuthority(user) {
@@ -2683,15 +2700,18 @@
     function employeeFromUserSearch(value) {
       const term = normalizeSearch(value);
       if (!term) return null;
-      return (state.employees || []).find(employee => {
-        const values = [
-          employeeOptionLabel(employee),
-          employeeDisplayCode(employee),
-          employeeFullName(employee),
-          employee?.cedula || employee?.data?.cedula || "",
-          employee?.cargo || employee?.data?.cargo || ""
-        ].map(normalizeSearch);
-        return values.some(candidate => candidate && (candidate === term || candidate.includes(term) || term.includes(candidate)));
+      const selectedCode = employeeCodeFromSearch(value);
+      const selectedDigits = String(value || "").replace(/\D/g, "");
+      const employees = state.employees || [];
+      return employees.find(employee => {
+        const tokens = employeeSearchTokens(employee);
+        return Boolean(selectedCode && tokens.code === selectedCode);
+      }) || employees.find(employee => {
+        const tokens = employeeSearchTokens(employee);
+        return Boolean(tokens.label === term || tokens.id === term || tokens.cedula === term || (selectedDigits && tokens.cedulaDigits === selectedDigits));
+      }) || employees.find(employee => {
+        const tokens = employeeSearchTokens(employee);
+        return Boolean(tokens.label.includes(term) || tokens.name.includes(term));
       }) || null;
     }
 
