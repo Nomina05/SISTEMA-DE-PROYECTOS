@@ -1510,6 +1510,8 @@
     }
 
     function mapUserFromDb(user, permissionMap) {
+      const linkedPermissions = permissionMap[user.id] || [];
+      const cachedPermissions = Array.isArray(user.permisos_codigos) ? user.permisos_codigos : [];
       return {
         id: user.id,
         nombre: user.nombre || user.usuario || user.correo,
@@ -1522,7 +1524,7 @@
         rolComercial: user.rol_comercial || "",
         notaAcceso: user.nota_acceso || "",
         activo: user.activo !== false,
-        permissions: permissionMap[user.id] || [],
+        permissions: linkedPermissions.length ? linkedPermissions : cachedPermissions,
         requiereCambioPassword: Boolean(user.requiere_cambio_password),
         creado: user.creado_en ? new Date(user.creado_en).toLocaleDateString("es-DO") : ""
       };
@@ -1544,6 +1546,9 @@
       ]);
       if (projectsResult.error) throw projectsResult.error;
       if (usersResult.error) throw usersResult.error;
+      if (permissionsResult.error && !String(permissionsResult.error.message || "").toLowerCase().includes("relation")) {
+        console.warn("No se pudieron cargar permisos vinculados; se usara permisos_codigos como respaldo.", permissionsResult.error);
+      }
       if (warehouseResult.error && !String(warehouseResult.error.message || "").toLowerCase().includes("relation")) throw warehouseResult.error;
       if (warehouseArticlesResult.error && !String(warehouseArticlesResult.error.message || "").toLowerCase().includes("relation")) throw warehouseArticlesResult.error;
       if (alertConfigResult.error && !String(alertConfigResult.error.message || "").toLowerCase().includes("relation")) throw alertConfigResult.error;
@@ -1752,14 +1757,15 @@
 
     function isMissingUserOptionalColumn(error) {
       const message = String(error?.message || "").toLowerCase();
-      return ["empleado_rrhh", "rol_comercial", "nota_acceso"].some(column => message.includes(column));
+      return ["empleado_rrhh", "rol_comercial", "nota_acceso", "permisos_codigos"].some(column => message.includes(column));
     }
 
-    function userOptionalPayload(data) {
+    function userOptionalPayload(data, permissions = []) {
       return {
         empleado_rrhh: data.empleadoRrhh || "",
         rol_comercial: data.rolComercial || "",
-        nota_acceso: data.notaAcceso || ""
+        nota_acceso: data.notaAcceso || "",
+        permisos_codigos: permissions
       };
     }
 
@@ -1768,6 +1774,7 @@
       delete clone.empleado_rrhh;
       delete clone.rol_comercial;
       delete clone.nota_acceso;
+      delete clone.permisos_codigos;
       return clone;
     }
 
@@ -5695,12 +5702,16 @@
               perfil_base: data.rol,
               requiere_cambio_password: mustChangePassword,
               activo: isActive,
-              ...userOptionalPayload(data),
+              ...userOptionalPayload(data, permissions),
               actualizado_en: new Date().toISOString()
             };
             if (areaId) updatePayload.area_id = areaId;
             await updateUserProfileRow(editingUserId, updatePayload);
-            await replaceUserPermissions(editingUserId, permissions);
+            try {
+              await replaceUserPermissions(editingUserId, permissions);
+            } catch (permissionError) {
+              console.warn("No se pudo actualizar usuario_permisos; se conservara permisos_codigos.", permissionError);
+            }
             await loadSupabaseData();
             const refreshedUser = state.users.find(user => user.id === editingUserId);
             if (refreshedUser) Object.assign(refreshedUser, {
@@ -5745,9 +5756,13 @@
             perfil_base: data.rol,
             requiere_cambio_password: mustChangePassword,
             activo: isActive,
-            ...userOptionalPayload(data)
+            ...userOptionalPayload(data, permissions)
           });
-          await replaceUserPermissions(inserted.data.id, permissions);
+          try {
+            await replaceUserPermissions(inserted.data.id, permissions);
+          } catch (permissionError) {
+            console.warn("No se pudo actualizar usuario_permisos; se conservara permisos_codigos.", permissionError);
+          }
           await loadSupabaseData();
           const refreshedUser = state.users.find(user => user.id === inserted.data.id);
           if (refreshedUser) Object.assign(refreshedUser, {
