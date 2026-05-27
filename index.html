@@ -1550,6 +1550,7 @@
       if (employeesResult.data?.length) {
         state.employees = employeesResult.data.map(row => ({
           id: row.id,
+          codigo: row.codigo || row.datos?.codigo || (row.fila_excel ? `EMP${String(Number(row.fila_excel) - 1).padStart(3, "0")}` : ""),
           nombre: row.nombre || "",
           apellido: row.apellido || "",
           cedula: row.cedula || "",
@@ -3601,6 +3602,17 @@
       return `${employee.nombre || ""} ${employee.apellido || ""}`.trim() || "Empleado";
     }
 
+    function employeeDisplayCode(employee) {
+      const data = employee?.data || {};
+      if (employee?.codigo) return employee.codigo;
+      if (data.codigo) return data.codigo;
+      const excelRow = Number(employee?.filaExcel || data.filaExcel || data.fila_excel || 0);
+      if (excelRow > 1) return `EMP${String(excelRow - 1).padStart(3, "0")}`;
+      const cedula = String(employee?.cedula || data.cedula || "").replace(/\D/g, "");
+      if (cedula) return `EMP${cedula.slice(-3).padStart(3, "0")}`;
+      return "EMP000";
+    }
+
     function renderEmployeeSelfService() {
       const select = document.getElementById("essEmployeeSelect");
       const profile = document.getElementById("essProfile");
@@ -3609,7 +3621,7 @@
       const employees = essEmployeeList();
       select.innerHTML = `<option value="">Seleccione empleado</option>` + employees.map(employee => {
         const id = String(employee.id || employee.codigo);
-        return `<option value="${escapeHtml(id)}">${escapeHtml(employee.codigo || id)} - ${escapeHtml(employeeFullName(employee))}</option>`;
+        return `<option value="${escapeHtml(id)}">${escapeHtml(employeeDisplayCode(employee))} - ${escapeHtml(employeeFullName(employee))}</option>`;
       }).join("");
       if (!employees.some(employee => String(employee.id || employee.codigo) === String(state.essSelectedEmployeeId))) {
         state.essSelectedEmployeeId = "";
@@ -3638,7 +3650,7 @@
       const deduction = Math.min(780.12, Math.max(salary * 0.0591, 0));
       const leaveRows = (state.essLeaveRequests || []).filter(row => String(row.employeeId) === employeeId);
       const ticketRows = (state.essTickets || []).filter(row => String(row.employeeId) === employeeId);
-      const employeeCode = employee.codigo || (employeeId === "EMP737" ? "EMP737" : `EMP${String(employeeId).slice(0, 3).toUpperCase()}`);
+      const employeeCode = employeeDisplayCode(employee);
       const pendingLeaves = leaveRows.filter(row => row.estado === "Pendiente").length;
       const openTickets = ticketRows.filter(row => row.estado !== "Cerrado").length;
       profile.innerHTML = `<div class="ess-profile-box">
