@@ -175,6 +175,9 @@
     .employee-section { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 13px; border: 1px solid #cfddea; border-radius: 8px; background: var(--surface); }
     .employee-section legend { padding: 0 0 8px; color: #102b4a; font-size: 15px; font-weight: 900; }
     .employee-org-section .span-4 { grid-column: 1 / -1; }
+    .employee-edit-only { display: none; }
+    .employee-form.is-editing .employee-edit-only { display: grid; }
+    .employee-form input:disabled, .employee-form select:disabled, .employee-form textarea:disabled { background: #edf2f7; color: #64748b; cursor: not-allowed; }
     .employee-form .actions { align-items: center; }
     .employee-form .span-2 { grid-column: span 2; }
     .employee-form .span-4 { grid-column: 1 / -1; }
@@ -763,29 +766,35 @@
             <label><span class="sr-only">Grupo ocupacional</span><select name="grupoOcupacional" id="employeeGroupSelect"><option value="">Grupo ocupacional</option></select></label>
             <label><span class="sr-only">Cargo</span><select name="cargo" id="employeePositionSelect"><option value="">Cargo</option></select></label>
             <label><span class="sr-only">Salario</span><input name="salario" type="number" min="0" step="0.01" placeholder="Salario"></label>
-            <label><span class="sr-only">Salario Interinato</span><input name="salarioInterinato" type="number" min="0" step="0.01" placeholder="Salario Interinato"></label>
+            <label><span class="sr-only">Salario Interinato</span><input name="salarioInterinato" type="number" min="0" step="0.01" placeholder="Salario Interinato" disabled></label>
+            <label><span class="sr-only">Salario Suplencia</span><input name="salarioSuplencia" type="number" min="0" step="0.01" placeholder="Salario Suplencia" disabled></label>
             <label><span class="sr-only">Fecha de ingreso</span><input name="fechaIngreso" type="date"></label>
-            <label><span class="sr-only">Tipo de Ingreso</span><select name="tipoIngreso"><option value="">Tipo de Ingreso</option><option>Fijo</option><option>Interinato</option><option>Temporal</option><option>Suplencia</option><option>Contratado</option></select></label>
-            <label><span class="sr-only">Estado del empleado</span><select name="estadoEmpleado"><option value="">(Seleccione o VACANTE)</option><option>Ocupado</option><option>Vacante</option></select></label>
+            <label><span class="sr-only">Tipo de Ingreso</span><select name="tipoIngreso"><option value="">Tipo de Ingreso</option><option value="Creacion">Creaci&oacute;n</option><option value="Sustitucion">Sustituci&oacute;n</option></select></label>
+            <label><span class="sr-only">Vacantes</span><select name="vacanteEmpleadoId"><option value="">(Seleccione o VACANTE)</option></select></label>
+            <label><span class="sr-only">Estatus</span><select name="estatusEmpleado"><option value="">Estatus</option><option>Fijo</option><option>Temporal</option><option>Suplencia</option><option>Interinato</option><option>Carrera Administrativa</option></select></label>
+            <label><span class="sr-only">Periodo desde</span><input name="periodoDesde" type="date" disabled></label>
+            <label><span class="sr-only">Periodo hasta</span><input name="periodoHasta" type="date" disabled></label>
+            <label class="employee-edit-only"><span class="sr-only">Aumento</span><input name="aumentoMonto" type="number" min="0" step="0.01" placeholder="Aumento" disabled></label>
+            <label class="employee-edit-only"><span class="sr-only">Porcentaje aumento</span><input name="aumentoPorcentaje" type="text" placeholder="% aumento" readonly></label>
 
             <fieldset class="employee-section employee-org-section">
               <legend>Estructura organizacional</legend>
-              <label><span class="sr-only">Direccion</span><input name="direccionOrg" placeholder="Direccion"></label>
-              <label><span class="sr-only">Departamento</span><input name="departamento" placeholder="Departamento"></label>
-              <label><span class="sr-only">Division</span><input name="division" placeholder="Division"></label>
-              <label><span class="sr-only">Seccion</span><input name="seccion" placeholder="Seccion"></label>
+              <label><span class="sr-only">Direccion</span><select name="direccionOrg"><option value="">Direccion</option></select></label>
+              <label><span class="sr-only">Departamento</span><select name="departamento"><option value="">Departamento</option></select></label>
+              <label><span class="sr-only">Division</span><select name="division"><option value="">Division</option></select></label>
+              <label><span class="sr-only">Seccion</span><select name="seccion"><option value="">Seccion</option></select></label>
               <label class="span-4"><span class="sr-only">Estructura organizacional</span><select name="estructura"><option value="">Sin estructura seleccionada</option></select></label>
             </fieldset>
 
-            <label><span class="sr-only">Centro de Servicio</span><input name="centroServicio" placeholder="Centro de Servicio"></label>
+            <label><span class="sr-only">Centro de Servicio</span><select name="centroServicio"><option value="">Centro de Servicio</option></select></label>
 
             <fieldset class="employee-section">
               <legend>Clasificacion presupuestaria</legend>
-              <label><span class="sr-only">Fondo</span><input name="fondo" placeholder="Fondo"></label>
-              <label><span class="sr-only">Programa</span><input name="programa" placeholder="Programa"></label>
-              <label><span class="sr-only">SubProg</span><input name="subprog" placeholder="SubProg"></label>
-              <label><span class="sr-only">Actividad</span><input name="actividad" placeholder="Actividad"></label>
-              <label><span class="sr-only">Clasificacion presupuestaria</span><input name="clasificacionPresupuestaria" placeholder="Clasificacion presupuestaria"></label>
+              <label><span class="sr-only">Fondo</span><select name="fondo"><option value="">Fondo</option></select></label>
+              <label><span class="sr-only">Programa</span><select name="programa"><option value="">Programa</option></select></label>
+              <label><span class="sr-only">SubProg</span><select name="subprog"><option value="">SubProg</option></select></label>
+              <label><span class="sr-only">Actividad</span><select name="actividad"><option value="">Actividad</option></select></label>
+              <label><span class="sr-only">Clasificacion presupuestaria</span><select name="clasificacionPresupuestaria"><option value="">Clasificacion presupuestaria</option></select></label>
             </fieldset>
 
             <fieldset class="employee-section">
@@ -793,12 +802,12 @@
               <label><span class="sr-only">Direccion de residencia</span><input name="direccionResidencia" placeholder="Direccion de residencia"></label>
               <label><span class="sr-only">Sector</span><input name="sector" placeholder="Sector"></label>
               <label><span class="sr-only">Cuenta de banco</span><input name="cuentaBanco" placeholder="Cuenta de banco"></label>
-              <label><span class="sr-only">Edad</span><input name="edad" type="number" min="0" step="1" placeholder="Edad"></label>
+              <label><span class="sr-only">Edad</span><input name="edad" type="number" min="0" step="1" placeholder="Edad" readonly></label>
               <label><span class="sr-only">Fecha de nacimiento</span><input name="fechaNacimiento" type="date"></label>
               <label><span class="sr-only">Nivel de escolaridad</span><input name="nivelEscolaridad" placeholder="Nivel de escolaridad"></label>
-              <label><span class="sr-only">Estado civil</span><input name="estadoCivil" placeholder="Estado civil"></label>
+              <label><span class="sr-only">Estado civil</span><select name="estadoCivil"><option value="">Estado civil</option><option>Soltero/a</option><option>Casado/a</option><option>Union libre</option><option>Divorciado/a</option><option>Viudo/a</option></select></label>
               <label><span class="sr-only">Cantidad de hijos</span><input name="cantidadHijos" type="number" min="0" step="1" placeholder="Cantidad de hijos"></label>
-              <label><span class="sr-only">Tipo de sangre</span><input name="tipoSangre" placeholder="Tipo de sangre"></label>
+              <label><span class="sr-only">Tipo de sangre</span><select name="tipoSangre"><option value="">Tipo de sangre</option><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></label>
               <label><span class="sr-only">Licencia de conducir</span><input name="licenciaConducir" placeholder="Licencia de conducir"></label>
               <label><span class="sr-only">Otros datos</span><textarea name="otrosDatos" placeholder="Otros datos"></textarea></label>
             </fieldset>
@@ -821,6 +830,8 @@
             <label><span class="sr-only">Recomendacion</span><textarea name="recomendacion" placeholder="Recomendacion"></textarea></label>
             <label><span class="sr-only">Nota</span><textarea name="nota" placeholder="Nota"></textarea></label>
             <label><span class="sr-only">Activo</span><select name="activo"><option value="Si">Activo</option><option value="No">Inactivo</option></select></label>
+            <label><span class="sr-only">Fecha de salida</span><input name="fechaSalida" type="date" disabled></label>
+            <label><span class="sr-only">Tipo de salida</span><select name="tipoSalida" disabled><option value="">Tipo de salida</option><option value="Desvinculacion">Desvinculaci&oacute;n</option><option>Renuncia</option><option>Despido</option><option>Abandono de trabajo</option><option>Licencia sin sueldo</option><option>Otros</option></select></label>
             <div class="actions span-4 employee-actions">
               <button class="btn" type="submit">Guardar</button>
               <button class="btn secondary" id="newEmployeeBtn" type="button">Nuevo</button>
@@ -2714,6 +2725,7 @@
         ).join("");
         if (selected) employeeStructureSelect.value = selected;
       }
+      populateEmployeeDependentSelects();
       const rows = units.map(unit => {
         const parent = units.find(item => String(item.id) === String(unit.padreId));
         const parentName = unit.padreNombre || parent?.nombre || "";
@@ -2788,16 +2800,214 @@
       positionSelect.value = selectedPosition || "";
     }
 
+    const baseServiceCenters = [
+      "Oficina Edif. Corporativo", "Planta de tratamiento La Dura", "Juan Lopez", "Jamao al Norte", "Las Lagunas", "Villa Trina", "Veragua", "Gaspar Hernandez", "San Victor", "Canca La Reina", "Cayetano Germosen", "Hincha", "Barrio Nuevo Puerto Rico", "Estafeta La Estacion", "Los Lopez", "Monte La Jagua", "Tanque de llenado Guauci", "Jaspa de Bao"
+    ];
+
+    function optionText(select) {
+      return select?.selectedOptions?.[0]?.textContent?.trim() || "";
+    }
+
+    function setSelectOptions(select, placeholder, options, selected = "") {
+      if (!select) return;
+      const normalized = [...new Map(options.filter(Boolean).map(option => {
+        const value = String(option.value ?? option);
+        const label = String(option.label ?? option);
+        return [value, { value, label }];
+      })).values()];
+      select.innerHTML = `<option value="">${escapeHtml(placeholder)}</option>` + normalized.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("");
+      if (selected && !normalized.some(option => option.value === selected)) {
+        select.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+      }
+      select.value = selected || "";
+    }
+
+    function selectByTextOrValue(select, textOrValue = "") {
+      if (!select || !textOrValue) return;
+      const wanted = String(textOrValue);
+      const option = [...select.options].find(item => item.value === wanted || item.textContent.trim() === wanted);
+      if (option) select.value = option.value;
+    }
+
+    function selectedOrCurrent(selected, key, current = "") {
+      return Object.prototype.hasOwnProperty.call(selected, key) ? selected[key] : current;
+    }
+
+    function childrenByType(parentId, type) {
+      return (state.organizationUnits || []).filter(unit => String(unit.tipo || "").toLowerCase() === type.toLowerCase() && (!parentId || String(unit.padreId || "") === String(parentId)));
+    }
+
+    function populateEmployeeStructureSelects(selected = {}) {
+      const form = document.getElementById("employeeForm");
+      if (!form) return;
+      const directions = (state.organizationUnits || []).filter(unit => String(unit.tipo || "").toLowerCase() === "direccion");
+      const directionSelect = form.elements.direccionOrg;
+      setSelectOptions(directionSelect, "Direccion", directions.map(unit => ({ value: unit.id, label: unit.nombre })), selectedOrCurrent(selected, "direccionOrg", directionSelect.value));
+      selectByTextOrValue(directionSelect, selected.direccionOrg);
+      const departments = childrenByType(directionSelect.value, "Departamento");
+      const departmentSelect = form.elements.departamento;
+      setSelectOptions(departmentSelect, "Departamento", departments.map(unit => ({ value: unit.id, label: unit.nombre })), selectedOrCurrent(selected, "departamento", departmentSelect.value));
+      selectByTextOrValue(departmentSelect, selected.departamento);
+      const divisions = childrenByType(departmentSelect.value, "Division");
+      const divisionSelect = form.elements.division;
+      setSelectOptions(divisionSelect, "Division", divisions.map(unit => ({ value: unit.id, label: unit.nombre })), selectedOrCurrent(selected, "division", divisionSelect.value));
+      selectByTextOrValue(divisionSelect, selected.division);
+      const sectionParent = divisionSelect.value || departmentSelect.value || directionSelect.value;
+      const sections = childrenByType(sectionParent, "Seccion");
+      const sectionSelect = form.elements.seccion;
+      setSelectOptions(sectionSelect, "Seccion", sections.map(unit => ({ value: unit.id, label: unit.nombre })), selectedOrCurrent(selected, "seccion", sectionSelect.value));
+      selectByTextOrValue(sectionSelect, selected.seccion);
+      const routeParts = [directionSelect, departmentSelect, divisionSelect, sectionSelect].map(optionText).filter(Boolean);
+      const structureSelect = form.elements.estructura;
+      const route = routeParts.join(" > ");
+      const allRoutes = (state.organizationUnits || []).map(unit => unitRoute(unit)).filter(Boolean);
+      setSelectOptions(structureSelect, "Sin estructura seleccionada", allRoutes, selectedOrCurrent(selected, "estructura", route || structureSelect.value));
+    }
+
+    function budgetSubprog(row) {
+      const match = String(row.actividad || "").match(/\bP\d+\b/i);
+      return match ? match[0].toUpperCase() : "General";
+    }
+
+    function populateEmployeeBudgetSelects(selected = {}) {
+      const form = document.getElementById("employeeForm");
+      if (!form) return;
+      const rows = payrollBudget2026 || [];
+      const fondoSelect = form.elements.fondo;
+      const selectedFund = selectedOrCurrent(selected, "fondo", fondoSelect.value);
+      const normalizedFund = selectedFund && !String(selectedFund).startsWith("Fondo") ? `Fondo ${selectedFund}` : selectedFund;
+      setSelectOptions(fondoSelect, "Fondo", [...new Set(rows.map(row => `Fondo ${row.fondo}`))], normalizedFund);
+      const fondoValue = String(fondoSelect.value || "").replace("Fondo ", "");
+      const byFund = rows.filter(row => !fondoValue || row.fondo === fondoValue);
+      const programaSelect = form.elements.programa;
+      setSelectOptions(programaSelect, "Programa", [...new Set(byFund.map(row => row.programa))], selectedOrCurrent(selected, "programa", programaSelect.value));
+      const byProgram = byFund.filter(row => !programaSelect.value || row.programa === programaSelect.value);
+      const subprogSelect = form.elements.subprog;
+      setSelectOptions(subprogSelect, "SubProg", [...new Set(byProgram.map(budgetSubprog))], selectedOrCurrent(selected, "subprog", subprogSelect.value));
+      const bySubprog = byProgram.filter(row => !subprogSelect.value || budgetSubprog(row) === subprogSelect.value);
+      const activitySelect = form.elements.actividad;
+      setSelectOptions(activitySelect, "Actividad", [...new Set(bySubprog.map(row => row.actividad))], selectedOrCurrent(selected, "actividad", activitySelect.value));
+      const classifierSelect = form.elements.clasificacionPresupuestaria;
+      const classifiers = bySubprog.map(row => `Fondo ${row.fondo} > ${row.programa} > ${budgetSubprog(row)} > ${row.actividad}`);
+      setSelectOptions(classifierSelect, "Clasificacion presupuestaria", classifiers, selectedOrCurrent(selected, "clasificacionPresupuestaria", classifierSelect.value));
+    }
+
+    function populateEmployeeServiceCenters(selected = "") {
+      const form = document.getElementById("employeeForm");
+      if (!form) return;
+      const centers = [...new Set([...baseServiceCenters, ...(state.employees || []).map(employee => employee.centroServicio || employee.data?.centroServicio)].filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      setSelectOptions(form.elements.centroServicio, "Centro de Servicio", centers, selected || form.elements.centroServicio.value);
+    }
+
+    function populateEmployeeVacancies(selected = "") {
+      const form = document.getElementById("employeeForm");
+      if (!form) return;
+      const inactive = (state.employees || []).filter(employee => employee.activo === false);
+      const options = inactive.map(employee => ({ value: employee.id, label: `${employee.codigo || employee.id} - ${employeeFullName(employee)} - ${employee.cargo || employee.data?.cargo || "Sin cargo"}` }));
+      const placeholder = form.elements.tipoIngreso.value === "Sustitucion" ? "(Seleccione empleado inactivo)" : "(Seleccione o VACANTE)";
+      const selectedValue = form.elements.tipoIngreso.value === "Sustitucion" ? (selected || form.elements.vacanteEmpleadoId.value) : "";
+      setSelectOptions(form.elements.vacanteEmpleadoId, placeholder, options, selectedValue);
+      form.elements.vacanteEmpleadoId.disabled = form.elements.tipoIngreso.value !== "Sustitucion";
+    }
+
+    function calculateEmployeeAge() {
+      const form = document.getElementById("employeeForm");
+      const value = form?.elements.fechaNacimiento?.value;
+      if (!form || !value) {
+        if (form?.elements.edad) form.elements.edad.value = "";
+        return;
+      }
+      const birth = new Date(`${value}T00:00:00`);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age -= 1;
+      form.elements.edad.value = Number.isFinite(age) && age >= 0 ? age : "";
+    }
+
+    function calculateEmployeeIncrease() {
+      const form = document.getElementById("employeeForm");
+      if (!form) return;
+      const salary = Number(form.elements.salario.value || 0);
+      const increase = Number(form.elements.aumentoMonto.value || 0);
+      form.elements.aumentoPorcentaje.value = salary > 0 && increase > 0 ? `${((increase / salary) * 100).toFixed(2)}%` : "";
+    }
+
+    function updateEmployeeConditionalFields() {
+      const form = document.getElementById("employeeForm");
+      if (!form) return;
+      const status = form.elements.estatusEmpleado.value;
+      const isInterinato = status === "Interinato";
+      const isSuplencia = status === "Suplencia";
+      const isTemporal = ["Interinato", "Suplencia", "Temporal"].includes(status);
+      form.elements.salarioInterinato.disabled = !isInterinato;
+      form.elements.salarioSuplencia.disabled = !isSuplencia;
+      form.elements.periodoDesde.disabled = !isTemporal;
+      form.elements.periodoHasta.disabled = !isTemporal;
+      if (!isInterinato) form.elements.salarioInterinato.value = "";
+      if (!isSuplencia) form.elements.salarioSuplencia.value = "";
+      if (!isTemporal) {
+        form.elements.periodoDesde.value = "";
+        form.elements.periodoHasta.value = "";
+      }
+      const isInactive = form.elements.activo.value === "No";
+      form.elements.fechaSalida.disabled = !isInactive;
+      form.elements.tipoSalida.disabled = !isInactive;
+      if (!isInactive) {
+        form.elements.fechaSalida.value = "";
+        form.elements.tipoSalida.value = "";
+      }
+      const isEditing = Boolean(form.elements.editingId.value);
+      form.classList.toggle("is-editing", isEditing);
+      form.elements.aumentoMonto.disabled = !isEditing;
+      if (!isEditing) {
+        form.elements.aumentoMonto.value = "";
+        form.elements.aumentoPorcentaje.value = "";
+      }
+      populateEmployeeVacancies();
+      calculateEmployeeIncrease();
+    }
+
+    function populateEmployeeDependentSelects(selected = {}) {
+      populateEmployeeStructureSelects(selected);
+      populateEmployeeBudgetSelects(selected);
+      populateEmployeeServiceCenters(selected.centroServicio);
+      populateEmployeeVacancies(selected.vacanteEmpleadoId);
+      updateEmployeeConditionalFields();
+      calculateEmployeeAge();
+    }
+
     function employeeFromForm(form) {
       const data = Object.fromEntries(new FormData(form));
+      const field = name => form.elements[name]?.value || "";
+      const selectedText = name => optionText(form.elements[name]);
+      if (["Interinato", "Suplencia"].includes(field("estatusEmpleado")) && !field("editingId")) {
+        throw new Error("El interinato o suplencia se registra editando un empleado existente; no crea un empleado nuevo.");
+      }
       return {
         id: data.editingId || makeId(),
         ...data,
-        salario: Number(data.salario || 0),
-        salarioInterinato: Number(data.salarioInterinato || 0),
-        edad: Number(data.edad || 0),
-        cantidadHijos: Number(data.cantidadHijos || 0),
-        activo: data.activo !== "No"
+        direccionOrg: selectedText("direccionOrg"),
+        departamento: selectedText("departamento"),
+        division: selectedText("division"),
+        seccion: selectedText("seccion"),
+        estructura: field("estructura") || [selectedText("direccionOrg"), selectedText("departamento"), selectedText("division"), selectedText("seccion")].filter(Boolean).join(" > "),
+        fondo: field("fondo"),
+        programa: field("programa"),
+        subprog: field("subprog"),
+        actividad: field("actividad"),
+        clasificacionPresupuestaria: field("clasificacionPresupuestaria"),
+        centroServicio: field("centroServicio"),
+        salario: Number(field("salario") || 0),
+        salarioInterinato: Number(field("salarioInterinato") || 0),
+        salarioSuplencia: Number(field("salarioSuplencia") || 0),
+        aumentoMonto: Number(field("aumentoMonto") || 0),
+        aumentoPorcentaje: field("aumentoPorcentaje"),
+        edad: Number(field("edad") || 0),
+        cantidadHijos: Number(field("cantidadHijos") || 0),
+        fechaSalida: field("fechaSalida"),
+        tipoSalida: field("tipoSalida"),
+        activo: field("activo") !== "No"
       };
     }
 
@@ -2807,6 +3017,7 @@
       form.elements.editingId.value = "";
       form.elements.activo.value = "Si";
       populateOccupationalGroups();
+      populateEmployeeDependentSelects();
     }
 
     function editEmployee(id) {
@@ -2814,12 +3025,17 @@
       if (!employee) return;
       const form = document.getElementById("employeeForm");
       const data = { ...(employee.data || {}), ...employee };
+      const legacyStatus = data.estatusEmpleado || data.estatusLaboral || (["Fijo", "Temporal", "Suplencia", "Interinato", "Carrera Administrativa"].includes(data.tipoIngreso) ? data.tipoIngreso : "");
+      data.estatusEmpleado = legacyStatus;
+      data.tipoIngreso = ["Creacion", "Sustitucion"].includes(data.tipoIngreso) ? data.tipoIngreso : "Creacion";
       Object.keys(data).forEach(key => {
         if (form.elements[key] && key !== "activo") form.elements[key].value = data[key] ?? "";
       });
       form.elements.editingId.value = employee.id;
       form.elements.activo.value = employee.activo !== false ? "Si" : "No";
       populateOccupationalGroups(data.grupoOcupacional || "", data.cargo || "");
+      populateEmployeeDependentSelects(data);
+      calculateEmployeeIncrease();
       document.getElementById("recursos-humanos").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -2927,7 +3143,8 @@
         cuentaBanco: String(firstValue(row, ["Cuenta Banco", "Cuenta de banco", "cuentaBanco"]) || "").trim(),
         grupoOcupacional: String(firstValue(row, ["Grupo", "Grupo ocupacional", "grupoOcupacional"]) || "").trim(),
         cargo: String(firstValue(row, ["Cargo", "cargo"]) || "").trim(),
-        tipoIngreso: String(firstValue(row, ["Estatus", "Tipo de ingreso", "tipoIngreso"]) || "").trim(),
+        tipoIngreso: String(firstValue(row, ["Tipo de ingreso", "tipoIngreso"]) || "").trim() || "Creacion",
+        estatusEmpleado: String(firstValue(row, ["Estatus", "estatusLaboral", "estatusEmpleado"]) || "").trim(),
         estatusLaboral: String(firstValue(row, ["Estatus", "estatusLaboral"]) || "").trim(),
         direccionOrg,
         departamento,
@@ -2938,6 +3155,8 @@
         sueldoBruto: numberFromImport(firstValue(row, ["Sueldo Bruto", "sueldoBruto"])),
         suplencia: numberFromImport(firstValue(row, ["Suplencia", "suplencia"])),
         interinato: numberFromImport(firstValue(row, ["Interinato", "interinato"])),
+        salarioSuplencia: numberFromImport(firstValue(row, ["Suplencia", "salarioSuplencia"])),
+        salarioInterinato: numberFromImport(firstValue(row, ["Interinato", "salarioInterinato"])),
         totalSalario: salarioTotal,
         salario: salarioTotal,
         dependientesAdicionales: numberFromImport(firstValue(row, ["Depend. Adicionales", "dependientesAdicionales"])),
@@ -5433,7 +5652,12 @@
     document.getElementById("employeeForm").addEventListener("submit", async event => {
       event.preventDefault();
       if (!can("recursos-humanos")) return alert("El usuario activo no tiene permiso para registrar empleados.");
-      const employee = employeeFromForm(event.currentTarget);
+      let employee;
+      try {
+        employee = employeeFromForm(event.currentTarget);
+      } catch (error) {
+        return alert(error.message || "Revise los datos del empleado.");
+      }
       if (window.supabaseClient) {
         const payload = {
           id: employee.id,
@@ -5475,6 +5699,20 @@
     document.getElementById("employeeImportInput").addEventListener("change", event => {
       importEmployeesFile(event.target.files[0]).catch(error => alert(error.message || "No se pudo importar el Excel."));
     });
+    document.querySelector('#employeeForm select[name="tipoIngreso"]').addEventListener("change", () => updateEmployeeConditionalFields());
+    document.querySelector('#employeeForm select[name="estatusEmpleado"]').addEventListener("change", () => updateEmployeeConditionalFields());
+    document.querySelector('#employeeForm select[name="activo"]').addEventListener("change", () => updateEmployeeConditionalFields());
+    document.querySelector('#employeeForm input[name="fechaNacimiento"]').addEventListener("change", calculateEmployeeAge);
+    document.querySelector('#employeeForm input[name="aumentoMonto"]').addEventListener("input", calculateEmployeeIncrease);
+    document.querySelector('#employeeForm input[name="salario"]').addEventListener("input", calculateEmployeeIncrease);
+    document.querySelector('#employeeForm select[name="direccionOrg"]').addEventListener("change", () => populateEmployeeStructureSelects({ departamento: "", division: "", seccion: "" }));
+    document.querySelector('#employeeForm select[name="departamento"]').addEventListener("change", () => populateEmployeeStructureSelects({ division: "", seccion: "" }));
+    document.querySelector('#employeeForm select[name="division"]').addEventListener("change", () => populateEmployeeStructureSelects({ seccion: "" }));
+    document.querySelector('#employeeForm select[name="seccion"]').addEventListener("change", () => populateEmployeeStructureSelects());
+    document.querySelector('#employeeForm select[name="fondo"]').addEventListener("change", () => populateEmployeeBudgetSelects({ programa: "", subprog: "", actividad: "", clasificacionPresupuestaria: "" }));
+    document.querySelector('#employeeForm select[name="programa"]').addEventListener("change", () => populateEmployeeBudgetSelects({ subprog: "", actividad: "", clasificacionPresupuestaria: "" }));
+    document.querySelector('#employeeForm select[name="subprog"]').addEventListener("change", () => populateEmployeeBudgetSelects({ actividad: "", clasificacionPresupuestaria: "" }));
+    document.querySelector('#employeeForm select[name="actividad"]').addEventListener("change", () => populateEmployeeBudgetSelects({ clasificacionPresupuestaria: "" }));
 
     document.getElementById("vacancyForm").addEventListener("submit", event => {
       event.preventDefault();
