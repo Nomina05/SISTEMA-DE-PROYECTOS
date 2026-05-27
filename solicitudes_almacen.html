@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solicitudes a Almacen</title>
+<style>
+  :root{--bg:#f4f6fb;--ink:#172026;--muted:#64748b;--line:#dbe4f0;--blue:#1d4ed8;--green:#16a34a;--amber:#f97316;--panel:#fff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,"Segoe UI",Arial,sans-serif}
+  body.embedded{background:transparent}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;background:#1d3557;color:#fff}
+  body.embedded header{display:none}
+  main{padding:14px;display:grid;gap:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  body.embedded .panel{box-shadow:none}
+  h1,h2,h3{margin:0;color:#1d3557}
+  h2{font-size:18px;margin-bottom:12px}
+  p{margin:6px 0;color:var(--muted)}
+  form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  label{display:grid;gap:5px;color:#475569;font-size:12px;font-weight:700}
+  input,select,textarea,button{font:inherit}
+  input,select,textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:var(--ink)}
+  textarea{min-height:76px;resize:vertical}
+  button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border:0;border-radius:6px;cursor:pointer}
+  .btn{background:#e2e8f0;color:var(--ink)}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-secondary{background:var(--green);color:#fff}
+  .span-all{grid-column:1/-1}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  .metric{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:11px;background:#fff}
+  .metric small,.request small,.detail small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}
+  .metric strong{display:block;margin-top:5px;font-size:20px}
+  .messages{position:relative;display:flex;justify-content:flex-end}
+  .messages-count{min-width:20px;min-height:20px;border-radius:999px;background:#dc2626;color:#fff;display:inline-grid;place-items:center;font-size:11px}
+  .messages-panel{position:absolute;right:0;top:calc(100% + 6px);z-index:20;width:min(430px,calc(100vw - 28px));padding:12px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 14px 34px rgba(0,0,0,.16)}
+  .message{padding:8px 0;border-bottom:1px solid var(--line)}
+  .message:last-child{border-bottom:0}
+  .request-list{display:grid;gap:10px}
+  .request{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;background:#fff;padding:11px}
+  .request-summary{display:grid;grid-template-columns:minmax(170px,1.5fr) repeat(3,minmax(110px,1fr)) auto;gap:9px;align-items:center}
+  .request strong{display:block;overflow-wrap:anywhere}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}
+  table{width:100%;border-collapse:collapse;background:#fff}
+  th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;white-space:nowrap}
+  th{background:#f8fafc;color:#475569}
+  .modal{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:18px;background:rgba(15,23,42,.56)}
+  .modal-card{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:8px;padding:16px}
+  .modal-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}
+  .detail{border:1px solid var(--line);border-radius:8px;background:#f8fafc;padding:10px}
+  .empty{color:var(--muted);padding:10px}
+  [hidden]{display:none!important}
+  @media(max-width:820px){.request-summary{grid-template-columns:1fr}.span-all{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Solicitudes a Almacen</h1>
+    <p>Registro de articulos solicitados por las areas.</p>
+  </div>
+  <strong id="clock"></strong>
+</header>
+<main>
+  <div class="messages">
+    <button class="btn" id="messagesBtn" type="button">Mensajes <span class="messages-count" id="messagesCount">0</span></button>
+    <div class="messages-panel" id="messagesPanel" hidden></div>
+  </div>
+
+  <section class="panel">
+    <div class="cards">
+      <div class="metric"><small>Solicitudes</small><strong id="totalRequests">0</strong></div>
+      <div class="metric"><small>Urgentes</small><strong id="urgentRequests">0</strong></div>
+      <div class="metric"><small>Articulos catalogados</small><strong id="totalArticles">0</strong></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Nueva solicitud</h2>
+      <form id="requestForm" novalidate>
+        <label>Solicitante<select id="requester" name="solicitanteUsuarioId" required></select></label>
+        <label>Fecha y hora<input name="fechaHora" type="datetime-local" required></label>
+        <label>Nivel de urgencia<select name="prioridad"><option>Normal</option><option>Alta</option><option>Urgente</option></select></label>
+        <label>Buscar articulo<input id="articleSearch" placeholder="Escriba para buscar"></label>
+        <label>Articulo<select id="articleSelect" name="articulo" required></select></label>
+        <label>Cantidad<input name="cantidad" type="number" min="0.01" step="0.01" required></label>
+        <label>Unidad<input id="requestUnit" name="unidad" required placeholder="Ej. Unidad"></label>
+        <label class="span-all">Observacion<textarea name="observacion" placeholder="Detalle adicional de la solicitud"></textarea></label>
+        <div class="actions span-all"><button class="btn-primary" type="submit">Guardar solicitud</button></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Catalogo de articulos</h2>
+      <form id="articleForm" novalidate>
+        <label>Articulo<input name="nombre" required placeholder="Ej. Papel bond"></label>
+        <label>Unidad<input name="unidad" required placeholder="Ej. Resma"></label>
+        <div class="actions span-all"><button class="btn-secondary" type="submit">Agregar articulo</button></div>
+      </form>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Articulo</th><th>Unidad</th></tr></thead>
+          <tbody id="articlesTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Solicitudes registradas</h2>
+    <div class="request-list" id="requestsList"></div>
+  </section>
+</main>
+
+<div class="modal" id="detailModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h2>Detalle de solicitud a almacen</h2>
+        <p id="detailSubtitle"></p>
+      </div>
+      <button class="btn" type="button" onclick="closeDetail()">Cerrar</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<script>
+const REQUESTS_KEY='rrhhSolicitudesAlmacen';
+const ARTICLES_KEY='rrhhArticulosAlmacen';
+const USERS_KEY='usuariosSistema';
+const SESSION_KEY='sesionUsuarioId';
+const number=new Intl.NumberFormat('es-DO');
+let requests=JSON.parse(localStorage.getItem(REQUESTS_KEY)||'[]');
+let articles=JSON.parse(localStorage.getItem(ARTICLES_KEY)||'[]');
+let users=[];
+const makeId=()=>window.crypto?.randomUUID?window.crypto.randomUUID():'ALM-'+Date.now()+Math.random().toString(16).slice(2);
+const safe=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+function activeUser(){
+  const id=sessionStorage.getItem(SESSION_KEY)||localStorage.getItem(SESSION_KEY)||'';
+  return users.find(user=>user.id===id)||null;
+}
+
+function loadUsers(){
+  try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'[]').filter(user=>user.estado!=='Inactivo')}
+  catch{users=[]}
+}
+
+function save(){
+  localStorage.setItem(REQUESTS_KEY,JSON.stringify(requests));
+  localStorage.setItem(ARTICLES_KEY,JSON.stringify(articles));
+}
+
+function readKey(){
+  const user=activeUser();
+  return `rrhh-almacen-read-${user?.login||user?.correo||'anon'}`;
+}
+
+function readIds(){
+  try{return JSON.parse(localStorage.getItem(readKey())||'[]')}catch{return []}
+}
+
+function renderUsers(){
+  const selected=requester.value;
+  requester.innerHTML='<option value="">Seleccione solicitante</option>'+users
+    .map(user=>`<option value="${safe(user.id)}">${safe(user.nombre||user.login||user.correo)} - ${safe(user.rol||'Usuario')}</option>`)
+    .join('');
+  const preferred=selected||activeUser()?.id||'';
+  if(preferred&&users.some(user=>user.id===preferred))requester.value=preferred;
+}
+
+function renderArticleOptions(search=''){
+  const selected=articleSelect.value;
+  const rows=articles.filter(article=>normalize(article.nombre).includes(normalize(search)));
+  articleSelect.innerHTML='<option value="">Seleccione articulo</option>'+rows
+    .map(article=>`<option value="${safe(article.nombre)}" data-unit="${safe(article.unidad)}">${safe(article.nombre)}</option>`)
+    .join('');
+  if(rows.some(article=>article.nombre===selected))articleSelect.value=selected;
+}
+
+function renderArticles(){
+  articlesTable.innerHTML=articles.length?articles
+    .slice().sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))
+    .map(article=>`<tr><td>${safe(article.nombre)}</td><td>${safe(article.unidad)}</td></tr>`)
+    .join(''):'<tr><td colspan="2">Registre articulos para habilitar solicitudes.</td></tr>';
+  totalArticles.textContent=number.format(articles.length);
+  renderArticleOptions(articleSearch.value);
+}
+
+function renderMessages(){
+  const read=new Set(readIds());
+  const unread=requests.filter(row=>!read.has(String(row.id)));
+  messagesCount.textContent=number.format(unread.length);
+  messagesPanel.innerHTML=unread.length?unread.map(row=>`
+    <div class="message">
+      <strong>${safe(row.solicitante||'Sin solicitante')}</strong>
+      <div>${safe(row.articulo)} | ${number.format(row.cantidad||0)} ${safe(row.unidad)}</div>
+      <small>${row.fechaHora?new Date(row.fechaHora).toLocaleString('es-DO'):'-'}</small>
+    </div>`).join(''):'<div class="empty">No hay solicitudes nuevas sin leer.</div>';
+}
+
+function renderRequests(){
+  requestsList.innerHTML=requests.length?requests.map(row=>`
+    <article class="request">
+      <div class="request-summary">
+        <div><small>Solicitante</small><strong>${safe(row.solicitante||'-')}</strong></div>
+        <div><small>Fecha y hora</small>${row.fechaHora?new Date(row.fechaHora).toLocaleString('es-DO'):'-'}</div>
+        <div><small>Articulo</small>${safe(row.articulo||'-')}</div>
+        <div><small>Urgencia</small>${safe(row.prioridad||'Normal')}</div>
+        <button class="btn detail-btn" type="button" data-id="${safe(row.id)}">Mostrar detalles</button>
+      </div>
+    </article>`).join(''):'<div class="empty">Sin solicitudes registradas.</div>';
+  totalRequests.textContent=number.format(requests.length);
+  urgentRequests.textContent=number.format(requests.filter(row=>row.prioridad==='Urgente').length);
+  renderMessages();
+}
+
+function openDetail(id){
+  const row=requests.find(item=>String(item.id)===String(id));
+  if(!row)return;
+  detailSubtitle.textContent=`${row.solicitante||'Sin solicitante'} | ${row.fechaHora?new Date(row.fechaHora).toLocaleString('es-DO'):'-'}`;
+  detailContent.innerHTML=`
+    <div class="detail-grid">
+      <div class="detail"><small>Solicitante</small><strong>${safe(row.solicitante||'-')}</strong></div>
+      <div class="detail"><small>Fecha y hora</small><strong>${row.fechaHora?new Date(row.fechaHora).toLocaleString('es-DO'):'-'}</strong></div>
+      <div class="detail"><small>Nivel de urgencia</small><strong>${safe(row.prioridad||'Normal')}</strong></div>
+      <div class="detail"><small>Articulo</small><strong>${safe(row.articulo||'-')}</strong></div>
+      <div class="detail"><small>Cantidad</small><strong>${number.format(row.cantidad||0)}</strong></div>
+      <div class="detail"><small>Unidad</small><strong>${safe(row.unidad||'-')}</strong></div>
+    </div>
+    <section class="panel" style="margin-top:12px;box-shadow:none">
+      <h3>Observacion</h3>
+      <p>${safe(row.observacion||'Sin observaciones.')}</p>
+    </section>`;
+  detailModal.hidden=false;
+}
+
+function closeDetail(){detailModal.hidden=true}
+
+function setRequestDate(){
+  if(requestForm.elements.fechaHora.value)return;
+  const now=new Date();
+  now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  requestForm.elements.fechaHora.value=now.toISOString().slice(0,16);
+}
+
+articleForm.addEventListener('submit',event=>{
+  event.preventDefault();
+  const data=Object.fromEntries(new FormData(articleForm));
+  const nombre=String(data.nombre||'').trim();
+  const unidad=String(data.unidad||'').trim();
+  if(!nombre||!unidad)return;
+  if(articles.some(article=>normalize(article.nombre)===normalize(nombre))){
+    alert('Ese articulo ya existe en el catalogo.');
+    return;
+  }
+  articles.push({id:makeId(),nombre,unidad});
+  save();
+  articleForm.reset();
+  renderArticles();
+});
+
+requestForm.addEventListener('submit',event=>{
+  event.preventDefault();
+  const data=Object.fromEntries(new FormData(requestForm));
+  const requesterUser=users.find(user=>user.id===data.solicitanteUsuarioId);
+  const row={
+    id:makeId(),
+    solicitanteUsuarioId:data.solicitanteUsuarioId||'',
+    solicitante:requesterUser?.nombre||requesterUser?.login||requesterUser?.correo||'',
+    fechaHora:data.fechaHora||'',
+    articulo:data.articulo||'',
+    cantidad:Number(data.cantidad||0),
+    unidad:data.unidad||'',
+    prioridad:data.prioridad||'Normal',
+    observacion:data.observacion||''
+  };
+  const duplicate=requests.some(item=>item.solicitanteUsuarioId===row.solicitanteUsuarioId&&item.articulo===row.articulo&&String(item.fechaHora).slice(0,10)===String(row.fechaHora).slice(0,10));
+  if(duplicate&&!confirm('Ya existe una solicitud similar de este articulo para este solicitante en esta fecha. Desea continuar?'))return;
+  requests.unshift(row);
+  save();
+  requestForm.reset();
+  renderUsers();
+  setRequestDate();
+  renderRequests();
+});
+
+articleSearch.addEventListener('input',event=>renderArticleOptions(event.target.value));
+articleSelect.addEventListener('change',event=>{
+  const unit=event.target.selectedOptions[0]?.dataset.unit||'';
+  if(unit)requestUnit.value=unit;
+});
+requestsList.addEventListener('click',event=>{
+  const button=event.target.closest('.detail-btn');
+  if(button)openDetail(button.dataset.id);
+});
+messagesBtn.addEventListener('click',()=>{
+  messagesPanel.hidden=!messagesPanel.hidden;
+  if(!messagesPanel.hidden){
+    localStorage.setItem(readKey(),JSON.stringify(requests.map(row=>String(row.id))));
+    renderMessages();
+  }
+});
+detailModal.addEventListener('click',event=>{if(event.target===detailModal)closeDetail()});
+setInterval(()=>{
+  const clockEl=document.getElementById('clock');
+  if(clockEl)clockEl.textContent=new Date().toLocaleString('es-DO');
+},1000);
+
+(function init(){
+  if(new URLSearchParams(location.search).get('embedded')==='1')document.body.classList.add('embedded');
+  loadUsers();
+  renderUsers();
+  setRequestDate();
+  renderArticles();
+  renderRequests();
+})();
+</script>
+</body>
+</html>
