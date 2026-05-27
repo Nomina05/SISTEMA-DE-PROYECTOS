@@ -1378,6 +1378,36 @@
       "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes", ...Object.values(rhModulePermissions)],
       "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
+    function parsePermissionCodes(value) {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.flatMap(parsePermissionCodes);
+      if (typeof value !== "string") return [];
+      const text = value.trim();
+      if (!text) return [];
+      if (text.startsWith("[") && text.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(text);
+          return Array.isArray(parsed) ? parsed.flatMap(parsePermissionCodes) : [];
+        } catch (error) {
+          console.warn("No se pudo interpretar permisos_codigos como JSON.", error);
+        }
+      }
+      const pgArray = text.startsWith("{") && text.endsWith("}") ? text.slice(1, -1) : text;
+      return pgArray.split(",").map(code => code.replace(/^"|"$/g, "").trim()).filter(Boolean);
+    }
+
+    function normalizePermissionCodes(...sources) {
+      const seen = new Set();
+      sources.flatMap(parsePermissionCodes).forEach(code => {
+        if (permissionLabels[code]) seen.add(code);
+      });
+      return [...seen];
+    }
+
+    function fallbackPermissionsForRole(role) {
+      if (role === "Administrador") return Object.keys(permissionLabels);
+      return permissionPolicies[role] || permissionPolicies.Consulta || ["dashboard"];
+    }
     const reportPermissions = {
       municipio: "report-municipio",
       contratista: "report-contratista",
@@ -1403,6 +1433,7 @@
     let currentSessionEmail = "";
     let passwordChangeRequired = false;
     let passwordChangeUser = null;
+    let passwordChangeInProgress = false;
     const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
     const inactivityLimitMs = 20 * 60 * 1000;
     let inactivityTimer = null;
@@ -1510,8 +1541,10 @@
     }
 
     function mapUserFromDb(user, permissionMap) {
-      const linkedPermissions = permissionMap[user.id] || [];
-      const cachedPermissions = Array.isArray(user.permisos_codigos) ? user.permisos_codigos : [];
+      const linkedPermissions = normalizePermissionCodes(permissionMap[user.id] || []);
+      const cachedPermissions = normalizePermissionCodes(user.permisos_codigos);
+      const assignedPermissions = normalizePermissionCodes(linkedPermissions, cachedPermissions);
+      const role = user.perfil_base || "Consulta";
       return {
         id: user.id,
         nombre: user.nombre || user.usuario || user.correo,
@@ -1519,23 +1552,55 @@
         correo: user.correo || user.usuario,
         area: user.areas?.nombre || user.area || user.perfil_base || "",
         cargo: user.cargo || "",
-        rol: user.perfil_base || "Consulta",
+        rol: role,
         empleadoRrhh: user.empleado_rrhh || "",
         rolComercial: user.rol_comercial || "",
         notaAcceso: user.nota_acceso || "",
         activo: user.activo !== false,
-        permissions: linkedPermissions.length ? linkedPermissions : cachedPermissions,
+        permissions: assignedPermissions.length ? assignedPermissions : fallbackPermissionsForRole(role),
         requiereCambioPassword: Boolean(user.requiere_cambio_password),
         creado: user.creado_en ? new Date(user.creado_en).toLocaleDateString("es-DO") : ""
       };
     }
 
+    async function loadUserPermissionMap() {
+      const permissionMap = {};
+      if (!window.supabaseClient) return permissionMap;
+
+      const embedded = await window.supabaseClient.from("usuario_permisos").select("usuario_id, permisos(codigo)");
+      if (!embedded.error) {
+        (embedded.data || []).forEach(row => {
+          const codes = normalizePermissionCodes(row.permisos?.codigo);
+          if (!codes.length) return;
+          permissionMap[row.usuario_id] = normalizePermissionCodes(permissionMap[row.usuario_id] || [], codes);
+        });
+        return permissionMap;
+      }
+
+      console.warn("No se pudieron cargar permisos por relación; se intentará lectura directa.", embedded.error);
+      const [linksResult, catalogResult] = await Promise.all([
+        window.supabaseClient.from("usuario_permisos").select("usuario_id, permiso_id"),
+        window.supabaseClient.from("permisos").select("id,codigo")
+      ]);
+      if (linksResult.error || catalogResult.error) {
+        console.warn("No se pudieron cargar permisos vinculados; se usará permisos_codigos y perfil base.", linksResult.error || catalogResult.error);
+        return permissionMap;
+      }
+
+      const catalogById = new Map((catalogResult.data || []).map(permission => [permission.id, permission.codigo]));
+      (linksResult.data || []).forEach(link => {
+        const code = catalogById.get(link.permiso_id);
+        if (!permissionLabels[code]) return;
+        permissionMap[link.usuario_id] = normalizePermissionCodes(permissionMap[link.usuario_id] || [], code);
+      });
+      return permissionMap;
+    }
+
     async function loadSupabaseData() {
       if (!window.supabaseClient) return;
-      const [projectsResult, usersResult, permissionsResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult, employeesResult] = await Promise.all([
+      const [projectsResult, usersResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult, employeesResult] = await Promise.all([
         window.supabaseClient.from("proyectos").select("*, contratistas(nombre)").order("municipio", { ascending: true }),
         window.supabaseClient.from("usuarios").select("*, areas(nombre)").order("nombre", { ascending: true }),
-        window.supabaseClient.from("usuario_permisos").select("usuario_id, permisos(codigo)"),
         window.supabaseClient.from("cubicaciones").select("*").order("fecha", { ascending: false }),
         window.supabaseClient.from("solicitudes_almacen").select("*").order("fecha_hora", { ascending: false }),
         window.supabaseClient.from("articulos_almacen").select("*").order("nombre", { ascending: true }),
@@ -1546,20 +1611,13 @@
       ]);
       if (projectsResult.error) throw projectsResult.error;
       if (usersResult.error) throw usersResult.error;
-      if (permissionsResult.error && !String(permissionsResult.error.message || "").toLowerCase().includes("relation")) {
-        console.warn("No se pudieron cargar permisos vinculados; se usará permisos_codigos como respaldo.", permissionsResult.error);
-      }
       if (warehouseResult.error && !String(warehouseResult.error.message || "").toLowerCase().includes("relation")) throw warehouseResult.error;
       if (warehouseArticlesResult.error && !String(warehouseArticlesResult.error.message || "").toLowerCase().includes("relation")) throw warehouseArticlesResult.error;
       if (alertConfigResult.error && !String(alertConfigResult.error.message || "").toLowerCase().includes("relation")) throw alertConfigResult.error;
       if (catalogsResult.error && !String(catalogsResult.error.message || "").toLowerCase().includes("relation")) throw catalogsResult.error;
       if (orgUnitsResult.error && !String(orgUnitsResult.error.message || "").toLowerCase().includes("relation")) throw orgUnitsResult.error;
       if (employeesResult.error && !String(employeesResult.error.message || "").toLowerCase().includes("relation")) throw employeesResult.error;
-      const permissionMap = {};
-      (permissionsResult.data || []).forEach(row => {
-        permissionMap[row.usuario_id] = permissionMap[row.usuario_id] || [];
-        if (row.permisos?.codigo) permissionMap[row.usuario_id].push(row.permisos.codigo);
-      });
+      const permissionMap = await loadUserPermissionMap();
       state.projects = (projectsResult.data || []).map(mapProjectFromDb);
       state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
       if (alertConfigResult.data) {
@@ -1729,10 +1787,12 @@
 
     async function replaceUserPermissions(userId, permissions) {
       if (!window.supabaseClient || !userId) return;
-      let permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+      const cleanPermissions = normalizePermissionCodes(permissions);
+      await syncUserPermissionCache(userId, cleanPermissions);
+      let permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", cleanPermissions);
       if (permissionRows.error) throw permissionRows.error;
       const foundCodes = new Set((permissionRows.data || []).map(permission => permission.codigo));
-      const missingCodes = permissions.filter(code => !foundCodes.has(code));
+      const missingCodes = cleanPermissions.filter(code => !foundCodes.has(code));
       if (missingCodes.length) {
         const insertedPermissions = await window.supabaseClient.from("permisos").insert(missingCodes.map(code => ({
           codigo: code,
@@ -1747,6 +1807,17 @@
         const links = permissionRows.data.map(permission => ({ usuario_id: userId, permiso_id: permission.id }));
         const linkResult = await window.supabaseClient.from("usuario_permisos").insert(links);
         if (linkResult.error) throw linkResult.error;
+      }
+    }
+
+    async function syncUserPermissionCache(userId, permissions) {
+      if (!window.supabaseClient || !userId) return;
+      const result = await window.supabaseClient
+        .from("usuarios")
+        .update({ permisos_codigos: normalizePermissionCodes(permissions) })
+        .eq("id", userId);
+      if (result.error && !isMissingUserOptionalColumn(result.error)) {
+        console.warn("No se pudo sincronizar permisos_codigos en usuarios.", result.error);
       }
     }
 
@@ -5163,6 +5234,26 @@
       setPasswordMessage("");
     }
 
+    async function markPasswordChangeCompleted(user) {
+      if (!window.supabaseClient) return;
+      const email = String(user?.correo || user?.usuario || currentSessionEmail || "").trim().toLowerCase();
+      const updates = [];
+      if (user?.id) updates.push(window.supabaseClient.from("usuarios").update({ requiere_cambio_password: false }).eq("id", user.id));
+      if (email) updates.push(window.supabaseClient.from("usuarios").update({ requiere_cambio_password: false }).or(`correo.eq.${email},usuario.eq.${email}`));
+      if (!updates.length) return;
+
+      const results = await Promise.all(updates);
+      const failed = results.find(result => result.error);
+      if (failed?.error) throw failed.error;
+
+      state.users.forEach(localUser => {
+        const sameId = user?.id && localUser.id === user.id;
+        const sameEmail = email && [localUser.correo, localUser.usuario].map(value => String(value || "").toLowerCase()).includes(email);
+        if (sameId || sameEmail) localUser.requiereCambioPassword = false;
+      });
+      saveState();
+    }
+
     async function handlePasswordChange(event) {
       event.preventDefault();
       const saveButton = document.getElementById("savePasswordBtn");
@@ -5177,15 +5268,10 @@
         if (password !== confirmation) throw new Error("Las contraseñas no coinciden.");
         saveButton.disabled = true;
         saveButton.textContent = "Guardando...";
+        passwordChangeInProgress = true;
         const { error } = await window.supabaseClient.auth.updateUser({ password });
         if (error) throw error;
-        if (passwordChangeUser?.id) {
-          const updateResult = await window.supabaseClient.from("usuarios").update({ requiere_cambio_password: false }).eq("id", passwordChangeUser.id);
-          if (updateResult.error) throw updateResult.error;
-          const localUser = state.users.find(user => user.id === passwordChangeUser.id);
-          if (localUser) localUser.requiereCambioPassword = false;
-          saveState();
-        }
+        await markPasswordChangeCompleted(passwordChangeUser);
         passwordChangeRequired = false;
         passwordChangeUser = null;
         document.getElementById("cancelPasswordBtn").hidden = false;
@@ -5197,6 +5283,7 @@
       } catch (error) {
         setPasswordMessage(error.message || "No fue posible cambiar la contraseña.", true);
       } finally {
+        passwordChangeInProgress = false;
         saveButton.disabled = false;
         saveButton.textContent = "Guardar contraseña";
       }
@@ -5216,6 +5303,7 @@
         showLogin();
       }
       window.supabaseClient.auth.onAuthStateChange((_event, session) => {
+        if (passwordChangeInProgress && _event === "USER_UPDATED") return;
         if (session) {
           showAuthenticated(session);
         } else {
