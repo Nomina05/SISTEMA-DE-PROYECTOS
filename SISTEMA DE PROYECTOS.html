@@ -160,20 +160,25 @@
     .rh-action { min-height: 58px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f9fbfc; text-align: left; font-weight: 800; }
     .rh-action small { display: block; margin-top: 4px; color: var(--muted); font-weight: 700; }
     #rhTab-empleados > .panel > .page-heading, #rhTab-empleados > .panel > .subtabs { display: none; }
-    .employee-register-panel { padding: 12px; background: #fff; }
+    .employee-register-panel { padding: 14px; background: #fff; }
     .employee-register-panel .rh-module-list { display: none; }
-    .employee-register-panel .panel-head { margin: 0 0 10px; }
+    .employee-register-panel .panel-head { display: none; }
     .employee-register-panel .panel-head h2 { font-size: clamp(21px, 1.6vw, 26px); color: #0d3159; }
     .employee-register-panel .panel-head h2::after { content: ""; display: block; width: 48px; height: 3px; margin-top: 8px; border-radius: 999px; background: var(--blue); }
     .employee-register-panel .panel-head .sub, .employee-register-panel .panel-head .badge { display: none; }
-    .employee-form { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; padding: 10px; border: 1px solid #cfddea; border-radius: 8px; background: var(--surface); }
-    .employee-form label { gap: 5px; font-size: 12px; }
-    .employee-form input, .employee-form select, .employee-form textarea { min-height: 32px; padding: 6px 8px; border-color: #c9d8e6; font-size: 12px; }
-    .employee-form textarea { min-height: 50px; }
-    .employee-form h2 { grid-column: 1 / -1; margin: 2px 0 0; padding: 10px 8px 0; border-top: 1px solid #d8e5f0; color: #102b4a; font-size: 14px; }
+    .employee-form { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding: 0; border: 0; background: transparent; }
+    .employee-form label { min-width: 0; gap: 0; font-size: 12px; }
+    .employee-form input, .employee-form select, .employee-form textarea { min-height: 50px; padding: 9px 11px; border-color: #c9d8e6; border-radius: 7px; font-size: 14px; }
+    .employee-form textarea { min-height: 70px; }
+    .employee-toolbar { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(250px, 1fr) auto auto; gap: 10px; align-items: center; margin-bottom: 2px; }
+    .employee-file input { min-height: 34px; padding: 4px 0; border: 0; background: transparent; }
+    .employee-section { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 13px; border: 1px solid #cfddea; border-radius: 8px; background: var(--surface); }
+    .employee-section legend { padding: 0 0 8px; color: #102b4a; font-size: 15px; font-weight: 900; }
+    .employee-org-section .span-4 { grid-column: 1 / -1; }
     .employee-form .actions { align-items: center; }
     .employee-form .span-2 { grid-column: span 2; }
     .employee-form .span-4 { grid-column: 1 / -1; }
+    .employee-actions { justify-content: flex-start; }
     .warehouse-requests { display: grid; gap: 10px; }
     .warehouse-request { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; padding: 12px; }
     .warehouse-request-summary { display: grid; grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 1fr)) auto; gap: 10px; align-items: center; }
@@ -304,7 +309,8 @@
       .embedded-frame { height: 560px; }
       .rh-workspace { grid-template-columns: 1fr; }
       .ess-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .employee-form { grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); }
+      .employee-form, .employee-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .employee-toolbar { grid-template-columns: 1fr auto auto; }
       table.snip-detail-report { min-width: 1080px; }
       table.snip-group-report { min-width: 1100px; }
     }
@@ -327,7 +333,8 @@
       .panel { padding: 12px; border-radius: 6px; }
       .metric strong { font-size: 16px; }
       .span-2, .span-4 { grid-column: auto; }
-      .employee-form .span-2, .employee-form .span-4 { grid-column: auto; }
+      .employee-form, .employee-section, .employee-toolbar { grid-template-columns: 1fr; }
+      .employee-form .span-2, .employee-form .span-4, .employee-org-section .span-4 { grid-column: auto; }
       .wide { grid-column: auto; }
       .filters input, .filters select { width: 100%; }
       .table-tools { align-items: stretch; }
@@ -743,56 +750,78 @@
           </div>
           <form id="employeeForm" class="form-grid employee-form">
             <input type="hidden" name="editingId">
-            <label class="span-2">Importar Excel<input id="employeeImportInput" type="file" accept=".xlsx,.xls,.csv"></label>
-            <div class="actions span-2">
+            <div class="employee-toolbar">
+              <label class="employee-file"><span class="sr-only">Importar Excel</span><input id="employeeImportInput" type="file" accept=".xlsx,.xls,.csv"></label>
+              <button class="btn" id="employeeImportBtn" type="button">Importar Excel</button>
               <button class="btn secondary" id="employeeTemplateBtn" type="button">Plantilla</button>
             </div>
-            <label>Nombre<input name="nombre" placeholder="Nombre" required></label>
-            <label>Apellido<input name="apellido" placeholder="Apellido" required></label>
-            <label>CÃ©dula<input name="cedula" placeholder="000-0000000-0" required></label>
-            <label>Grupo ocupacional<select name="grupoOcupacional" id="employeeGroupSelect"><option value="">Seleccione grupo</option></select></label>
-            <label class="span-2">Cargo<select name="cargo" id="employeePositionSelect"><option value="">Seleccione cargo</option></select></label>
-            <label>Salario<input name="salario" type="number" min="0" step="0.01" placeholder="Salario"></label>
-            <label>Fecha de ingreso<input name="fechaIngreso" type="date"></label>
-            <label>Tipo de Ingreso<input name="tipoIngreso"></label>
-            <label class="span-2">Estructura organizacional<select name="estructura"><option value="">Sin estructura seleccionada</option></select></label>
-            <label>DirecciÃ³n<input name="direccionOrg"></label>
-            <label>Departamento<input name="departamento"></label>
-            <label>DivisiÃ³n<input name="division"></label>
-            <label>SecciÃ³n<input name="seccion"></label>
-            <label>Centro de Servicio<input name="centroServicio"></label>
-            <label>ClasificaciÃ³n presupuestaria<input name="clasificacionPresupuestaria"></label>
-            <label>Fondo<input name="fondo"></label>
-            <label>Programa<input name="programa"></label>
-            <label>SubProg<input name="subprog"></label>
-            <label>Actividad<input name="actividad"></label>
-            <h2 class="span-4">Datos personales y bancarios</h2>
-            <label class="span-2">DirecciÃ³n de residencia<input name="direccionResidencia"></label>
-            <label>Sector<input name="sector"></label>
-            <label>Cuenta de banco<input name="cuentaBanco"></label>
-            <label>Edad<input name="edad" type="number" min="0" step="1"></label>
-            <label>Fecha de nacimiento<input name="fechaNacimiento" type="date"></label>
-            <label>Nivel de escolaridad<input name="nivelEscolaridad"></label>
-            <label>Estado civil<input name="estadoCivil"></label>
-            <label>Cantidad de hijos<input name="cantidadHijos" type="number" min="0" step="1"></label>
-            <label>Tipo de sangre<input name="tipoSangre"></label>
-            <label>Licencia de conducir<input name="licenciaConducir"></label>
-            <h2 class="span-4">Expediente digital y datos complementarios</h2>
-            <label>Contacto de emergencia<input name="contactoEmergencia"></label>
-            <label>TelÃ©fono de emergencia<input name="telefonoEmergencia"></label>
-            <label>Parentesco<input name="parentesco"></label>
-            <label>Documentos y archivos<input name="documentosArchivos"></label>
-            <label class="span-2">Historial laboral<textarea name="historialLaboral"></textarea></label>
-            <label class="span-2">Historial salarial<textarea name="historialSalarial"></textarea></label>
-            <label class="span-2">Dependientes<textarea name="dependientes"></textarea></label>
-            <label class="span-2">Contratos<textarea name="contratos"></textarea></label>
-            <label class="span-2">Firma digital / referencia<input name="firmaDigital"></label>
-            <label class="span-2">Foto / URL o referencia<input name="fotoReferencia"></label>
-            <label class="span-2">BiometrÃ­a / referencia<input name="biometriaReferencia"></label>
-            <label class="span-2">RecomendaciÃ³n<input name="recomendacion"></label>
-            <label class="span-4">Nota<textarea name="nota"></textarea></label>
-            <label class="permission-check"><input name="activo" type="checkbox" checked>Activo</label>
-            <div class="actions span-4">
+
+            <label><span class="sr-only">Nombre</span><input name="nombre" placeholder="Nombre" required></label>
+            <label><span class="sr-only">Apellido</span><input name="apellido" placeholder="Apellido" required></label>
+            <label><span class="sr-only">Tipo de documento</span><select name="tipoDocumento"><option>Cedula</option><option>Pasaporte</option></select></label>
+            <label><span class="sr-only">Cedula</span><input name="cedula" placeholder="Cedula 000-0000000-0" required></label>
+            <label><span class="sr-only">Grupo ocupacional</span><select name="grupoOcupacional" id="employeeGroupSelect"><option value="">Grupo ocupacional</option></select></label>
+            <label><span class="sr-only">Cargo</span><select name="cargo" id="employeePositionSelect"><option value="">Cargo</option></select></label>
+            <label><span class="sr-only">Salario</span><input name="salario" type="number" min="0" step="0.01" placeholder="Salario"></label>
+            <label><span class="sr-only">Salario Interinato</span><input name="salarioInterinato" type="number" min="0" step="0.01" placeholder="Salario Interinato"></label>
+            <label><span class="sr-only">Fecha de ingreso</span><input name="fechaIngreso" type="date"></label>
+            <label><span class="sr-only">Tipo de Ingreso</span><select name="tipoIngreso"><option value="">Tipo de Ingreso</option><option>Fijo</option><option>Interinato</option><option>Temporal</option><option>Suplencia</option><option>Contratado</option></select></label>
+            <label><span class="sr-only">Estado del empleado</span><select name="estadoEmpleado"><option value="">(Seleccione o VACANTE)</option><option>Ocupado</option><option>Vacante</option></select></label>
+
+            <fieldset class="employee-section employee-org-section">
+              <legend>Estructura organizacional</legend>
+              <label><span class="sr-only">Direccion</span><input name="direccionOrg" placeholder="Direccion"></label>
+              <label><span class="sr-only">Departamento</span><input name="departamento" placeholder="Departamento"></label>
+              <label><span class="sr-only">Division</span><input name="division" placeholder="Division"></label>
+              <label><span class="sr-only">Seccion</span><input name="seccion" placeholder="Seccion"></label>
+              <label class="span-4"><span class="sr-only">Estructura organizacional</span><select name="estructura"><option value="">Sin estructura seleccionada</option></select></label>
+            </fieldset>
+
+            <label><span class="sr-only">Centro de Servicio</span><input name="centroServicio" placeholder="Centro de Servicio"></label>
+
+            <fieldset class="employee-section">
+              <legend>Clasificacion presupuestaria</legend>
+              <label><span class="sr-only">Fondo</span><input name="fondo" placeholder="Fondo"></label>
+              <label><span class="sr-only">Programa</span><input name="programa" placeholder="Programa"></label>
+              <label><span class="sr-only">SubProg</span><input name="subprog" placeholder="SubProg"></label>
+              <label><span class="sr-only">Actividad</span><input name="actividad" placeholder="Actividad"></label>
+              <label><span class="sr-only">Clasificacion presupuestaria</span><input name="clasificacionPresupuestaria" placeholder="Clasificacion presupuestaria"></label>
+            </fieldset>
+
+            <fieldset class="employee-section">
+              <legend>Datos personales y bancarios</legend>
+              <label><span class="sr-only">Direccion de residencia</span><input name="direccionResidencia" placeholder="Direccion de residencia"></label>
+              <label><span class="sr-only">Sector</span><input name="sector" placeholder="Sector"></label>
+              <label><span class="sr-only">Cuenta de banco</span><input name="cuentaBanco" placeholder="Cuenta de banco"></label>
+              <label><span class="sr-only">Edad</span><input name="edad" type="number" min="0" step="1" placeholder="Edad"></label>
+              <label><span class="sr-only">Fecha de nacimiento</span><input name="fechaNacimiento" type="date"></label>
+              <label><span class="sr-only">Nivel de escolaridad</span><input name="nivelEscolaridad" placeholder="Nivel de escolaridad"></label>
+              <label><span class="sr-only">Estado civil</span><input name="estadoCivil" placeholder="Estado civil"></label>
+              <label><span class="sr-only">Cantidad de hijos</span><input name="cantidadHijos" type="number" min="0" step="1" placeholder="Cantidad de hijos"></label>
+              <label><span class="sr-only">Tipo de sangre</span><input name="tipoSangre" placeholder="Tipo de sangre"></label>
+              <label><span class="sr-only">Licencia de conducir</span><input name="licenciaConducir" placeholder="Licencia de conducir"></label>
+              <label><span class="sr-only">Otros datos</span><textarea name="otrosDatos" placeholder="Otros datos"></textarea></label>
+            </fieldset>
+
+            <fieldset class="employee-section">
+              <legend>Expediente digital y datos complementarios</legend>
+              <label><span class="sr-only">Contacto de emergencia</span><input name="contactoEmergencia" placeholder="Contacto de emergencia"></label>
+              <label><span class="sr-only">Telefono de emergencia</span><input name="telefonoEmergencia" placeholder="Telefono de emergencia"></label>
+              <label><span class="sr-only">Parentesco</span><input name="parentesco" placeholder="Parentesco"></label>
+              <label><span class="sr-only">Documentos y archivos</span><textarea name="documentosArchivos" placeholder="Documentos y archivos"></textarea></label>
+              <label><span class="sr-only">Historial laboral</span><textarea name="historialLaboral" placeholder="Historial laboral"></textarea></label>
+              <label><span class="sr-only">Historial salarial</span><textarea name="historialSalarial" placeholder="Historial salarial"></textarea></label>
+              <label><span class="sr-only">Dependientes</span><textarea name="dependientes" placeholder="Dependientes"></textarea></label>
+              <label><span class="sr-only">Contratos</span><textarea name="contratos" placeholder="Contratos"></textarea></label>
+              <label><span class="sr-only">Firma digital / referencia</span><input name="firmaDigital" placeholder="Firma digital / referencia"></label>
+              <label><span class="sr-only">Foto / URL o referencia</span><input name="fotoReferencia" placeholder="Foto / URL o referencia"></label>
+              <label><span class="sr-only">Biometria / referencia</span><input name="biometriaReferencia" placeholder="Biometria / referencia"></label>
+            </fieldset>
+
+            <label><span class="sr-only">Recomendacion</span><textarea name="recomendacion" placeholder="Recomendacion"></textarea></label>
+            <label><span class="sr-only">Nota</span><textarea name="nota" placeholder="Nota"></textarea></label>
+            <label><span class="sr-only">Activo</span><select name="activo"><option value="Si">Activo</option><option value="No">Inactivo</option></select></label>
+            <div class="actions span-4 employee-actions">
               <button class="btn" type="submit">Guardar</button>
               <button class="btn secondary" id="newEmployeeBtn" type="button">Nuevo</button>
               <button class="btn secondary" id="viewEmployeesBtn" type="button">Ver empleados</button>
@@ -2746,13 +2775,13 @@
       const positionSelect = document.getElementById("employeePositionSelect");
       if (!groupSelect || !positionSelect) return;
       const groups = Object.keys(occupationalGroups);
-      groupSelect.innerHTML = `<option value="">Seleccione grupo</option>` + groups.map(group => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
+      groupSelect.innerHTML = `<option value="">Grupo ocupacional</option>` + groups.map(group => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join("");
       if (selectedGroup && !groups.includes(selectedGroup)) {
         groupSelect.innerHTML += `<option value="${escapeHtml(selectedGroup)}">${escapeHtml(selectedGroup)}</option>`;
       }
       groupSelect.value = selectedGroup || "";
       const positions = occupationalGroups[groupSelect.value] || [];
-      positionSelect.innerHTML = `<option value="">Seleccione cargo</option>` + positions.map(position => `<option value="${escapeHtml(position)}">${escapeHtml(position)}</option>`).join("");
+      positionSelect.innerHTML = `<option value="">Cargo</option>` + positions.map(position => `<option value="${escapeHtml(position)}">${escapeHtml(position)}</option>`).join("");
       if (selectedPosition && !positions.includes(selectedPosition)) {
         positionSelect.innerHTML += `<option value="${escapeHtml(selectedPosition)}">${escapeHtml(selectedPosition)}</option>`;
       }
@@ -2765,9 +2794,10 @@
         id: data.editingId || makeId(),
         ...data,
         salario: Number(data.salario || 0),
+        salarioInterinato: Number(data.salarioInterinato || 0),
         edad: Number(data.edad || 0),
         cantidadHijos: Number(data.cantidadHijos || 0),
-        activo: form.querySelector('input[name="activo"]').checked
+        activo: data.activo !== "No"
       };
     }
 
@@ -2775,7 +2805,7 @@
       const form = document.getElementById("employeeForm");
       form.reset();
       form.elements.editingId.value = "";
-      form.elements.activo.checked = true;
+      form.elements.activo.value = "Si";
       populateOccupationalGroups();
     }
 
@@ -2788,7 +2818,7 @@
         if (form.elements[key] && key !== "activo") form.elements[key].value = data[key] ?? "";
       });
       form.elements.editingId.value = employee.id;
-      form.elements.activo.checked = employee.activo !== false;
+      form.elements.activo.value = employee.activo !== false ? "Si" : "No";
       populateOccupationalGroups(data.grupoOcupacional || "", data.cargo || "");
       document.getElementById("recursos-humanos").scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -5437,6 +5467,9 @@
     });
     document.getElementById("viewEmployeesBtn").addEventListener("click", () => {
       document.getElementById("employeesTableWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    document.getElementById("employeeImportBtn").addEventListener("click", () => {
+      document.getElementById("employeeImportInput").click();
     });
     document.getElementById("employeeTemplateBtn").addEventListener("click", downloadEmployeeTemplate);
     document.getElementById("employeeImportInput").addEventListener("change", event => {
