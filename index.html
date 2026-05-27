@@ -116,6 +116,7 @@
     .workload-card strong { display: block; margin-top: 6px; font-size: 20px; }
     .notice-actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .mini-btn { min-height: 28px; padding: 4px 8px; border-radius: 6px; background: #e7edf0; color: var(--ink); font-size: 12px; font-weight: 800; }
+    .mini-btn.danger { background: #ffe4df; color: #9c3128; }
     .mobile-records { display: none; gap: 10px; }
     .mobile-record { padding: 12px; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; background: #fff; }
     .mobile-record strong { display: block; margin-bottom: 6px; }
@@ -3513,24 +3514,63 @@
       ];
     }
 
+    function employeeRequestKey(employee) {
+      return String(employee?.id || employee?.codigo || employee?.cedula || "");
+    }
+
+    function leaveResponsibleArea(tipo) {
+      const value = String(tipo || "").toLowerCase();
+      if (value.includes("vacacion")) return "Recursos Humanos - Organizacion del Trabajo y Compensaciones";
+      if (value.includes("licencia")) return "Recursos Humanos - Registro y Control de Nomina";
+      if (value.includes("permiso")) return "Recursos Humanos - Direccion Recursos Humanos";
+      return "Recursos Humanos";
+    }
+
+    function leaveApproverName() {
+      const user = activeUser();
+      return user?.nombre || user?.usuario || currentSessionEmail || state.activeUser || "Responsable RRHH";
+    }
+
+    function syncLeaveNotification(row, status = "Pendiente") {
+      upsertInternalNotification({
+        level: "Alerta",
+        type: "Solicitud RRHH",
+        reference: row.codigoEmpleado || row.solicitante || row.employeeId || "-",
+        detail: `${row.tipo || "Solicitud"} | ${row.areaResponsable || leaveResponsibleArea(row.tipo)}`
+      }, status);
+      renderNotificationCenter();
+    }
+
+    function leaveStatusActions(row) {
+      const id = escapeHtml(row.id);
+      const buttons = [];
+      if (row.estado !== "En revision") buttons.push(`<button class="mini-btn leave-status-btn" type="button" data-id="${id}" data-status="En revision">En revision</button>`);
+      if (row.estado !== "Aprobada") buttons.push(`<button class="mini-btn leave-status-btn" type="button" data-id="${id}" data-status="Aprobada">Aprobar</button>`);
+      if (row.estado !== "Rechazada") buttons.push(`<button class="mini-btn leave-status-btn danger" type="button" data-id="${id}" data-status="Rechazada">Rechazar</button>`);
+      return buttons.join(" ");
+    }
+
     function renderLeavePanel() {
       const employeeSelect = document.getElementById("leaveEmployeeSelect");
       if (!employeeSelect) return;
       const employees = leaveEmployees();
-      employeeSelect.innerHTML = `<option value="">Empleado</option>` + employees.map((employee, index) => `<option value="${escapeHtml(employee.id)}">${escapeHtml(employeeCode(employee, index))} - ${escapeHtml(employeeFullName(employee))}</option>`).join("");
+      employeeSelect.innerHTML = `<option value="">Empleado</option>` + employees.map(employee => {
+        const key = employeeRequestKey(employee);
+        return `<option value="${escapeHtml(key)}">${escapeHtml(employeeDisplayCode(employee))} - ${escapeHtml(employeeFullName(employee))}</option>`;
+      }).join("");
       const form = document.getElementById("leaveRequestForm");
       if (form && !form.elements.solicitud.value) form.elements.solicitud.value = new Date().toISOString().slice(0, 10);
       const rows = state.essLeaveRequests || [];
       const pending = rows.filter(row => row.estado === "Pendiente").length;
       const approved = rows.filter(row => row.estado === "Aprobada").length;
       const activeLicenses = rows.filter(row => String(row.tipo || "").toLowerCase().includes("licencia") && row.estado !== "Rechazada").length;
-      const balances = employees.map((employee, index) => {
-        const employeeId = String(employee.id);
+      const balances = employees.map(employee => {
+        const employeeId = employeeRequestKey(employee);
         const used = rows
           .filter(row => String(row.employeeId) === employeeId && row.estado === "Aprobada")
           .reduce((total, row) => total + Number(row.dias || 0), 0);
         return {
-          codigo: employeeCode(employee, index),
+          codigo: employeeDisplayCode(employee),
           empleado: employeeFullName(employee),
           fechaIngreso: employee.fechaIngreso || employee.data?.fechaIngreso || "-",
           diasAnuales: 15,
@@ -3548,11 +3588,14 @@
           ["Dias disponibles", totalBalance, "ok"]
         ].map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${number.format(value)}</strong></div>`).join("");
       }
-      renderTable("leaveApprovalsTable", ["Empleado", "Tipo", "Solicitud", "Desde", "Hasta", "Dias", "Estado", "Aprobador", "Motivo", "Accion"], rows.map(row => {
-        const employee = employees.find(item => String(item.id) === String(row.employeeId));
+      renderTable("leaveApprovalsTable", ["Empleado", "Tipo", "Origen", "Area responsable", "Solicitud", "Desde", "Hasta", "Dias", "Estado", "Aprobador", "Motivo", "Accion"], rows.map(row => {
+        const employee = employees.find(item => employeeRequestKey(item) === String(row.employeeId));
+        const employeeLabel = employee ? `${employeeDisplayCode(employee)} - ${employeeFullName(employee)}` : (row.codigoEmpleado || row.employeeId || "-");
         return [
-          escapeHtml(employee ? employeeFullName(employee) : row.employeeId || "-"),
+          escapeHtml(employeeLabel),
           escapeHtml(row.tipo || "-"),
+          escapeHtml(row.origen || "Autoservicio"),
+          escapeHtml(row.areaResponsable || leaveResponsibleArea(row.tipo)),
           escapeHtml(row.solicitud || row.fecha || "-"),
           escapeHtml(row.desde || "-"),
           escapeHtml(row.hasta || "-"),
@@ -3560,7 +3603,7 @@
           alertLevelBadge(row.estado || "Pendiente"),
           escapeHtml(row.aprobador || "-"),
           escapeHtml(row.motivo || "-"),
-          `<button class="mini-btn approve-leave-btn" type="button" data-id="${escapeHtml(row.id)}">Aprobar</button>`
+          leaveStatusActions(row)
         ];
       }));
       renderTable("leaveBalanceTable", ["Codigo", "Empleado", "Fecha ingreso", "Dias anuales", "Dias usados", "Balance disponible"], balances.map(row => [
@@ -3637,7 +3680,7 @@
           ["Tickets abiertos", "0", ""]
         ].map(([label, value, tone]) => `<div class="ess-kpi ${tone}"><small>${label}</small><strong>${value}</strong></div>`).join("");
         renderTable("essPayslipsTable", ["PERIODO", "SALARIO", "DEDUCCIONES", "NETO", "ACCION"], []);
-        renderTable("essLeaveTable", ["TIPO", "DESDE", "HASTA", "DIAS", "ESTADO", "MOTIVO"], []);
+        renderTable("essLeaveTable", ["TIPO", "DESDE", "HASTA", "DIAS", "ESTADO", "AREA", "APROBADOR", "MOTIVO"], []);
         renderTable("essAttendanceTable", ["FECHA", "ESTADO", "ENTRADA", "SALIDA", "HORAS EXTRAS", "NOTA"], []);
         renderTable("essEvaluationsTable", ["PERIODO", "TIPO", "RESULTADO", "EVALUADOR", "FEEDBACK"], []);
         renderTable("essTicketsTable", ["FECHA", "ASUNTO", "CATEGORIA", "PRIORIDAD", "ESTADO", "DETALLE"], []);
@@ -3645,7 +3688,7 @@
         return;
       }
       const data = employee.data || {};
-      const employeeId = String(employee.id || employee.codigo || "EMP737");
+      const employeeId = employeeRequestKey(employee) || "EMP737";
       const salary = Number(employee.salario || data.salario || 13200);
       const deduction = Math.min(780.12, Math.max(salary * 0.0591, 0));
       const leaveRows = (state.essLeaveRequests || []).filter(row => String(row.employeeId) === employeeId);
@@ -3678,8 +3721,15 @@
         money.format(salary - deduction),
         `<button class="mini-btn" type="button">Recibo</button>`
       ]]);
-      renderTable("essLeaveTable", ["TIPO", "DESDE", "HASTA", "DIAS", "ESTADO", "MOTIVO"], leaveRows.map(row => [
-        escapeHtml(row.tipo), escapeHtml(row.desde), escapeHtml(row.hasta), number.format(Number(row.dias || 0)), alertLevelBadge(row.estado || "Pendiente"), escapeHtml(row.motivo || "-")
+      renderTable("essLeaveTable", ["TIPO", "DESDE", "HASTA", "DIAS", "ESTADO", "AREA", "APROBADOR", "MOTIVO"], leaveRows.map(row => [
+        escapeHtml(row.tipo),
+        escapeHtml(row.desde),
+        escapeHtml(row.hasta),
+        number.format(Number(row.dias || 0)),
+        alertLevelBadge(row.estado || "Pendiente"),
+        escapeHtml(row.areaResponsable || leaveResponsibleArea(row.tipo)),
+        escapeHtml(row.aprobador || "-"),
+        escapeHtml(row.motivo || "-")
       ]));
       renderTable("essAttendanceTable", ["FECHA", "ESTADO", "ENTRADA", "SALIDA", "HORAS EXTRAS", "NOTA"], []);
       renderTable("essEvaluationsTable", ["PERIODO", "TIPO", "RESULTADO", "EVALUADOR", "FEEDBACK"], []);
@@ -5197,11 +5247,28 @@
       }
       const data = Object.fromEntries(new FormData(event.currentTarget));
       state.essLeaveRequests = state.essLeaveRequests || [];
-      state.essLeaveRequests.unshift({ id: makeId(), employeeId: String(employee.id || employee.codigo || "EMP737"), fecha: new Date().toISOString(), estado: "Pendiente", ...data });
+      const now = new Date().toISOString();
+      const request = {
+        id: makeId(),
+        employeeId: employeeRequestKey(employee) || "EMP737",
+        codigoEmpleado: employeeDisplayCode(employee),
+        solicitante: employeeFullName(employee),
+        fecha: now,
+        solicitud: now.slice(0, 10),
+        estado: "Pendiente",
+        origen: "Autoservicio",
+        areaResponsable: leaveResponsibleArea(data.tipo),
+        aprobador: "",
+        aprobadoEn: "",
+        ...data
+      };
+      state.essLeaveRequests.unshift(request);
+      syncLeaveNotification(request, "Pendiente");
       audit("Solicitud ESS registrada", `${employeeFullName(employee)} | ${data.tipo}`);
       saveState();
       event.currentTarget.reset();
       renderEmployeeSelfService();
+      renderLeavePanel();
     });
     document.getElementById("essUpdateForm").addEventListener("submit", event => {
       event.preventDefault();
@@ -5247,8 +5314,23 @@
     document.getElementById("leaveRequestForm").addEventListener("submit", event => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(event.currentTarget));
+      const employee = leaveEmployees().find(item => employeeRequestKey(item) === String(data.employeeId));
+      if (!data.aprobador && data.estado === "Aprobada") data.aprobador = leaveApproverName();
       state.essLeaveRequests = state.essLeaveRequests || [];
-      state.essLeaveRequests.unshift({ id: makeId(), employeeId: data.employeeId, fecha: new Date().toISOString(), ...data });
+      const request = {
+        id: makeId(),
+        employeeId: data.employeeId,
+        codigoEmpleado: employee ? employeeDisplayCode(employee) : "",
+        solicitante: employee ? employeeFullName(employee) : data.employeeId,
+        fecha: new Date().toISOString(),
+        origen: "Recursos Humanos",
+        areaResponsable: leaveResponsibleArea(data.tipo),
+        aprobador: data.aprobador || (data.estado === "Aprobada" ? leaveApproverName() : ""),
+        aprobadoEn: data.estado === "Aprobada" ? new Date().toISOString() : "",
+        ...data
+      };
+      state.essLeaveRequests.unshift(request);
+      syncLeaveNotification(request, request.estado === "Aprobada" || request.estado === "Rechazada" ? "Resuelta" : "Pendiente");
       audit("Solicitud de vacaciones registrada", `${data.employeeId} | ${data.tipo} | ${data.dias} dias`);
       saveState();
       event.currentTarget.reset();
@@ -5260,12 +5342,15 @@
       renderLeavePanel();
     });
     document.addEventListener("click", event => {
-      const approveLeaveButton = event.target.closest(".approve-leave-btn");
-      if (!approveLeaveButton) return;
-      const row = (state.essLeaveRequests || []).find(item => item.id === approveLeaveButton.dataset.id);
+      const statusButton = event.target.closest(".leave-status-btn");
+      if (!statusButton) return;
+      const row = (state.essLeaveRequests || []).find(item => item.id === statusButton.dataset.id);
       if (row) {
-        row.estado = "Aprobada";
-        row.aprobador = row.aprobador || state.activeUser || "Administrador";
+        row.estado = statusButton.dataset.status || "Pendiente";
+        row.aprobador = row.estado === "Pendiente" ? "" : leaveApproverName();
+        row.aprobadoEn = row.estado === "Aprobada" ? new Date().toISOString() : "";
+        row.areaResponsable = row.areaResponsable || leaveResponsibleArea(row.tipo);
+        syncLeaveNotification(row, row.estado === "Aprobada" || row.estado === "Rechazada" ? "Resuelta" : "Pendiente");
         saveState();
         renderLeavePanel();
         renderEmployeeSelfService();
