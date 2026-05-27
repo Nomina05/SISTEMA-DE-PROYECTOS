@@ -657,7 +657,8 @@
           <h2>Panel de Usuarios</h2>
           <form id="userForm" class="form-grid">
             <input type="hidden" name="editingUserId" id="editingUserId">
-            <label class="span-2">Vincular empleado RRHH<input name="empleadoRrhh" placeholder="Seleccione o escriba el empleado"></label>
+            <label class="span-2">Vincular empleado RRHH<input name="empleadoRrhh" id="userEmployeeSearch" list="rrhhEmployeeOptions" placeholder="Buscar por codigo, nombre, cedula o cargo"></label>
+            <datalist id="rrhhEmployeeOptions"></datalist>
             <label>Nombre completo<input name="nombre" required></label>
             <label>Usuario<input name="usuario" required></label>
             <label>Correo institucional<input name="correo" type="email" required placeholder="usuario@coraamoca.gob.do"></label>
@@ -1324,10 +1325,45 @@
       "report-inconsistencias": "Reporte de inconsistencias",
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
-      "report-snip": "Reporte por cÃ³digo SNIP"
+      "report-snip": "Reporte por cÃ³digo SNIP",
+      "rrhh-resumen": "RRHH: Resumen ejecutivo",
+      "rrhh-empleados": "RRHH: Empleados",
+      "rrhh-reclutamiento": "RRHH: Reclutamiento",
+      "rrhh-asistencia": "RRHH: Asistencia y tiempo",
+      "rrhh-nomina": "RRHH: NÃ³mina",
+      "rrhh-vacaciones": "RRHH: Vacaciones y licencias",
+      "rrhh-desempeno": "RRHH: DesempeÃ±o",
+      "rrhh-capacitacion": "RRHH: CapacitaciÃ³n",
+      "rrhh-beneficios": "RRHH: Beneficios",
+      "rrhh-legal": "RRHH: Disciplinario y legal",
+      "rrhh-comunicacion": "RRHH: ComunicaciÃ³n interna",
+      "rrhh-autoservicio": "RRHH: Autoservicio",
+      "rrhh-supervisor": "RRHH: Supervisor",
+      "rrhh-analitica": "RRHH: Reportes y analÃ­tica",
+      "rrhh-configuracion": "RRHH: ConfiguraciÃ³n",
+      "rrhh-ia": "RRHH: IA y automatizaciÃ³n"
+    };
+    const rhModulePermissions = {
+      resumen: "rrhh-resumen",
+      empleados: "rrhh-empleados",
+      reclutamiento: "rrhh-reclutamiento",
+      asistencia: "rrhh-asistencia",
+      nomina: "rrhh-nomina",
+      vacaciones: "rrhh-vacaciones",
+      desempeno: "rrhh-desempeno",
+      capacitacion: "rrhh-capacitacion",
+      beneficios: "rrhh-beneficios",
+      legal: "rrhh-legal",
+      comunicacion: "rrhh-comunicacion",
+      autoservicio: "rrhh-autoservicio",
+      supervisor: "rrhh-supervisor",
+      analitica: "rrhh-analitica",
+      configuracion: "rrhh-configuracion",
+      ia: "rrhh-ia"
     };
     const permissionGroups = {
       "NavegaciÃ³n": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "estructura", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
+      "Recursos Humanos por mÃ³dulo": Object.values(rhModulePermissions),
       "GestiÃ³n": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
       "Solicitudes de Compras": ["compras-datos", "finanzas-pagos-compras"],
       "AlmacÃ©n e inventario": ["warehouse-create", "inventory-edit"],
@@ -1339,7 +1375,7 @@
       "DirecciÃ³n TÃ©cnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
       "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
       "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes"],
+      "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes", ...Object.values(rhModulePermissions)],
       "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     const reportPermissions = {
@@ -1688,12 +1724,17 @@
 
     async function replaceUserPermissions(userId, permissions) {
       if (!window.supabaseClient || !userId) return;
-      const permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
+      let permissionRows = await window.supabaseClient.from("permisos").select("id,codigo").in("codigo", permissions);
       if (permissionRows.error) throw permissionRows.error;
       const foundCodes = new Set((permissionRows.data || []).map(permission => permission.codigo));
       const missingCodes = permissions.filter(code => !foundCodes.has(code));
       if (missingCodes.length) {
-        throw new Error(`Faltan permisos en Supabase: ${missingCodes.join(", ")}. Ejecute la migraciÃ³n de permisos antes de asignarlos.`);
+        const insertedPermissions = await window.supabaseClient.from("permisos").insert(missingCodes.map(code => ({
+          codigo: code,
+          nombre: permissionLabels[code] || code
+        }))).select("id,codigo");
+        if (insertedPermissions.error) throw insertedPermissions.error;
+        permissionRows = { data: [...(permissionRows.data || []), ...(insertedPermissions.data || [])] };
       }
       const deleteResult = await window.supabaseClient.from("usuario_permisos").delete().eq("usuario_id", userId);
       if (deleteResult.error) throw deleteResult.error;
@@ -1755,6 +1796,78 @@
       if (nameEl) nameEl.textContent = profile.name;
       if (roleEl) roleEl.textContent = profile.role;
       if (emailEl) emailEl.textContent = profile.email;
+    }
+
+    function isFullAccessUser(user = activeUser()) {
+      return Boolean(user?.rol === "Administrador" || adminEmails.includes(String(currentSessionEmail || "").toLowerCase()));
+    }
+
+    function employeeStructureRoute(employee) {
+      const data = employee?.data || {};
+      return employee?.estructura || data.estructura || [
+        employee?.direccionOrg || data.direccionOrg || data.direccion,
+        employee?.departamento || data.departamento,
+        employee?.division || data.division,
+        employee?.seccion || data.seccion
+      ].filter(Boolean).join(" > ");
+    }
+
+    function employeeOptionLabel(employee) {
+      const code = employeeDisplayCode(employee);
+      const name = employeeFullName(employee);
+      const cedula = employee?.cedula || employee?.data?.cedula || "";
+      const cargo = employee?.cargo || employee?.data?.cargo || "";
+      return `${code} - ${name} | ${cedula} | ${cargo}`;
+    }
+
+    function linkedEmployeeForUser(user) {
+      const linked = normalizeSearch(user?.empleadoRrhh || "");
+      if (!linked) return null;
+      return (state.employees || []).find(employee => {
+        const values = [
+          employeeRequestKey(employee),
+          employeeDisplayCode(employee),
+          employeeFullName(employee),
+          employee?.cedula || employee?.data?.cedula || "",
+          employeeOptionLabel(employee)
+        ].map(normalizeSearch);
+        return values.some(value => value && (value === linked || value.includes(linked) || linked.includes(value)));
+      }) || null;
+    }
+
+    function userHasLineAuthority(user) {
+      const roleText = normalizeSearch(`${user?.cargo || ""} ${user?.rolComercial || ""} ${user?.rol || ""}`);
+      return /director|encargad|supervisor|gerente|jefe|coordinador|administrador/.test(roleText);
+    }
+
+    function employeeInUserLine(employee, user = activeUser()) {
+      if (!user || isFullAccessUser(user)) return true;
+      const linked = linkedEmployeeForUser(user);
+      if (linked && employeeRequestKey(linked) === employeeRequestKey(employee)) return true;
+      if (!userHasLineAuthority(user)) return false;
+      const scope = normalizeSearch(user.area || "");
+      if (!scope) return false;
+      const route = normalizeSearch(employeeStructureRoute(employee));
+      return Boolean(route && (route === scope || route.startsWith(`${scope} >`) || route.includes(scope)));
+    }
+
+    function visibleEmployeesForUser(user = activeUser()) {
+      const employees = state.employees || [];
+      if (!employees.length) return employees;
+      if (!user || isFullAccessUser(user)) return employees;
+      return employees.filter(employee => employeeInUserLine(employee, user));
+    }
+
+    function userHasAnyRhModule(user = activeUser()) {
+      const permissions = normalizedUser(user)?.permissions || [];
+      return Object.values(rhModulePermissions).some(permission => permissions.includes(permission));
+    }
+
+    function canRhTab(tab) {
+      const permission = rhModulePermissions[tab];
+      if (!permission) return can("recursos-humanos");
+      if (can(permission)) return true;
+      return can("recursos-humanos") && !userHasAnyRhModule();
     }
 
     const defaultPaymentApprovalFlow = [
@@ -1831,6 +1944,7 @@
       passwordInput.required = true;
       passwordInput.placeholder = "Clave genÃ©rica";
       form.elements.activo.checked = true;
+      form.elements.empleadoRrhh.value = "";
       form.elements.cargo.required = true;
       form.elements.cargo.placeholder = "Ej. Supervisor de obras";
       document.getElementById("userSubmitBtn").textContent = "Guardar usuario";
@@ -2473,6 +2587,9 @@
       document.querySelectorAll(".tab").forEach(tab => {
         tab.classList.toggle("hidden-by-permission", !can(reportPermissions[tab.dataset.report]));
       });
+      document.querySelectorAll("[data-rh-tab]").forEach(tab => {
+        tab.classList.toggle("hidden-by-permission", !canRhTab(tab.dataset.rhTab));
+      });
       if (!can(currentReportPermission())) {
         const firstReport = [...document.querySelectorAll(".tab")].find(tab => !tab.classList.contains("hidden-by-permission"));
         if (firstReport) {
@@ -2482,6 +2599,11 @@
           renderReport();
         }
       }
+      const activeRhTab = document.querySelector("[data-rh-tab].active");
+      if (activeRhTab && activeRhTab.classList.contains("hidden-by-permission")) {
+        const firstRhTab = [...document.querySelectorAll("[data-rh-tab]")].find(tab => !tab.classList.contains("hidden-by-permission"));
+        if (firstRhTab) showRhTab(firstRhTab.dataset.rhTab);
+      }
       const activeSection = document.querySelector(".section.active");
       if (activeSection && !can(activeSection.id)) {
         const firstNav = [...document.querySelectorAll(".nav-btn")].find(btn => !btn.classList.contains("hidden-by-permission"));
@@ -2490,12 +2612,13 @@
     }
 
     function renderUsers() {
-      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Activo", "Unidad / lÃ­nea de mando", "Cargo", "Rol", "Rol comercial", "Cambio clave", "Permisos", "Creado", "AcciÃ³n"], state.users.map(user => {
+      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Empleado RRHH", "Activo", "Unidad / lÃ­nea de mando", "Cargo", "Rol", "Rol comercial", "Cambio clave", "Permisos", "Creado", "AcciÃ³n"], state.users.map(user => {
         const u = normalizedUser(user);
         return [
           escapeHtml(u.nombre),
           escapeHtml(u.usuario),
           escapeHtml(u.correo || u.usuario || "-"),
+          escapeHtml(u.empleadoRrhh || "-"),
           u.activo === false ? alertLevelBadge("CrÃ­tico") : alertLevelBadge("Correcto"),
           escapeHtml(u.area || u.rol || "-"),
           escapeHtml(u.cargo || "-"),
@@ -2507,6 +2630,48 @@
           `<button class="btn secondary edit-user-btn" type="button" data-id="${escapeHtml(u.id)}">Modificar</button>`
         ];
       }));
+    }
+
+    function renderUserEmployeeOptions() {
+      const datalist = document.getElementById("rrhhEmployeeOptions");
+      if (!datalist) return;
+      datalist.innerHTML = (state.employees || []).map(employee => {
+        const route = employeeStructureRoute(employee);
+        return `<option value="${escapeHtml(employeeOptionLabel(employee))}" label="${escapeHtml(route || employeeFullName(employee))}"></option>`;
+      }).join("");
+    }
+
+    function employeeFromUserSearch(value) {
+      const term = normalizeSearch(value);
+      if (!term) return null;
+      return (state.employees || []).find(employee => {
+        const values = [
+          employeeOptionLabel(employee),
+          employeeDisplayCode(employee),
+          employeeFullName(employee),
+          employee?.cedula || employee?.data?.cedula || "",
+          employee?.cargo || employee?.data?.cargo || ""
+        ].map(normalizeSearch);
+        return values.some(candidate => candidate && (candidate === term || candidate.includes(term) || term.includes(candidate)));
+      }) || null;
+    }
+
+    function applyUserEmployeeLink() {
+      const form = document.getElementById("userForm");
+      if (!form) return;
+      const employee = employeeFromUserSearch(form.elements.empleadoRrhh.value);
+      if (!employee) return;
+      form.elements.empleadoRrhh.value = employeeOptionLabel(employee);
+      if (!form.elements.nombre.value) form.elements.nombre.value = employeeFullName(employee);
+      if (!form.elements.cargo.value) form.elements.cargo.value = employee.cargo || employee.data?.cargo || "";
+      const route = employeeStructureRoute(employee);
+      if (route) {
+        const areaSelect = form.elements.area;
+        if (![...areaSelect.options].some(option => option.value === route)) {
+          areaSelect.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(route)}">${escapeHtml(route)}</option>`);
+        }
+        areaSelect.value = route;
+      }
     }
 
     function renderPayments() {
@@ -2741,6 +2906,7 @@
       });
       renderTable("unitsCatalogTable", ["Tipo", "Nombre", "Depende de", "Ruta", "AcciÃ³n"], rows);
       renderTable("structureTreeTable", ["Tipo", "Nombre", "Depende de", "Ruta"], rows.map(row => row.slice(0, 4)));
+      renderUserEmployeeOptions();
     }
 
     function resetUnitForm() {
@@ -3062,7 +3228,7 @@
     }
 
     function renderEmployees() {
-      renderTable("employeesTable", ["Nombre", "Apellido", "Cedula", "Cargo", "Salario", "Fecha ingreso", "Estructura", "Centro", "Activo", "Accion"], (state.employees || []).map(employee => [
+      renderTable("employeesTable", ["Nombre", "Apellido", "Cedula", "Cargo", "Salario", "Fecha ingreso", "Estructura", "Centro", "Activo", "Accion"], visibleEmployeesForUser().map(employee => [
         escapeHtml(employee.nombre || "-"),
         escapeHtml(employee.apellido || "-"),
         escapeHtml(employee.cedula || "-"),
@@ -3277,6 +3443,10 @@
     };
 
     function showRhTab(tab) {
+      if (!canRhTab(tab)) {
+        const firstAllowed = [...document.querySelectorAll("[data-rh-tab]")].find(button => canRhTab(button.dataset.rhTab));
+        if (firstAllowed && firstAllowed.dataset.rhTab !== tab) return showRhTab(firstAllowed.dataset.rhTab);
+      }
       document.querySelectorAll("[data-rh-tab]").forEach(button => button.classList.toggle("active", button.dataset.rhTab === tab));
       document.querySelectorAll('[id^="rhTab-"]').forEach(section => section.classList.remove("active"));
       document.getElementById(`rhTab-${tab}`)?.classList.add("active");
@@ -3312,7 +3482,7 @@
       const total = payrollBudget2026.reduce((sum, row) => sum + Number(row.monto || 0), 0);
       const fondo30 = payrollBudget2026.filter(row => row.fondo === "30").reduce((sum, row) => sum + Number(row.monto || 0), 0);
       const fondo10 = payrollBudget2026.filter(row => row.fondo === "10").reduce((sum, row) => sum + Number(row.monto || 0), 0);
-      const payroll = (state.employees || []).filter(employee => employee.activo !== false).reduce((sum, employee) => sum + Number(employee.salario || employee.data?.salario || 0), 0);
+      const payroll = visibleEmployeesForUser().filter(employee => employee.activo !== false).reduce((sum, employee) => sum + Number(employee.salario || employee.data?.salario || 0), 0);
       return { total, fondo30, fondo10, payroll, disponible: total - payroll };
     }
 
@@ -3445,7 +3615,7 @@
     }
 
     function renderHumanResources() {
-      const employees = state.employees || [];
+      const employees = visibleEmployeesForUser();
       const active = employees.filter(employee => employee.activo !== false).length;
       const inactive = Math.max(employees.length - active, 0);
       const payroll = employees.reduce((total, employee) => total + Number(employee.salario || employee.data?.salario || 0), 0);
@@ -3505,7 +3675,7 @@
     }
 
     function leaveEmployees() {
-      const employees = state.employees || [];
+      const employees = visibleEmployeesForUser();
       if (employees.length) return employees;
       return [
         { id: "EMP737", codigo: "EMP737", nombre: "Abigail", apellido: "Casta\u00f1os Ramirez", fechaIngreso: "2025-03-25" },
@@ -3561,9 +3731,11 @@
       const form = document.getElementById("leaveRequestForm");
       if (form && !form.elements.solicitud.value) form.elements.solicitud.value = new Date().toISOString().slice(0, 10);
       const rows = state.essLeaveRequests || [];
-      const pending = rows.filter(row => row.estado === "Pendiente").length;
-      const approved = rows.filter(row => row.estado === "Aprobada").length;
-      const activeLicenses = rows.filter(row => String(row.tipo || "").toLowerCase().includes("licencia") && row.estado !== "Rechazada").length;
+      const visibleIds = new Set(employees.map(employeeRequestKey));
+      const scopedRows = isFullAccessUser() ? rows : rows.filter(row => visibleIds.has(String(row.employeeId)));
+      const pending = scopedRows.filter(row => row.estado === "Pendiente").length;
+      const approved = scopedRows.filter(row => row.estado === "Aprobada").length;
+      const activeLicenses = scopedRows.filter(row => String(row.tipo || "").toLowerCase().includes("licencia") && row.estado !== "Rechazada").length;
       const balances = employees.map(employee => {
         const employeeId = employeeRequestKey(employee);
         const used = rows
@@ -3588,7 +3760,7 @@
           ["Dias disponibles", totalBalance, "ok"]
         ].map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${number.format(value)}</strong></div>`).join("");
       }
-      renderTable("leaveApprovalsTable", ["Empleado", "Tipo", "Origen", "Area responsable", "Solicitud", "Desde", "Hasta", "Dias", "Estado", "Aprobador", "Motivo", "Accion"], rows.map(row => {
+      renderTable("leaveApprovalsTable", ["Empleado", "Tipo", "Origen", "Area responsable", "Solicitud", "Desde", "Hasta", "Dias", "Estado", "Aprobador", "Motivo", "Accion"], scopedRows.map(row => {
         const employee = employees.find(item => employeeRequestKey(item) === String(row.employeeId));
         const employeeLabel = employee ? `${employeeDisplayCode(employee)} - ${employeeFullName(employee)}` : (row.codigoEmpleado || row.employeeId || "-");
         return [
@@ -3633,7 +3805,8 @@
     }
 
     function essEmployeeList() {
-      return (state.employees || []).length ? state.employees : [defaultEssEmployee()];
+      const employees = visibleEmployeesForUser();
+      return employees.length ? employees : [defaultEssEmployee()];
     }
 
     function essCurrentEmployee() {
@@ -5233,6 +5406,8 @@
     document.querySelectorAll("[data-rh-tab]").forEach(button => {
       button.addEventListener("click", () => showRhTab(button.dataset.rhTab));
     });
+    document.getElementById("userEmployeeSearch").addEventListener("change", applyUserEmployeeLink);
+    document.getElementById("userEmployeeSearch").addEventListener("blur", applyUserEmployeeLink);
     document.getElementById("essEmployeeSelect").addEventListener("change", event => {
       state.essSelectedEmployeeId = event.target.value;
       saveState();
