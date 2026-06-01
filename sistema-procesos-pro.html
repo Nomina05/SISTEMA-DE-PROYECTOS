@@ -113,7 +113,7 @@ body.embedded header,
 body.embedded .nav{display:none}
 body.embedded .layout{display:block}
 body.embedded .main{padding:0}
-body.embedded .embedded-tabs{display:flex}
+body.embedded .embedded-tabs{display:none}
 body.embedded .card,
 body.embedded .proceso,
 body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
@@ -124,7 +124,7 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
 <body>
 
 <header>
-  <b>Solicitudes de Compras</b>
+  <b>Compras y Contrataciones</b>
   <span id="clock"></span>
 </header>
 
@@ -142,7 +142,7 @@ body.embedded .kpi{border:1px solid var(--borde);box-shadow:none}
   <button type="button" id="purchaseMessagesBtn">Mensajes <span class="messages-count" id="purchaseMessagesCount">0</span></button>
   <div class="messages-panel" id="purchaseMessagesPanel" hidden></div>
 </div>
-<div class="embedded-tabs" aria-label="Vistas de solicitudes de compras">
+<div class="embedded-tabs" aria-label="Vistas de compras y contrataciones">
   <button type="button" data-vista="reg" onclick="vista('reg')">Nueva solicitud</button>
   <button type="button" data-vista="dash" onclick="vista('dash')">Dashboard</button>
   <button type="button" data-vista="proc" onclick="vista('proc')">Procesos</button>
@@ -313,9 +313,15 @@ function plazoEtapaHoras(nombre){
 }
 const LIMITE_SIN_AVANCE = 48 * 60 * 60 * 1000;
 let idxGlobal = null;
-const embeddedMode = new URLSearchParams(location.search).get('embedded') === '1';
+const queryParams = new URLSearchParams(location.search);
+const embeddedMode = queryParams.get('embedded') === '1';
+const requestedEmbeddedView = queryParams.get('vista') || '';
+const allowedEmbeddedViews = new Set((queryParams.get('permitidas') || 'reg,dash,proc').split(',').filter(Boolean));
 if(embeddedMode){
   document.body.classList.add('embedded');
+  document.querySelectorAll('.embedded-tabs button').forEach(btn=>{
+    btn.hidden = !allowedEmbeddedViews.has(btn.dataset.vista);
+  });
 }
 
 function cargarUsuariosSistema(){
@@ -473,6 +479,9 @@ async function cargarProcesosSql(){
 
 // ====== VISTA ======
 function vista(v){
+  if(embeddedMode && !allowedEmbeddedViews.has(v)){
+    v = [...allowedEmbeddedViews][0] || 'reg';
+  }
   usuarios.style.display='none'; reg.style.display='none'; dash.style.display='none'; proc.style.display='none';
   document.getElementById(v).style.display='block';
   document.querySelectorAll('.embedded-tabs button').forEach(btn=>btn.classList.toggle('activo', btn.dataset.vista===v));
@@ -482,7 +491,7 @@ function vista(v){
 }
 
 if(embeddedMode){
-  vista('proc');
+  vista(requestedEmbeddedView || [...allowedEmbeddedViews][0] || 'reg');
 }
 
 purchaseMessagesBtn.addEventListener('click',()=>{

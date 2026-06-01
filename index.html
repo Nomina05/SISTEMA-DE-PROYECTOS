@@ -404,7 +404,7 @@
         <button class="nav-btn" data-view="recursos-humanos" onclick="showView('recursos-humanos')">Recursos Humanos</button>
         <button class="nav-btn" data-view="estructura" onclick="showView('estructura')">Estructura</button>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
-        <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Solicitudes de Compras</button>
+        <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Compras y Contrataciones</button>
         <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Solicitudes a Almacén</button>
         <button class="nav-btn" data-view="inventario" onclick="showView('inventario')">Inventario</button>
         <button class="nav-btn" data-view="documentos" onclick="showView('documentos')">Documentos</button>
@@ -1136,8 +1136,19 @@
       </section>
 
       <section class="section" id="solicitudes">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">Gestión corporativa</span>
+            <h1>Panel Corporativo de Compras y Contrataciones</h1>
+          </div>
+        </div>
+        <div class="subtabs" id="purchasingModuleTabs">
+          <button class="subtab" type="button" data-purchase-view="dash" data-permission="compras-dashboard">Dashboard</button>
+          <button class="subtab" type="button" data-purchase-view="reg" data-permission="compras-solicitudes">Nueva solicitud</button>
+          <button class="subtab" type="button" data-purchase-view="proc" data-permission="compras-procesos">Procesos</button>
+        </div>
         <div class="panel">
-          <iframe class="embedded-frame requests-frame" src="sistema-procesos-pro.html?embedded=1" title="Solicitudes de Compras"></iframe>
+          <iframe id="purchasingFrame" class="embedded-frame requests-frame" src="sistema-procesos-pro.html?embedded=1" title="Compras y Contrataciones"></iframe>
         </div>
       </section>
 
@@ -1317,7 +1328,7 @@
       estructura: "Estructura",
       controles: "Controles y alertas",
       registro: "Registro de proyectos",
-      solicitudes: "Solicitudes de Compras",
+      solicitudes: "Compras y Contrataciones",
       almacen: "Solicitudes a Almacén",
       inventario: "Inventario",
       documentos: "Documentos",
@@ -1329,6 +1340,9 @@
       "payment-create": "Registrar cubicaciones",
       "payment-approve": "Aprobar cubicaciones",
       "payment-reject": "Rechazar cubicaciones",
+      "compras-dashboard": "Compras: Ver dashboard",
+      "compras-solicitudes": "Compras: Crear solicitudes",
+      "compras-procesos": "Compras: Ver y gestionar procesos",
       "compras-datos": "Editar datos de Compras",
       "finanzas-pagos-compras": "Registrar pagos de Compras",
       "technical-log": "Bitácora técnica",
@@ -1386,22 +1400,27 @@
       configuracion: "rrhh-configuracion",
       ia: "rrhh-ia"
     };
+    const purchaseModulePermissions = {
+      dash: "compras-dashboard",
+      reg: "compras-solicitudes",
+      proc: "compras-procesos"
+    };
     const permissionGroups = {
       "Navegación": ["dashboard", "tareas", "notificaciones", "usuarios", "recursos-humanos", "estructura", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes"],
       "Recursos Humanos por módulo": Object.values(rhModulePermissions),
       "Gestión": ["users-admin", "backup", "project-edit", "mass-upload", "export-reports"],
-      "Solicitudes de Compras": ["compras-datos", "finanzas-pagos-compras"],
+      "Compras y Contrataciones": [...Object.values(purchaseModulePermissions), "compras-datos", "finanzas-pagos-compras"],
       "Almacén e inventario": ["warehouse-create", "inventory-edit"],
       "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-view", "documents-manage", "notifications-admin"],
       "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
-      "Dirección Técnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
-      "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
-      "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Dirección Técnica": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "compras-dashboard", "compras-procesos", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "report-municipio", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-direccion", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "compras-dashboard", "compras-procesos", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
+      "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "compras-dashboard", "compras-solicitudes", "compras-procesos", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
       "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes", ...Object.values(rhModulePermissions)],
-      "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
+      "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "compras-dashboard", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
     };
     function parsePermissionCodes(value) {
       if (!value) return [];
@@ -2150,6 +2169,47 @@
       return can("recursos-humanos") && !userHasAnyRhModule();
     }
 
+    function userHasAnyPurchasingModule(user = activeUser()) {
+      const permissions = normalizedUser(user)?.permissions || [];
+      return Object.values(purchaseModulePermissions).some(permission => permissions.includes(permission));
+    }
+
+    function canPurchaseView(view) {
+      const permission = purchaseModulePermissions[view];
+      if (!permission) return false;
+      if (can(permission)) return true;
+      return can("solicitudes") && !userHasAnyPurchasingModule();
+    }
+
+    function allowedPurchaseViews() {
+      return Object.keys(purchaseModulePermissions).filter(canPurchaseView);
+    }
+
+    function canAccessPurchasingModule() {
+      return allowedPurchaseViews().length > 0;
+    }
+
+    function showPurchaseView(view) {
+      const allowed = allowedPurchaseViews();
+      const target = allowed.includes(view) ? view : allowed[0];
+      if (!target) return;
+      document.querySelectorAll("[data-purchase-view]").forEach(button => {
+        button.classList.toggle("active", button.dataset.purchaseView === target);
+      });
+      const frame = document.getElementById("purchasingFrame");
+      if (!frame) return;
+      const src = `sistema-procesos-pro.html?embedded=1&vista=${encodeURIComponent(target)}&permitidas=${encodeURIComponent(allowed.join(","))}`;
+      if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
+    }
+
+    function renderPurchasingAccess() {
+      document.querySelectorAll("[data-purchase-view]").forEach(button => {
+        button.classList.toggle("hidden-by-permission", !canPurchaseView(button.dataset.purchaseView));
+      });
+      const active = document.querySelector("[data-purchase-view].active");
+      showPurchaseView(active?.dataset.purchaseView || allowedPurchaseViews()[0]);
+    }
+
     const defaultPaymentApprovalFlow = [
       { estado: "Pendiente técnica", area: "Dirección Técnica", label: "Aprobar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
       { estado: "Pendiente presupuesto", area: "Presupuesto", label: "Aprobar presupuesto", actorKey: "aprobacionPresupuestoPor", dateKey: "aprobacionPresupuestoEn", dbActor: "aprobacion_presupuesto_por", dbDate: "aprobacion_presupuesto_en" },
@@ -2862,7 +2922,8 @@
       document.getElementById("pdfReportBtn").classList.toggle("hidden-by-permission", !can("export-reports"));
       document.getElementById("printReportBtn").classList.toggle("hidden-by-permission", !can("export-reports"));
       document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.toggle("hidden-by-permission", !can(btn.dataset.view));
+        const allowed = btn.dataset.view === "solicitudes" ? canAccessPurchasingModule() : can(btn.dataset.view);
+        btn.classList.toggle("hidden-by-permission", !allowed);
       });
       document.querySelectorAll(".tab").forEach(tab => {
         tab.classList.toggle("hidden-by-permission", !can(reportPermissions[tab.dataset.report]));
@@ -2884,8 +2945,10 @@
         const firstRhTab = [...document.querySelectorAll("[data-rh-tab]")].find(tab => !tab.classList.contains("hidden-by-permission"));
         if (firstRhTab) showRhTab(firstRhTab.dataset.rhTab);
       }
+      renderPurchasingAccess();
       const activeSection = document.querySelector(".section.active");
-      if (activeSection && !can(activeSection.id)) {
+      const activeSectionAllowed = activeSection?.id === "solicitudes" ? canAccessPurchasingModule() : can(activeSection?.id);
+      if (activeSection && !activeSectionAllowed) {
         const firstNav = [...document.querySelectorAll(".nav-btn")].find(btn => !btn.classList.contains("hidden-by-permission"));
         if (firstNav) showView(firstNav.dataset.view);
       }
@@ -5396,12 +5459,13 @@
     }
 
     function showView(view) {
-      if (!can(view)) return;
+      if (view === "solicitudes" ? !canAccessPurchasingModule() : !can(view)) return;
       document.querySelectorAll(".nav-btn, .section").forEach(el => el.classList.remove("active"));
       const button = document.querySelector(`.nav-btn[data-view="${view}"]`);
       if (button) button.classList.add("active");
       document.getElementById(view).classList.add("active");
       if (view === "almacen") prepareWarehouseForm();
+      if (view === "solicitudes") renderPurchasingAccess();
     }
 
     function applySessionUser(session) {
@@ -5847,6 +5911,9 @@
     });
     document.querySelectorAll("[data-rh-tab]").forEach(button => {
       button.addEventListener("click", () => showRhTab(button.dataset.rhTab));
+    });
+    document.querySelectorAll("[data-purchase-view]").forEach(button => {
+      button.addEventListener("click", () => showPurchaseView(button.dataset.purchaseView));
     });
     document.getElementById("userEmployeeSearch").addEventListener("change", applyUserEmployeeLink);
     document.getElementById("userEmployeeSearch").addEventListener("blur", applyUserEmployeeLink);
