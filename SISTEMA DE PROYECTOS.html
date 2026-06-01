@@ -1408,6 +1408,11 @@
       if (role === "Administrador") return Object.keys(permissionLabels);
       return permissionPolicies[role] || permissionPolicies.Consulta || ["dashboard"];
     }
+
+    function isMissingSupabaseRelation(error) {
+      const message = String(error?.message || "").toLowerCase();
+      return message.includes("relation") || message.includes("schema cache") || message.includes("could not find the table");
+    }
     const reportPermissions = {
       municipio: "report-municipio",
       contratista: "report-contratista",
@@ -1434,6 +1439,8 @@
     let passwordChangeRequired = false;
     let passwordChangeUser = null;
     let passwordChangeInProgress = false;
+    let sharedStateHydrated = false;
+    let sharedStateSyncTimer = null;
     const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
     const inactivityLimitMs = 20 * 60 * 1000;
     let inactivityTimer = null;
@@ -1498,9 +1505,59 @@
       return [];
     }
 
+    function sharedStatePayload() {
+      return {
+        recruitmentVacancies: state.recruitmentVacancies || [],
+        recruitmentCandidates: state.recruitmentCandidates || [],
+        recruitmentInterviews: state.recruitmentInterviews || [],
+        essTickets: state.essTickets || [],
+        internalNotifications: state.internalNotifications || [],
+        workflowConfig: state.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }
+      };
+    }
+
+    function applySharedState(data) {
+      const shared = data && typeof data === "object" ? data : {};
+      state.recruitmentVacancies = shared.recruitmentVacancies || [];
+      state.recruitmentCandidates = shared.recruitmentCandidates || [];
+      state.recruitmentInterviews = shared.recruitmentInterviews || [];
+      state.essTickets = shared.essTickets || [];
+      state.internalNotifications = shared.internalNotifications || [];
+      state.workflowConfig = shared.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] };
+    }
+
+    async function syncSharedStateToSupabase() {
+      if (!window.supabaseClient || !sharedStateHydrated) return;
+      const result = await window.supabaseClient
+        .from("sistema_estado_compartido")
+        .upsert({
+          id: "principal",
+          datos: sharedStatePayload(),
+          actualizado_por: currentSessionEmail || state.activeUser || "Sistema"
+        }, { onConflict: "id" });
+      if (result.error) console.warn("No se pudo sincronizar el estado compartido en Supabase.", result.error);
+    }
+
+    function scheduleSharedStateSync() {
+      if (!window.supabaseClient || !sharedStateHydrated) return;
+      if (sharedStateSyncTimer) clearTimeout(sharedStateSyncTimer);
+      sharedStateSyncTimer = setTimeout(() => {
+        sharedStateSyncTimer = null;
+        syncSharedStateToSupabase();
+      }, 350);
+    }
+
     function saveState() {
       localStorage.setItem(stateKey, JSON.stringify(state));
       autoBackup();
+      scheduleSharedStateSync();
+    }
+
+    function resetFormById(id) {
+      const form = document.getElementById(id);
+      if (!form) return null;
+      form.reset();
+      return form;
     }
 
     function autoBackup() {
@@ -1642,7 +1699,7 @@
 
     async function loadSupabaseData() {
       if (!window.supabaseClient) return;
-      const [projectsResult, usersResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult, employeesResult, leaveRequestsResult] = await Promise.all([
+      const [projectsResult, usersResult, cubicacionesResult, warehouseResult, warehouseArticlesResult, alertConfigResult, catalogsResult, orgUnitsResult, employeesResult, leaveRequestsResult, sharedStateResult] = await Promise.all([
         window.supabaseClient.from("proyectos").select("*, contratistas(nombre)").order("municipio", { ascending: true }),
         window.supabaseClient.from("usuarios").select("*, areas(nombre)").order("nombre", { ascending: true }),
         window.supabaseClient.from("cubicaciones").select("*").order("fecha", { ascending: false }),
@@ -1652,7 +1709,8 @@
         window.supabaseClient.from("catalogos_sistema").select("*").order("tipo", { ascending: true }).order("valor", { ascending: true }),
         window.supabaseClient.from("estructura_unidades").select("*").order("ruta", { ascending: true }),
         window.supabaseClient.from("rrhh_empleados").select("*").order("apellido", { ascending: true }),
-        window.supabaseClient.from("rrhh_solicitudes_autoservicio").select("*").order("fecha_creacion", { ascending: false })
+        window.supabaseClient.from("rrhh_solicitudes_autoservicio").select("*").order("fecha_creacion", { ascending: false }),
+        window.supabaseClient.from("sistema_estado_compartido").select("datos").eq("id", "principal").maybeSingle()
       ]);
       if (projectsResult.error) throw projectsResult.error;
       if (usersResult.error) throw usersResult.error;
@@ -1662,7 +1720,8 @@
       if (catalogsResult.error && !String(catalogsResult.error.message || "").toLowerCase().includes("relation")) throw catalogsResult.error;
       if (orgUnitsResult.error && !String(orgUnitsResult.error.message || "").toLowerCase().includes("relation")) throw orgUnitsResult.error;
       if (employeesResult.error && !String(employeesResult.error.message || "").toLowerCase().includes("relation")) throw employeesResult.error;
-      if (leaveRequestsResult.error && !String(leaveRequestsResult.error.message || "").toLowerCase().includes("relation")) throw leaveRequestsResult.error;
+      if (leaveRequestsResult.error && !isMissingSupabaseRelation(leaveRequestsResult.error)) throw leaveRequestsResult.error;
+      if (sharedStateResult.error && !isMissingSupabaseRelation(sharedStateResult.error)) throw sharedStateResult.error;
       const permissionMap = await loadUserPermissionMap();
       state.projects = (projectsResult.data || []).map(mapProjectFromDb);
       state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
@@ -1710,7 +1769,20 @@
         }));
       }
       if (!leaveRequestsResult.error) {
-        state.essLeaveRequests = (leaveRequestsResult.data || []).map(mapLeaveRequestFromDb);
+        const sharedLeaveRequests = (leaveRequestsResult.data || []).map(mapLeaveRequestFromDb);
+        if (sharedLeaveRequests.length) {
+          state.essLeaveRequests = sharedLeaveRequests;
+        } else if ((state.essLeaveRequests || []).length) {
+          const migrationResult = await window.supabaseClient
+            .from("rrhh_solicitudes_autoservicio")
+            .upsert(state.essLeaveRequests.map(leaveRequestToDb), { onConflict: "id" });
+          if (migrationResult.error) console.warn("No se pudieron migrar solicitudes RRHH locales a Supabase.", migrationResult.error);
+        }
+      }
+      if (!sharedStateResult.error) {
+        const sharedData = sharedStateResult.data?.datos || {};
+        if (Object.keys(sharedData).length) applySharedState(sharedData);
+        sharedStateHydrated = true;
       }
       state.audit = state.audit || [];
       const projectKeyByDbId = Object.fromEntries((state.projects || []).map(project => [String(project.dbId || project.id || project.key), project.key]));
@@ -2119,8 +2191,8 @@
     }
 
     function resetUserForm() {
-      const form = document.getElementById("userForm");
-      form.reset();
+      const form = resetFormById("userForm");
+      if (!form) return;
       editingUserId = "";
       document.getElementById("editingUserId").value = "";
       const passwordInput = form.elements.passwordTemporal;
@@ -3096,8 +3168,8 @@
     }
 
     function resetUnitForm() {
-      const form = document.getElementById("unitForm");
-      form.reset();
+      const form = resetFormById("unitForm");
+      if (!form) return;
       form.elements.editingId.value = "";
     }
 
@@ -3366,8 +3438,8 @@
     }
 
     function resetEmployeeForm() {
-      const form = document.getElementById("employeeForm");
-      form.reset();
+      const form = resetFormById("employeeForm");
+      if (!form) return;
       form.elements.editingId.value = "";
       form.elements.activo.value = "Si";
       populateOccupationalGroups();
@@ -3928,7 +4000,7 @@
         .select("*")
         .order("fecha_creacion", { ascending: false });
       if (result.error) {
-        if (!String(result.error.message || "").toLowerCase().includes("relation")) console.warn("No se pudieron actualizar las solicitudes RRHH.", result.error);
+        if (!isMissingSupabaseRelation(result.error)) console.warn("No se pudieron actualizar las solicitudes RRHH.", result.error);
         return;
       }
       state.essLeaveRequests = (result.data || []).map(mapLeaveRequestFromDb);
@@ -5309,7 +5381,7 @@
     function openPasswordModal(required = false, user = null) {
       passwordChangeRequired = required;
       passwordChangeUser = user;
-      document.getElementById("passwordForm").reset();
+      resetFormById("passwordForm");
       setPasswordMessage(required ? "Debe cambiar la contraseña temporal para continuar." : "");
       document.getElementById("cancelPasswordBtn").hidden = required;
       document.getElementById("passwordModal").hidden = false;
@@ -5319,7 +5391,7 @@
     function closePasswordModal() {
       if (passwordChangeRequired) return;
       document.getElementById("passwordModal").hidden = true;
-      document.getElementById("passwordForm").reset();
+      resetFormById("passwordForm");
       setPasswordMessage("");
     }
 
@@ -5365,7 +5437,7 @@
         passwordChangeUser = null;
         document.getElementById("cancelPasswordBtn").hidden = false;
         setPasswordMessage("Contraseña actualizada correctamente.");
-        document.getElementById("passwordForm").reset();
+        resetFormById("passwordForm");
         if (document.getElementById("passwordModal")) {
           setTimeout(closePasswordModal, 900);
         }
@@ -5421,8 +5493,8 @@
     }
 
     function clearProjectFormForNew() {
-      const form = document.getElementById("projectForm");
-      form.reset();
+      const form = resetFormById("projectForm");
+      if (!form) return;
       form.elements.projectKey.value = "";
       form.elements.estatus.value = "";
     }
@@ -5768,7 +5840,7 @@
       }
     });
     document.getElementById("newLeaveRequestBtn").addEventListener("click", () => {
-      document.getElementById("leaveRequestForm").reset();
+      resetFormById("leaveRequestForm");
       renderLeavePanel();
     });
     document.addEventListener("click", async event => {
@@ -5999,12 +6071,12 @@
     });
 
     document.getElementById("editProjectBtn").addEventListener("click", () => {
-      document.getElementById("projectForm").reset();
+      resetFormById("projectForm");
       setProjectMode("edit");
     });
 
     document.getElementById("cancelNewProjectBtn").addEventListener("click", () => {
-      document.getElementById("projectForm").reset();
+      resetFormById("projectForm");
       setProjectMode("idle");
     });
 
@@ -6273,7 +6345,7 @@
       renderReport();
     });
 
-    document.getElementById("newVacancyBtn").addEventListener("click", () => document.getElementById("vacancyForm").reset());
+    document.getElementById("newVacancyBtn").addEventListener("click", () => resetFormById("vacancyForm"));
 
     document.getElementById("candidateForm").addEventListener("submit", event => {
       event.preventDefault();
@@ -6288,7 +6360,7 @@
       renderReport();
     });
 
-    document.getElementById("newCandidateBtn").addEventListener("click", () => document.getElementById("candidateForm").reset());
+    document.getElementById("newCandidateBtn").addEventListener("click", () => resetFormById("candidateForm"));
 
     document.getElementById("interviewForm").addEventListener("submit", event => {
       event.preventDefault();
