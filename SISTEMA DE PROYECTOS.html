@@ -2021,6 +2021,25 @@
       }
     }
 
+    async function adminUpdateUserPassword(userId, password, mustChangePassword) {
+      const cleanPassword = String(password || "");
+      if (!cleanPassword) return;
+      if (cleanPassword.length < 6) throw new Error("La nueva clave de acceso debe tener al menos 6 caracteres.");
+      if (!window.supabaseClient) throw new Error("No hay conexión con Supabase para actualizar la contraseña.");
+      const result = await window.supabaseClient.rpc("admin_actualizar_password_usuario", {
+        p_usuario_id: userId,
+        p_password: cleanPassword,
+        p_requiere_cambio: Boolean(mustChangePassword)
+      });
+      if (result.error) {
+        const message = String(result.error.message || "");
+        if (message.includes("Could not find the function") || message.includes("schema cache")) {
+          throw new Error("Falta ejecutar la migración de contraseñas administrativas en Supabase.");
+        }
+        throw result.error;
+      }
+    }
+
     async function syncUserPermissionCache(userId, permissions) {
       if (!window.supabaseClient || !userId) return;
       const result = await window.supabaseClient
@@ -6217,7 +6236,10 @@
         const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       } catch (loginError) {
-        error.textContent = loginError.message || "No fue posible iniciar sesión.";
+        const message = String(loginError.message || "");
+        error.textContent = /invalid login credentials|registro inv[aá]lido/i.test(message)
+          ? "Correo o contraseña incorrectos. Verifique la clave asignada en Supabase Auth."
+          : (message || "No fue posible iniciar sesión.");
       } finally {
         button.disabled = false;
         button.textContent = "Iniciar sesión";
@@ -6269,6 +6291,7 @@
 
         if (editingUserId) {
           if (window.supabaseClient) {
+            await adminUpdateUserPassword(editingUserId, data.passwordTemporal, mustChangePassword);
             const areaId = await ensureAreaId(data.area);
             const updatePayload = {
               nombre: data.nombre,
@@ -6305,6 +6328,7 @@
           saveState();
           resetUserForm();
           renderAll();
+          if (data.passwordTemporal) alert("Usuario actualizado. La nueva contraseña ya fue sincronizada con Supabase Auth.");
           return;
         }
 
