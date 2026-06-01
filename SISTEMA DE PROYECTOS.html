@@ -283,6 +283,17 @@
     .permission-summary { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 999px; background: #edf3f7; color: var(--ink); font-weight: 800; white-space: nowrap; }
     .permission-check { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #f9fbfc; color: var(--ink); font-weight: 700; }
     .permission-check input { width: 16px; min-height: 16px; accent-color: var(--blue); }
+    .user-admin-layout { display: grid; gap: 12px; }
+    .user-form-section { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 10px; padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .user-form-section h3 { grid-column: 1 / -1; margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); color: #102b4a; font-size: 14px; }
+    .user-palette { grid-column: 1 / -1; display: flex; gap: 7px; flex-wrap: wrap; }
+    .user-palette .btn { min-height: 30px; }
+    .user-summary { grid-column: 1 / -1; padding: 12px; border: 1px solid #bfd3e3; border-left: 4px solid var(--blue); border-radius: 8px; background: #f4f9fd; }
+    .user-summary strong { display: block; color: #102b4a; font-size: 14px; }
+    .user-summary span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .permission-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .permission-toolbar h3 { margin: 0; }
+    .permission-toolbar button { padding: 4px 7px; border-radius: 5px; background: #e7edf0; color: var(--ink); font-size: 11px; font-weight: 800; }
     .hidden-by-permission { display: none !important; }
     .section { display: none; }
     .section.active { display: block; }
@@ -655,22 +666,43 @@
         </div>
         <div class="panel" data-permission="users-admin">
           <h2>Panel de Usuarios</h2>
-          <form id="userForm" class="form-grid">
+          <form id="userForm" class="form-grid user-admin-layout">
             <input type="hidden" name="editingUserId" id="editingUserId">
-            <label class="span-2">Vincular empleado RRHH<input name="empleadoRrhh" id="userEmployeeSearch" list="rrhhEmployeeOptions" placeholder="Buscar por código, nombre, cédula o cargo"></label>
-            <datalist id="rrhhEmployeeOptions"></datalist>
-            <label>Nombre completo<input name="nombre" required></label>
-            <label>Usuario<input name="usuario" required></label>
-            <label>Correo institucional<input name="correo" type="email" required placeholder="usuario@coraamoca.gob.do"></label>
-            <label>Rol<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Recursos Humanos</option><option>Consulta</option></select></label>
-            <label>Rol comercial si aplica<input name="rolComercial" placeholder="Ej. Atención al Cliente"></label>
-            <label class="permission-check"><input name="activo" type="checkbox" checked>Activo</label>
-            <label class="span-2">Unidad organizacional / línea de mando<select name="area" id="workAreaInput" required><option value="">Seleccione unidad</option></select></label>
-            <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
-            <label>Clave de acceso<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Clave genérica" required></label>
-            <label class="span-2">Nota de acceso<input name="notaAcceso" placeholder="Observación interna sobre el acceso"></label>
-            <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
-            <div class="span-4" id="policyPreview"></div>
+            <section class="user-form-section">
+              <h3>1. Identidad y acceso</h3>
+              <label class="span-2">Vincular empleado RRHH<input name="empleadoRrhh" id="userEmployeeSearch" list="rrhhEmployeeOptions" placeholder="Buscar por código, nombre, cédula o cargo"></label>
+              <datalist id="rrhhEmployeeOptions"></datalist>
+              <label>Nombre completo<input name="nombre" required></label>
+              <label>Usuario<input name="usuario" required></label>
+              <label>Correo institucional<input name="correo" type="email" required placeholder="usuario@coraamoca.gob.do"></label>
+              <label>Cargo<input name="cargo" placeholder="Ej. Supervisor de obras" required></label>
+              <label>Rol comercial si aplica<input name="rolComercial" placeholder="Ej. Atención al Cliente"></label>
+              <label class="permission-check"><input name="activo" type="checkbox" checked>Usuario activo</label>
+            </section>
+            <section class="user-form-section">
+              <h3>2. Alcance organizacional</h3>
+              <label class="span-2">Unidad organizacional / línea de mando<select name="area" id="workAreaInput" required><option value="">Seleccione unidad</option></select></label>
+              <label>Alcance de consulta<select name="alcance" id="userScopeSelect"><option value="propio">Solo sus registros</option><option value="unidad">Su unidad y dependencias</option><option value="departamento">Su departamento</option><option value="direccion">Su dirección</option><option value="institucion">Toda la institución</option></select></label>
+            </section>
+            <section class="user-form-section">
+              <h3>3. Perfil base y seguridad</h3>
+              <label>Perfil base<select name="rol" id="roleSelect"><option>Administrador</option><option>Dirección General</option><option>Director</option><option>Encargado de departamento</option><option>Encargado de sección</option><option>Analista o técnico</option><option>Empleado autoservicio</option><option>Dirección Técnica</option><option>Financiera</option><option>Registro</option><option>Recursos Humanos</option><option>Consulta</option></select></label>
+              <label>Clave de acceso<input name="passwordTemporal" type="password" autocomplete="new-password" minlength="6" placeholder="Clave genérica" required></label>
+              <label class="span-2">Nota de acceso<input name="notaAcceso" placeholder="Observación interna sobre el acceso"></label>
+              <label class="permission-check span-2"><input name="requiereCambioPassword" type="checkbox" checked>Solicitar cambio de contraseña en el primer inicio</label>
+            </section>
+            <section class="user-form-section">
+              <h3>4. Plantillas rápidas</h3>
+              <div class="user-palette" id="userPermissionPalette">
+                <button class="btn secondary" type="button" data-permission-preset="rrhh">Aplicar perfil de RRHH</button>
+                <button class="btn secondary" type="button" data-permission-preset="compras">Aplicar perfil de Compras</button>
+                <button class="btn secondary" type="button" data-permission-preset="financiera">Aplicar perfil financiero</button>
+                <button class="btn secondary" type="button" data-permission-preset="tecnica">Aplicar perfil técnico</button>
+                <button class="btn secondary" type="button" data-permission-preset="consulta">Solo lectura</button>
+              </div>
+              <div class="span-4" id="policyPreview"></div>
+            </section>
+            <div class="user-summary" id="userAccessSummary"></div>
             <div class="span-4 actions">
               <button class="btn" id="userSubmitBtn">Guardar usuario</button>
               <button class="btn secondary" id="cancelUserEditBtn" type="button" hidden>Cancelar modificación</button>
@@ -1420,7 +1452,20 @@
       "Financiera": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "compras-dashboard", "compras-procesos", "almacen", "inventario", "documentos", "reportes", "cubicaciones", "payment-create", "payment-approve", "payment-reject", "finanzas-pagos-compras", "documents-view", "notifications-admin", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-snip", "report-inconsistencias"],
       "Registro": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "compras-dashboard", "compras-solicitudes", "compras-procesos", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "project-edit", "payment-create", "technical-log", "documents-view", "documents-manage", "warehouse-create", "inventory-edit", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
       "Recursos Humanos": ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes", ...Object.values(rhModulePermissions)],
-      "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "compras-dashboard", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"]
+      "Consulta": ["dashboard", "tareas", "notificaciones", "controles", "solicitudes", "compras-dashboard", "almacen", "inventario", "documentos", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-pagos", "report-estatus", "report-snip", "report-inconsistencias"],
+      "Dirección General": ["dashboard", "tareas", "notificaciones", "controles", "registro", "solicitudes", "compras-dashboard", "compras-procesos", "almacen", "inventario", "documentos", "cubicaciones", "reportes", "documents-view", "export-reports", "report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"],
+      "Director": ["dashboard", "tareas", "notificaciones", "controles", "documentos", "reportes", "documents-view", "report-ejecutivo", "report-estatus"],
+      "Encargado de departamento": ["dashboard", "tareas", "notificaciones", "controles", "documentos", "documents-view"],
+      "Encargado de sección": ["dashboard", "tareas", "notificaciones", "documentos", "documents-view"],
+      "Analista o técnico": ["dashboard", "tareas", "notificaciones", "documentos", "documents-view"],
+      "Empleado autoservicio": ["dashboard", "notificaciones", "recursos-humanos", "rrhh-autoservicio"]
+    };
+    const permissionPresets = {
+      rrhh: ["dashboard", "tareas", "notificaciones", "recursos-humanos", "estructura", "documentos", "reportes", ...Object.values(rhModulePermissions)],
+      compras: ["dashboard", "tareas", "notificaciones", "solicitudes", "compras-dashboard", "compras-solicitudes", "compras-procesos", "compras-datos", "documentos", "documents-view", "reportes", "report-compras"],
+      financiera: permissionPolicies.Financiera,
+      tecnica: permissionPolicies["Dirección Técnica"],
+      consulta: permissionPolicies.Consulta
     };
     function parsePermissionCodes(value) {
       if (!value) return [];
@@ -1659,6 +1704,7 @@
         empleadoRrhh: user.empleado_rrhh || "",
         rolComercial: user.rol_comercial || "",
         notaAcceso: user.nota_acceso || "",
+        alcance: user.alcance_organizacional || "unidad",
         activo: user.activo !== false,
         permissions: assignedPermissions.length ? assignedPermissions : fallbackPermissionsForRole(role),
         requiereCambioPassword: Boolean(user.requiere_cambio_password),
@@ -1993,7 +2039,7 @@
 
     function isMissingUserOptionalColumn(error) {
       const message = String(error?.message || "").toLowerCase();
-      return ["empleado_rrhh", "rol_comercial", "nota_acceso", "permisos_codigos"].some(column => message.includes(column));
+      return ["empleado_rrhh", "rol_comercial", "nota_acceso", "alcance_organizacional", "permisos_codigos"].some(column => message.includes(column));
     }
 
     function userOptionalPayload(data, permissions = []) {
@@ -2001,6 +2047,7 @@
         empleado_rrhh: data.empleadoRrhh || "",
         rol_comercial: data.rolComercial || "",
         nota_acceso: data.notaAcceso || "",
+        alcance_organizacional: data.alcance || "unidad",
         permisos_codigos: permissions
       };
     }
@@ -2010,6 +2057,7 @@
       delete clone.empleado_rrhh;
       delete clone.rol_comercial;
       delete clone.nota_acceso;
+      delete clone.alcance_organizacional;
       delete clone.permisos_codigos;
       return clone;
     }
@@ -2139,12 +2187,23 @@
       return /director|encargad|supervisor|gerente|jefe|coordinador|administrador/.test(roleText);
     }
 
+    function scopedUserArea(user) {
+      const scope = user?.alcance || "unidad";
+      const routeParts = String(user?.area || "").split(">").map(part => part.trim()).filter(Boolean);
+      if (scope === "institucion") return "";
+      if (scope === "direccion") return routeParts.slice(0, 1).join(" > ");
+      if (scope === "departamento") return routeParts.slice(0, Math.min(2, routeParts.length)).join(" > ");
+      return routeParts.join(" > ");
+    }
+
     function employeeInUserLine(employee, user = activeUser()) {
       if (!user || isFullAccessUser(user)) return true;
       const linked = linkedEmployeeForUser(user);
       if (linked && employeeRequestKey(linked) === employeeRequestKey(employee)) return true;
+      if ((user.alcance || "unidad") === "propio") return false;
+      if (user.alcance === "institucion") return true;
       if (!userHasLineAuthority(user)) return false;
-      const scope = normalizeSearch(user.area || "");
+      const scope = normalizeSearch(scopedUserArea(user));
       if (!scope) return false;
       const route = normalizeSearch(employeeStructureRoute(employee));
       return Boolean(route && (route === scope || route.startsWith(`${scope} >`) || route.includes(scope)));
@@ -2248,10 +2307,10 @@
 
     function renderPermissionChecklist(checkedPermissions) {
       const selected = new Set(checkedPermissions || []);
-      return `<small>Todo el sistema</small><div class="permission-groups">` +
+      return `<small>Permisos dirigidos por módulo</small><div class="permission-groups">` +
         Object.entries(permissionGroups).map(([group, permissions]) => `
           <section class="permission-group">
-            <h3>${group}</h3>
+            <div class="permission-toolbar"><h3>${group}</h3><button type="button" data-toggle-permission-group="${escapeHtml(group)}">${permissions.every(permission => selected.has(permission)) ? "Desmarcar grupo" : "Marcar grupo"}</button></div>
             <div class="permission-checks">
               ${permissions.map(permission => {
                 const checked = selected.has(permission) ? "checked" : "";
@@ -2273,6 +2332,53 @@
       const current = [...document.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
       const permissions = usePolicy || !current.length ? (permissionPolicies[role] || []) : current;
       document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(permissions);
+      renderUserAccessSummary();
+    }
+
+    function renderUserAccessSummary() {
+      const form = document.getElementById("userForm");
+      const target = document.getElementById("userAccessSummary");
+      if (!form || !target) return;
+      const name = form.elements.nombre.value.trim() || "Usuario sin nombre";
+      const cargo = form.elements.cargo.value.trim() || form.elements.rol.value || "Perfil sin definir";
+      const area = form.elements.area.value || "Sin línea de mando seleccionada";
+      const scopeLabels = {
+        propio: "Solo sus propios registros",
+        unidad: "Su unidad y dependencias",
+        departamento: "Su departamento",
+        direccion: "Su dirección",
+        institucion: "Toda la institución"
+      };
+      const permissions = [...form.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
+      const visiblePermissions = permissions.slice(0, 6).map(permission => permissionLabels[permission] || permission);
+      const remainder = Math.max(permissions.length - visiblePermissions.length, 0);
+      target.innerHTML = `<strong>${escapeHtml(name)} · ${escapeHtml(cargo)}</strong>
+        <span>Alcance: ${escapeHtml(scopeLabels[form.elements.alcance.value] || form.elements.alcance.value)} | Línea de mando: ${escapeHtml(area)}</span>
+        <span>Accesos seleccionados: ${permissions.length ? escapeHtml(visiblePermissions.join(", ")) + (remainder ? ` y ${remainder} más` : "") : "Ninguno"}</span>`;
+    }
+
+    function applyPermissionPreset(name) {
+      const permissions = permissionPresets[name] || [];
+      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(permissions);
+      renderUserAccessSummary();
+    }
+
+    function togglePermissionGroup(group) {
+      const permissions = permissionGroups[group] || [];
+      const inputs = permissions.map(permission => document.querySelector(`input[name="permissions"][value="${permission}"]`)).filter(Boolean);
+      const shouldCheck = inputs.some(input => !input.checked);
+      inputs.forEach(input => { input.checked = shouldCheck; });
+      const selected = [...document.querySelectorAll('input[name="permissions"]:checked')].map(input => input.value);
+      document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(selected);
+      renderUserAccessSummary();
+    }
+
+    function recommendedScopeForRole(role) {
+      if (role === "Administrador" || role === "Dirección General") return "institucion";
+      if (role === "Director" || role === "Dirección Técnica" || role === "Financiera" || role === "Recursos Humanos") return "direccion";
+      if (role === "Encargado de departamento") return "departamento";
+      if (role === "Encargado de sección") return "unidad";
+      return "propio";
     }
 
     function resetUserForm() {
@@ -2285,6 +2391,7 @@
       passwordInput.placeholder = "Clave genérica";
       form.elements.activo.checked = true;
       form.elements.empleadoRrhh.value = "";
+      form.elements.alcance.value = "unidad";
       form.elements.cargo.required = true;
       form.elements.cargo.placeholder = "Ej. Supervisor de obras";
       document.getElementById("userSubmitBtn").textContent = "Guardar usuario";
@@ -2311,6 +2418,7 @@
       form.elements.cargo.value = user.cargo || "";
       form.elements.rolComercial.value = user.rolComercial || "";
       form.elements.notaAcceso.value = user.notaAcceso || "";
+      form.elements.alcance.value = user.alcance || "unidad";
       form.elements.activo.checked = user.activo !== false;
       form.elements.cargo.required = false;
       form.elements.cargo.placeholder = "Opcional al modificar";
@@ -2323,6 +2431,7 @@
       document.getElementById("userSubmitBtn").textContent = "Actualizar usuario";
       document.getElementById("cancelUserEditBtn").hidden = false;
       document.getElementById("policyPreview").innerHTML = renderPermissionChecklist(isMasterAdmin ? Object.keys(permissionLabels) : (rawUser.permissions || []));
+      renderUserAccessSummary();
       document.getElementById("usuarios").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -2955,7 +3064,7 @@
     }
 
     function renderUsers() {
-      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Empleado RRHH", "Activo", "Unidad / línea de mando", "Cargo", "Rol", "Rol comercial", "Cambio clave", "Permisos", "Creado", "Acción"], state.users.map(user => {
+      renderTable("usersTable", ["Nombre completo", "Usuario", "Correo institucional", "Empleado RRHH", "Activo", "Unidad / línea de mando", "Alcance", "Cargo", "Perfil base", "Rol comercial", "Cambio clave", "Permisos", "Creado", "Acción"], state.users.map(user => {
         const u = normalizedUser(user);
         return [
           escapeHtml(u.nombre),
@@ -2964,6 +3073,7 @@
           escapeHtml(u.empleadoRrhh || "-"),
           u.activo === false ? alertLevelBadge("Crítico") : alertLevelBadge("Correcto"),
           escapeHtml(u.area || u.rol || "-"),
+          escapeHtml(u.alcance || "unidad"),
           escapeHtml(u.cargo || "-"),
           escapeHtml(u.rol || "-"),
           escapeHtml(u.rolComercial || "-"),
@@ -3018,6 +3128,7 @@
         }
         areaSelect.value = route;
       }
+      renderUserAccessSummary();
     }
 
     function renderPayments() {
@@ -6183,11 +6294,12 @@
               permissions: [...permissions],
               empleadoRrhh: data.empleadoRrhh || "",
               rolComercial: data.rolComercial || "",
-              notaAcceso: data.notaAcceso || ""
+              notaAcceso: data.notaAcceso || "",
+              alcance: data.alcance || "unidad"
             });
           } else {
             const index = state.users.findIndex(user => user.id === editingUserId);
-            if (index >= 0) state.users[index] = { ...state.users[index], nombre: data.nombre, usuario: data.usuario, correo: accessEmail, area: data.area, cargo: data.cargo, rol: data.rol, rolComercial: data.rolComercial, empleadoRrhh: data.empleadoRrhh, notaAcceso: data.notaAcceso, activo: isActive, requiereCambioPassword: mustChangePassword, permissions };
+            if (index >= 0) state.users[index] = { ...state.users[index], nombre: data.nombre, usuario: data.usuario, correo: accessEmail, area: data.area, cargo: data.cargo, rol: data.rol, rolComercial: data.rolComercial, empleadoRrhh: data.empleadoRrhh, notaAcceso: data.notaAcceso, alcance: data.alcance || "unidad", activo: isActive, requiereCambioPassword: mustChangePassword, permissions };
           }
           audit("Usuario modificado", `${data.nombre} (${data.usuario})`);
           saveState();
@@ -6234,10 +6346,11 @@
             permissions: [...permissions],
             empleadoRrhh: data.empleadoRrhh || "",
             rolComercial: data.rolComercial || "",
-            notaAcceso: data.notaAcceso || ""
+            notaAcceso: data.notaAcceso || "",
+            alcance: data.alcance || "unidad"
           });
         } else {
-          state.users.push({ ...data, id: makeId(), correo: accessEmail, passwordTemporal: undefined, requiereCambioPassword: mustChangePassword, activo: isActive, permissions, creado: new Date().toLocaleDateString("es-DO") });
+          state.users.push({ ...data, id: makeId(), correo: accessEmail, passwordTemporal: undefined, alcance: data.alcance || "unidad", requiereCambioPassword: mustChangePassword, activo: isActive, permissions, creado: new Date().toLocaleDateString("es-DO") });
         }
         audit("Usuario creado", `${data.nombre} (${data.usuario})`);
         saveState();
@@ -6792,11 +6905,21 @@
     });
 
     document.getElementById("roleSelect").addEventListener("change", event => {
-      const areaInput = document.getElementById("workAreaInput");
-      if (!areaInput.value || Object.keys(permissionPolicies).includes(areaInput.value)) {
-        areaInput.value = event.target.value;
-      }
+      document.getElementById("userScopeSelect").value = recommendedScopeForRole(event.target.value);
       renderPolicyPreview(true);
+    });
+    document.getElementById("userPermissionPalette").addEventListener("click", event => {
+      const button = event.target.closest("[data-permission-preset]");
+      if (button) applyPermissionPreset(button.dataset.permissionPreset);
+    });
+    document.getElementById("policyPreview").addEventListener("click", event => {
+      const button = event.target.closest("[data-toggle-permission-group]");
+      if (button) togglePermissionGroup(button.dataset.togglePermissionGroup);
+    });
+    document.getElementById("userForm").addEventListener("input", event => {
+      if (event.target.matches('input[name="permissions"], input[name="nombre"], input[name="cargo"], select[name="area"], select[name="alcance"]')) {
+        renderUserAccessSummary();
+      }
     });
     document.getElementById("cancelUserEditBtn").addEventListener("click", resetUserForm);
     document.getElementById("syncAuthUsersBtn").addEventListener("click", () => {
