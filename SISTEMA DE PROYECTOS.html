@@ -1026,7 +1026,32 @@
             <div class="table-wrap" style="margin-top:12px;"><table id="essTicketsTable"></table></div>
           </div>
         </div>
-        <div class="subsection" id="rhTab-supervisor"><div class="rh-panels" data-rh-panel="supervisor"></div></div>
+        <div class="subsection" id="rhTab-supervisor">
+          <div class="page-heading">
+            <div><span class="eyebrow">Recursos Humanos</span><h1>Panel del Supervisor / Manager</h1></div>
+          </div>
+          <div class="rh-kpis" id="supervisorKpis"></div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Aprobar solicitudes</h2>
+            <div class="table-wrap"><table id="supervisorRequestsTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Ver equipo</h2>
+            <div class="table-wrap"><table id="supervisorTeamTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Asistencia del equipo</h2>
+            <div class="table-wrap"><table id="supervisorAttendanceTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>Evaluaciones y gestión de metas</h2>
+            <div class="table-wrap"><table id="supervisorEvaluationsTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <h2>KPIs del departamento</h2>
+            <div class="table-wrap"><table id="supervisorDepartmentKpisTable"></table></div>
+          </div>
+        </div>
         <div class="subsection" id="rhTab-analitica"><div class="rh-panels" data-rh-panel="analitica"></div></div>
         <div class="subsection" id="rhTab-configuracion"><div class="rh-panels" data-rh-panel="configuracion"></div></div>
         <div class="subsection" id="rhTab-ia"><div class="rh-panels" data-rh-panel="ia"></div></div>
@@ -3708,7 +3733,7 @@
       document.querySelectorAll("[data-rh-tab]").forEach(button => button.classList.toggle("active", button.dataset.rhTab === tab));
       document.querySelectorAll('[id^="rhTab-"]').forEach(section => section.classList.remove("active"));
       document.getElementById(`rhTab-${tab}`)?.classList.add("active");
-      if (tab === "vacaciones" || tab === "autoservicio") refreshLeaveRequestsFromSupabase();
+      if (tab === "vacaciones" || tab === "autoservicio" || tab === "supervisor") refreshLeaveRequestsFromSupabase();
     }
 
     function renderRhModulePanel(key, config) {
@@ -3925,6 +3950,7 @@
       renderRecruitment();
       renderEmployeeSelfService();
       renderLeavePanel();
+      renderSupervisorPanel();
     }
 
     function employeeCode(employee, index = 0) {
@@ -4007,6 +4033,7 @@
       saveState();
       renderLeavePanel();
       renderEmployeeSelfService();
+      renderSupervisorPanel();
     }
 
     function leaveStatusActions(row) {
@@ -4084,6 +4111,106 @@
         number.format(row.usados),
         number.format(row.balance)
       ]));
+    }
+
+    function employeeDataList(employee, key) {
+      const value = employee?.data?.[key] || employee?.[key];
+      return Array.isArray(value) ? value : [];
+    }
+
+    function renderSupervisorPanel() {
+      const kpis = document.getElementById("supervisorKpis");
+      if (!kpis) return;
+      const employees = visibleEmployeesForUser();
+      const employeeIds = new Set(employees.map(employeeRequestKey));
+      const requests = (state.essLeaveRequests || []).filter(row => employeeIds.has(String(row.employeeId)));
+      const pendingRequests = requests.filter(row => row.estado === "Pendiente" || row.estado === "En revision");
+      const attendance = employees.flatMap(employee => employeeDataList(employee, "asistencias").map(row => ({
+        employee,
+        fecha: row.fecha || "",
+        estado: row.estado || "Sin registro",
+        entrada: row.entrada || "-",
+        salida: row.salida || "-",
+        horasExtras: row.horasExtras || row.horas_extras || 0,
+        nota: row.nota || ""
+      })));
+      const evaluations = employees.flatMap(employee => employeeDataList(employee, "evaluaciones").map(row => ({
+        employee,
+        periodo: row.periodo || row.fecha || "-",
+        resultado: row.resultado || "-",
+        metasActivas: Number(row.metasActivas || row.metas_activas || 0),
+        avance: Number(row.avance || row.avancePromedio || row.avance_promedio || 0),
+        planesMejora: Number(row.planesMejora || row.planes_mejora || 0)
+      })));
+      const today = new Date().toISOString().slice(0, 10);
+      const attendanceToday = attendance.filter(row => row.fecha === today);
+      const absencesToday = attendanceToday.filter(row => normalizeSearch(row.estado).includes("ausen")).length;
+      const lateToday = attendanceToday.filter(row => normalizeSearch(row.estado).includes("tardan")).length;
+      const averageKpi = evaluations.length
+        ? evaluations.reduce((total, row) => total + Number(row.resultado || row.avance || 0), 0) / evaluations.length
+        : 0;
+      const completedGoals = evaluations.reduce((total, row) => total + (row.avance >= 100 ? 1 : 0), 0);
+      const improvementPlans = evaluations.reduce((total, row) => total + row.planesMejora, 0);
+
+      kpis.innerHTML = [
+        ["Equipo", employees.length, "ok"],
+        ["Asistencia hoy", attendanceToday.length, "ok"],
+        ["Solicitudes pendientes", pendingRequests.length, "bad"],
+        ["KPI promedio", averageKpi.toFixed(1), "ok"]
+      ].map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(String(value))}</strong></div>`).join("");
+
+      renderTable("supervisorRequestsTable", ["Tipo", "Empleado", "Desde", "Hasta", "Días", "Estado", "Motivo", "Acción"], pendingRequests.map(row => {
+        const employee = employees.find(item => employeeRequestKey(item) === String(row.employeeId));
+        return [
+          escapeHtml(row.tipo || "-"),
+          escapeHtml(employee ? `${employeeDisplayCode(employee)} - ${employeeFullName(employee)}` : (row.codigoEmpleado || row.solicitante || "-")),
+          escapeHtml(row.desde || "-"),
+          escapeHtml(row.hasta || "-"),
+          number.format(Number(row.dias || 0)),
+          alertLevelBadge(row.estado || "Pendiente"),
+          escapeHtml(row.motivo || "-"),
+          leaveStatusActions(row)
+        ];
+      }));
+      renderTable("supervisorTeamTable", ["Código", "Empleado", "Cargo", "Dirección", "Departamento", "División", "Sección", "Estado", "Salario"], employees.map(employee => {
+        const data = employee.data || {};
+        return [
+          escapeHtml(employeeDisplayCode(employee)),
+          escapeHtml(employeeFullName(employee)),
+          escapeHtml(employee.cargo || data.cargo || "-"),
+          escapeHtml(employee.direccionOrg || data.direccionOrg || data.direccion || "-"),
+          escapeHtml(employee.departamento || data.departamento || "-"),
+          escapeHtml(employee.division || data.division || "-"),
+          escapeHtml(employee.seccion || data.seccion || "-"),
+          employee.activo === false ? alertLevelBadge("Inactivo") : alertLevelBadge("Activo"),
+          money.format(Number(employee.salario || data.salario || 0))
+        ];
+      }));
+      renderTable("supervisorAttendanceTable", ["Fecha", "Empleado", "Estado", "Entrada", "Salida", "Horas extras", "Nota"], attendance.map(row => [
+        escapeHtml(row.fecha || "-"),
+        escapeHtml(employeeFullName(row.employee)),
+        escapeHtml(row.estado),
+        escapeHtml(row.entrada),
+        escapeHtml(row.salida),
+        number.format(Number(row.horasExtras || 0)),
+        escapeHtml(row.nota || "-")
+      ]));
+      renderTable("supervisorEvaluationsTable", ["Empleado", "Última evaluación", "Resultado", "Metas activas", "Avance promedio", "Planes mejora"], evaluations.map(row => [
+        escapeHtml(employeeFullName(row.employee)),
+        escapeHtml(row.periodo),
+        escapeHtml(String(row.resultado)),
+        number.format(row.metasActivas),
+        `${number.format(row.avance)}%`,
+        number.format(row.planesMejora)
+      ]));
+      renderTable("supervisorDepartmentKpisTable", ["Indicador", "Valor"], [
+        ["Empleados activos", number.format(employees.filter(employee => employee.activo !== false).length)],
+        ["Tardanzas hoy", number.format(lateToday)],
+        ["Ausencias hoy", number.format(absencesToday)],
+        ["Solicitudes pendientes", number.format(pendingRequests.length)],
+        ["Metas completadas", number.format(completedGoals)],
+        ["Planes de mejora abiertos", number.format(improvementPlans)]
+      ]);
     }
 
     function defaultEssEmployee() {
@@ -5761,6 +5888,7 @@
         event.currentTarget.reset();
         renderEmployeeSelfService();
         renderLeavePanel();
+        renderSupervisorPanel();
       } catch (error) {
         state.essLeaveRequests = state.essLeaveRequests.filter(row => row.id !== request.id);
         alert(error.message || "No se pudo enviar la solicitud a Recursos Humanos. Verifique la migración de Supabase.");
@@ -5834,6 +5962,7 @@
         event.currentTarget.reset();
         renderLeavePanel();
         renderEmployeeSelfService();
+        renderSupervisorPanel();
       } catch (error) {
         state.essLeaveRequests = state.essLeaveRequests.filter(row => row.id !== request.id);
         alert(error.message || "No se pudo guardar la solicitud en Supabase.");
@@ -5859,6 +5988,7 @@
           saveState();
           renderLeavePanel();
           renderEmployeeSelfService();
+          renderSupervisorPanel();
         } catch (error) {
           Object.assign(row, previous);
           alert(error.message || "No se pudo actualizar el estado de la solicitud en Supabase.");
