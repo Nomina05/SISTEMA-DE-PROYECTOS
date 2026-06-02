@@ -248,13 +248,19 @@
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; -webkit-overflow-scrolling: touch; box-shadow: inset 0 1px 0 rgba(255,255,255,.75); }
     table { width: 100%; border-collapse: collapse; min-width: 960px; }
     table.compact-report { width: max-content; table-layout: auto; }
-    table.snip-detail-report { min-width: 1080px; }
-    table.snip-group-report { min-width: 1080px; }
+    table.snip-detail-report { min-width: 1480px; }
+    table.snip-group-report { min-width: 1480px; }
     table.compact-report th, table.compact-report td { padding: 7px 7px; font-size: 11px; line-height: 1.2; }
     table.snip-detail-report th:nth-child(1), table.snip-detail-report td:nth-child(1) { min-width: 120px; }
-    table.snip-detail-report th:nth-child(n+2), table.snip-detail-report td:nth-child(n+2) { min-width: 150px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.snip-detail-report th:nth-child(2), table.snip-detail-report td:nth-child(2),
+    table.snip-detail-report th:nth-child(3), table.snip-detail-report td:nth-child(3),
+    table.snip-detail-report th:nth-child(4), table.snip-detail-report td:nth-child(4) { min-width: 170px; text-align: left; white-space: normal; }
+    table.snip-detail-report th:nth-child(n+5), table.snip-detail-report td:nth-child(n+5) { min-width: 150px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     table.snip-group-report th:nth-child(1), table.snip-group-report td:nth-child(1) { min-width: 130px; }
-    table.snip-group-report th:nth-child(n+2), table.snip-group-report td:nth-child(n+2) { min-width: 155px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.snip-group-report th:nth-child(2), table.snip-group-report td:nth-child(2),
+    table.snip-group-report th:nth-child(3), table.snip-group-report td:nth-child(3),
+    table.snip-group-report th:nth-child(4), table.snip-group-report td:nth-child(4) { min-width: 170px; text-align: left; white-space: normal; }
+    table.snip-group-report th:nth-child(n+5), table.snip-group-report td:nth-child(n+5) { min-width: 155px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     table.compact-report td:nth-child(-n+4) { overflow-wrap: anywhere; }
     table.compact-report small { color: var(--muted); font-size: 10px; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; font-size: 12px; }
@@ -326,8 +332,8 @@
       .ess-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .employee-form, .employee-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .employee-toolbar { grid-template-columns: 1fr auto auto; }
-      table.snip-detail-report { min-width: 1080px; }
-      table.snip-group-report { min-width: 1100px; }
+      table.snip-detail-report { min-width: 1480px; }
+      table.snip-group-report { min-width: 1480px; }
     }
 
     @media (max-width: 720px) {
@@ -361,8 +367,8 @@
       .embedded-frame { height: 480px; }
       .ess-kpi-grid { grid-template-columns: 1fr; }
       table { min-width: 720px; }
-      table.snip-detail-report { min-width: 1080px; }
-      table.snip-group-report { min-width: 1100px; }
+      table.snip-detail-report { min-width: 1480px; }
+      table.snip-group-report { min-width: 1480px; }
       th, td { font-size: 12px; padding: 8px; }
       .permission-checks, .permission-groups { grid-template-columns: 1fr; }
       .desktop-table-only { display: none; }
@@ -2021,22 +2027,53 @@
       }
     }
 
-    async function adminUpdateUserPassword(userId, password, mustChangePassword) {
+    async function adminUpdateUserPassword(userId, password, mustChangePassword, email) {
       const cleanPassword = String(password || "");
       if (!cleanPassword) return;
       if (cleanPassword.length < 6) throw new Error("La nueva clave de acceso debe tener al menos 6 caracteres.");
       if (!window.supabaseClient) throw new Error("No hay conexión con Supabase para actualizar la contraseña.");
-      const result = await window.supabaseClient.rpc("admin_actualizar_password_usuario", {
-        p_usuario_id: userId,
-        p_password: cleanPassword,
-        p_requiere_cambio: Boolean(mustChangePassword)
+      const result = await window.supabaseClient.functions.invoke("admin-update-user-password", {
+        body: {
+          usuarioId: userId,
+          password: cleanPassword,
+          email: String(email || "").trim().toLowerCase(),
+          requiereCambioPassword: Boolean(mustChangePassword)
+        }
       });
       if (result.error) {
-        const message = String(result.error.message || "");
-        if (message.includes("Could not find the function") || message.includes("schema cache")) {
-          throw new Error("Falta ejecutar la migración de contraseñas administrativas en Supabase.");
+        let detail = "";
+        try {
+          detail = String((await result.error.context?.json())?.error || "");
+        } catch (_error) {
+          detail = "";
         }
-        throw result.error;
+        throw new Error(detail || "No fue posible actualizar la clave en Supabase Auth. Verifique que la Edge Function admin-update-user-password esté desplegada.");
+      }
+      if (!result.data?.ok) {
+        throw new Error(result.data?.error || "No fue posible actualizar la clave en Supabase Auth.");
+      }
+    }
+
+    async function adminCreateUserAccount(email, password) {
+      const cleanPassword = String(password || "");
+      const cleanEmail = String(email || "").trim().toLowerCase();
+      if (!cleanEmail) throw new Error("Debe colocar el correo institucional.");
+      if (cleanPassword.length < 6) throw new Error("La nueva clave de acceso debe tener al menos 6 caracteres.");
+      if (!window.supabaseClient) throw new Error("No hay conexión con Supabase para crear la cuenta.");
+      const result = await window.supabaseClient.functions.invoke("admin-update-user-password", {
+        body: { create: true, email: cleanEmail, password: cleanPassword }
+      });
+      if (result.error) {
+        let detail = "";
+        try {
+          detail = String((await result.error.context?.json())?.error || "");
+        } catch (_error) {
+          detail = "";
+        }
+        throw new Error(detail || "No fue posible crear la cuenta en Supabase Auth. Verifique que la Edge Function admin-update-user-password esté desplegada.");
+      }
+      if (!result.data?.ok) {
+        throw new Error(result.data?.error || "No fue posible crear la cuenta en Supabase Auth.");
       }
     }
 
@@ -4179,6 +4216,30 @@
       return user?.nombre || user?.usuario || currentSessionEmail || state.activeUser || "Responsable RRHH";
     }
 
+    function leaveUserRoleText(user = activeUser()) {
+      return normalizeSearch(`${user?.cargo || ""} ${user?.area || ""} ${user?.rol || ""}`);
+    }
+
+    function canReviewLeaveRequests(user = activeUser()) {
+      return Boolean(user && (canResolveLeaveRequests(user) || userCan(user, "rrhh-vacaciones")));
+    }
+
+    function canResolveLeaveRequests(user = activeUser()) {
+      const roleText = leaveUserRoleText(user);
+      return Boolean(user && (
+        isFullAccessUser(user) ||
+        roleText.includes("organizacion del trabajo y compensacion") ||
+        roleText.includes("administrador de recursos humanos") ||
+        roleText.includes("administradora de recursos humanos")
+      ));
+    }
+
+    function canSetLeaveStatus(status, user = activeUser()) {
+      if (status === "Aprobada" || status === "Rechazada") return canResolveLeaveRequests(user);
+      if (status === "En revision") return canReviewLeaveRequests(user);
+      return true;
+    }
+
     function syncLeaveNotification(row, status = "Pendiente") {
       upsertInternalNotification({
         level: "Alerta",
@@ -4232,10 +4293,10 @@
     function leaveStatusActions(row) {
       const id = escapeHtml(row.id);
       const buttons = [];
-      if (row.estado !== "En revision") buttons.push(`<button class="mini-btn leave-status-btn" type="button" data-id="${id}" data-status="En revision">En revision</button>`);
-      if (row.estado !== "Aprobada") buttons.push(`<button class="mini-btn leave-status-btn" type="button" data-id="${id}" data-status="Aprobada">Aprobar</button>`);
-      if (row.estado !== "Rechazada") buttons.push(`<button class="mini-btn leave-status-btn danger" type="button" data-id="${id}" data-status="Rechazada">Rechazar</button>`);
-      return buttons.join(" ");
+      if (canReviewLeaveRequests() && row.estado !== "En revision") buttons.push(`<button class="mini-btn leave-status-btn" type="button" data-id="${id}" data-status="En revision">Validar revisión</button>`);
+      if (canResolveLeaveRequests() && row.estado !== "Aprobada") buttons.push(`<button class="mini-btn leave-status-btn" type="button" data-id="${id}" data-status="Aprobada">Aprobar</button>`);
+      if (canResolveLeaveRequests() && row.estado !== "Rechazada") buttons.push(`<button class="mini-btn leave-status-btn danger" type="button" data-id="${id}" data-status="Rechazada">Rechazar</button>`);
+      return buttons.join(" ") || "-";
     }
 
     function renderLeavePanel() {
@@ -4666,14 +4727,11 @@
       const form = document.getElementById("warehouseRequestForm");
       if (!form) return;
       const requesterSelect = document.getElementById("warehouseRequester");
-      const selectedRequester = requesterSelect.value;
-      const authorizedUsers = (state.users || []).filter(user => userCan(user, "almacen"));
-      requesterSelect.innerHTML = `<option value="">Seleccione solicitante</option>` + authorizedUsers.map(user => {
-        const normalized = normalizedUser(user);
-        return `<option value="${escapeHtml(normalized.id)}">${escapeHtml(normalized.nombre)} - ${escapeHtml(normalized.area || normalized.rol || "")}</option>`;
-      }).join("");
-      const preferredRequester = selectedRequester || activeUser()?.id || "";
-      if (preferredRequester && authorizedUsers.some(user => String(user.id) === String(preferredRequester))) requesterSelect.value = preferredRequester;
+      const requester = normalizedUser(activeUser());
+      requesterSelect.innerHTML = requester?.id
+        ? `<option value="${escapeHtml(requester.id)}">${escapeHtml(requester.nombre)} - ${escapeHtml(requester.area || requester.rol || "")}</option>`
+        : `<option value="">Usuario activo no identificado</option>`;
+      requesterSelect.disabled = true;
       if (!form.elements.fechaHora.value) {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -5368,6 +5426,9 @@
             const code = displaySnip(project);
             return [
               code,
+              project.tipo || "-",
+              project.municipio || "-",
+              project.comunidad || "-",
               money.format(snipAmount(project)),
               money.format(project.adjudicado || 0),
               money.format(project.comprometido || 0),
@@ -5381,8 +5442,8 @@
         const totalComprometido = sum(rows, "comprometido");
         const totalPaid = sum(rows, "pagado");
         const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
-        renderTable("reportTable", ["Código SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
-          "TOTAL", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalComprometido), money.format(totalPaid), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(totalPendienteAdjudicacion)
+        renderTable("reportTable", ["Código SNIP", "Tipo de obra", "Municipio", "Sector", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+          "TOTAL", "", "", "", money.format(totalSnip), money.format(totalAdjudicado), money.format(totalComprometido), money.format(totalPaid), money.format(sum(rows, "disponibilidadAdjudicado")), money.format(totalPendienteAdjudicacion)
         ]);
         return;
       }
@@ -5403,6 +5464,9 @@
           const pendienteAdjudicacion = items.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
           return [
             code,
+            [...new Set(items.map(item => item.tipo || "-"))].join(" / "),
+            [...new Set(items.map(item => item.municipio || "-"))].join(" / "),
+            [...new Set(items.map(item => item.comunidad || "-"))].join(" / "),
             money.format(totalSnip),
             money.format(adjudicado),
             money.format(comprometido),
@@ -5416,8 +5480,11 @@
       const totalComprometido = sum(rows, "comprometido");
       const totalPaid = sum(rows, "pagado");
       const totalPendienteAdjudicacion = rows.reduce((total, item) => total + Math.max((item.presupuesto || 0) - (item.adjudicado || 0), 0), 0);
-      renderTable("reportTable", ["Código SNIP", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
+      renderTable("reportTable", ["Código SNIP", "Tipo de obra", "Municipio", "Sector", "Total por SNIP", "Monto Adjudicado", "20% Pagado", "Total pagado", "Disponibilidad", "Pendiente por Adjudicación"], tableRows, [
         "TOTAL",
+        "",
+        "",
+        "",
         money.format(totalSnip),
         money.format(totalAdjudicado),
         money.format(totalComprometido),
@@ -6136,6 +6203,11 @@
       event.preventDefault();
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const employee = leaveEmployees().find(item => employeeRequestKey(item) === String(data.employeeId));
+      if (!canSetLeaveStatus(data.estado)) {
+        return alert(data.estado === "En revision"
+          ? "El usuario activo no tiene permiso para validar solicitudes de vacaciones o permisos."
+          : "Solo Organización del Trabajo y Compensaciones o el Administrador de Recursos Humanos pueden aprobar o rechazar solicitudes.");
+      }
       if (!data.aprobador && data.estado === "Aprobada") data.aprobador = leaveApproverName();
       state.essLeaveRequests = state.essLeaveRequests || [];
       const request = {
@@ -6172,6 +6244,11 @@
     document.addEventListener("click", async event => {
       const statusButton = event.target.closest(".leave-status-btn");
       if (!statusButton) return;
+      if (!canSetLeaveStatus(statusButton.dataset.status)) {
+        return alert(statusButton.dataset.status === "En revision"
+          ? "El usuario activo no tiene permiso para validar solicitudes de vacaciones o permisos."
+          : "Solo Organización del Trabajo y Compensaciones o el Administrador de Recursos Humanos pueden aprobar o rechazar solicitudes.");
+      }
       const row = (state.essLeaveRequests || []).find(item => item.id === statusButton.dataset.id);
       if (row) {
         const previous = { estado: row.estado, aprobador: row.aprobador, aprobadoEn: row.aprobadoEn, areaResponsable: row.areaResponsable };
@@ -6291,7 +6368,7 @@
 
         if (editingUserId) {
           if (window.supabaseClient) {
-            await adminUpdateUserPassword(editingUserId, data.passwordTemporal, mustChangePassword);
+            await adminUpdateUserPassword(editingUserId, data.passwordTemporal, mustChangePassword, accessEmail);
             const areaId = await ensureAreaId(data.area);
             const updatePayload = {
               nombre: data.nombre,
@@ -6335,19 +6412,7 @@
         if (!data.passwordTemporal || data.passwordTemporal.length < 6) return alert("Debe colocar una clave de acceso de al menos 6 caracteres.");
         if (window.supabaseClient) {
           const areaId = await ensureAreaId(data.area);
-          const currentSession = await window.supabaseClient.auth.getSession();
-          const authResult = await window.supabaseClient.auth.signUp({
-            email: accessEmail,
-            password: data.passwordTemporal,
-            options: { data: { nombre: data.nombre, requiere_cambio_password: mustChangePassword } }
-          });
-          if (authResult.error && !isExistingAuthUserError(authResult.error)) throw authResult.error;
-          if (currentSession.data.session?.access_token && currentSession.data.session?.refresh_token) {
-            await window.supabaseClient.auth.setSession({
-              access_token: currentSession.data.session.access_token,
-              refresh_token: currentSession.data.session.refresh_token
-            });
-          }
+          await adminCreateUserAccount(accessEmail, data.passwordTemporal);
           const inserted = await upsertUserProfileRow({
             nombre: data.nombre,
             usuario: data.usuario,
@@ -6459,6 +6524,8 @@
       event.preventDefault();
       if (!can("warehouse-create")) return alert("El usuario activo no tiene permiso para registrar solicitudes a almacén.");
       const data = Object.fromEntries(new FormData(event.currentTarget));
+      data.solicitanteUsuarioId = activeUser()?.id || "";
+      if (!data.solicitanteUsuarioId) return alert("No se pudo identificar el usuario activo para registrar la solicitud.");
       const row = {
         id: makeId(),
         solicitanteUsuarioId: data.solicitanteUsuarioId || "",

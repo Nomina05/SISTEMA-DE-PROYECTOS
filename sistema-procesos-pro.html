@@ -350,7 +350,12 @@ function usuarioPorId(id){
 function usuarioActivoSistema(){
   try{
     const projectState = JSON.parse(localStorage.getItem(PROJECT_USERS_KEY) || '{}');
-    return (projectState.users || []).find(u=>u.usuario===projectState.activeUser) || null;
+    const active = String(projectState.activeUser || '').toLowerCase();
+    return (projectState.users || []).find(u=>
+      String(u.id || '').toLowerCase() === active ||
+      String(u.usuario || '').toLowerCase() === active ||
+      String(u.correo || '').toLowerCase() === active
+    ) || null;
   }catch(error){
     return null;
   }
@@ -561,13 +566,18 @@ function renderUsuarios(){
 
 function llenarUsuariosProceso(){
   cargarUsuariosSistema();
-  let opciones = '<option value="">Seleccione usuario</option>' +
+  const activo = usuarioActivoSistema();
+  let opcionesSolicitud = activo
+    ? `<option value="${activo.id}">${activo.nombre || activo.usuario || activo.correo} - ${activo.rol || 'Consulta'}</option>`
+    : '<option value="">Usuario activo no identificado</option>';
+  let opcionesActores = '<option value="">Seleccione usuario</option>' +
     usuariosRegistrados.map(u=>
       `<option value="${u.id}">${u.nombre} - ${u.rol}</option>`
     ).join('');
 
-  user.innerHTML = opciones;
-  actor.innerHTML = opciones;
+  user.innerHTML = opcionesSolicitud;
+  user.disabled = true;
+  actor.innerHTML = opcionesActores;
 }
 
 // ====== CREAR ======
