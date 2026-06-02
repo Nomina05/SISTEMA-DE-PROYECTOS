@@ -1307,45 +1307,23 @@
       <section class="section" id="reportes">
         <div class="panel">
           <h2>Reportes</h2>
-          <div class="tabs">
-            <button class="tab active" data-report="municipio">Por municipio</button>
-            <button class="tab" data-report="contratista">Por proveedor</button>
-            <button class="tab" data-report="disponibilidad">Disponibilidad de presupuesto</button>
-            <button class="tab" data-report="compras">Proceso de compras</button>
-            <button class="tab" data-report="ejecutivo">Ejecutivo</button>
-            <button class="tab" data-report="inversion">Inversión Pública</button>
-            <button class="tab" data-report="mensual">Comparativo mensual</button>
-            <button class="tab" data-report="direccion">Dirección General</button>
-            <button class="tab" data-report="pagos">Pagos realizados</button>
-            <button class="tab" data-report="estatus">Estatus de obras</button>
-            <button class="tab" data-report="snip">Por código SNIP</button>
-            <button class="tab" data-report="inconsistencias">Inconsistencias</button>
-            <button class="tab" data-report="rrhh-reclutamiento">Reclutamiento RRHH</button>
-            <button class="tab" data-report="rrhh-nomina-2026">Nómina 2026</button>
+          <div class="empty">Módulo disponible para configurar la nueva estructura de reportes.</div>
+          <div hidden aria-hidden="true">
+            <input id="searchBox">
+            <select id="snipFilter"><option value=""></option></select>
+            <select id="snipModeFilter"><option value="detalle"></option></select>
+            <select id="providerFilter"><option value=""></option></select>
+            <select id="typeFilter"><option value=""></option></select>
+            <select id="processTypeFilter"><option value=""></option></select>
+            <input id="minAmountFilter">
+            <input id="maxAmountFilter">
+            <select id="municipalityFilter"><option value=""></option></select>
+            <select id="statusFilter"><option value=""></option></select>
+            <button id="csvBtn" type="button"></button>
+            <button id="pdfReportBtn" type="button"></button>
+            <button id="printReportBtn" type="button"></button>
+            <table id="reportTable"></table>
           </div>
-          <div class="table-tools">
-            <div class="filters">
-              <input id="searchBox" placeholder="Buscar...">
-              <select id="snipFilter" class="snip-filter" hidden><option value="">Todos los códigos SNIP</option></select>
-              <select id="snipModeFilter" class="snip-filter" hidden>
-                <option value="detalle">Detalle por obra</option>
-                <option value="agrupado">Agrupar por código SNIP</option>
-              </select>
-              <select id="providerFilter" hidden><option value="">Todos los proveedores</option></select>
-              <select id="typeFilter" hidden><option value="">Todos los tipos de obra</option></select>
-              <select id="processTypeFilter"><option value="">Todos los tipos de proceso</option></select>
-              <input id="minAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto mínimo">
-              <input id="maxAmountFilter" class="amount-filter" type="number" min="0" step="0.01" placeholder="Monto máximo">
-              <select id="municipalityFilter"><option value="">Todos los municipios</option></select>
-              <select id="statusFilter"><option value="">Todos los estatus</option></select>
-            </div>
-            <div class="actions">
-              <button class="btn secondary" id="csvBtn" type="button">Exportar CSV</button>
-              <button class="btn secondary" id="pdfReportBtn" type="button">Exportar PDF</button>
-              <button class="btn secondary" id="printReportBtn" type="button">Imprimir</button>
-            </div>
-          </div>
-          <div class="table-wrap"><table id="reportTable"></table></div>
         </div>
       </section>
     </main>
@@ -1450,7 +1428,7 @@
       "Compras y Contrataciones": [...Object.values(purchaseModulePermissions), "compras-datos", "finanzas-pagos-compras"],
       "Almacén e inventario": ["warehouse-create", "inventory-edit"],
       "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-view", "documents-manage", "notifications-admin"],
-      "Reportes": ["report-municipio", "report-contratista", "report-disponibilidad", "report-compras", "report-inversion", "report-ejecutivo", "report-mensual", "report-direccion", "report-inconsistencias", "report-pagos", "report-estatus", "report-snip"]
+      "Reportes": []
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
