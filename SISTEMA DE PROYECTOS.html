@@ -273,10 +273,10 @@
     .snip-summary-head small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .snip-summary-head strong { display: block; margin-top: 3px; color: #102b4a; font-size: 14px; }
     .territory-summary-head { padding: 10px 12px; border-bottom: 1px solid var(--line); background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 800; text-align: center; }
-    table.snip-summary-table { min-width: 1160px; }
-    table.snip-code-summary-table { min-width: 980px; }
+    table.snip-summary-table { min-width: 1380px; }
+    table.snip-code-summary-table { min-width: 1320px; }
     table.snip-summary-table .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; font-size: 12px; }
-    table.snip-summary-table:not(.snip-code-summary-table) th:nth-child(n+4), table.snip-summary-table:not(.snip-code-summary-table) td:nth-child(n+4),
+    table.snip-summary-table:not(.snip-code-summary-table) th:nth-child(n+5), table.snip-summary-table:not(.snip-code-summary-table) td:nth-child(n+5),
     table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; font-size: 12px; }
     th { position: sticky; top: 0; background: #edf3f8; z-index: 1; white-space: nowrap; color: #405267; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
@@ -5262,30 +5262,33 @@
       const snipSummary = Object.entries(snipGroups)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([snip, items]) => {
+          const adjudicado = sum(items, "adjudicado");
           const pagado = sum(items, "pagado");
           return `<tr>
             <td>${escapeHtml(snip)}</td>
             <td>${money.format(sum(items, "presupuesto"))}</td>
-            <td>${money.format(sum(items, "adjudicado"))}</td>
+            <td>${money.format(adjudicado)}</td>
             <td>${money.format(pagado)}</td>
-            <td>${money.format(Math.max(sum(items, "presupuesto") - pagado, 0))}</td>
+            <td>${money.format(Math.max(adjudicado - pagado, 0))}</td>
+            <td>${money.format(Math.max(sum(items, "presupuesto") - adjudicado, 0))}</td>
             <td>${number.format(sum(items, "poblacion"))}</td>
           </tr>`;
         }).join("");
-      const territoryGroups = groupRows(rows, project => project.distrito || project.municipio || "Sin municipio o distrito");
+      const territoryGroups = groupRows(rows, project => project.municipio || "Sin municipio");
       const territoryBlocks = Object.entries(territoryGroups)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([territory, projects]) => `
           <section class="snip-summary-block">
-            <div class="territory-summary-head">Municipio o distrito: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión: ${money.format(sum(projects, "presupuesto"))}</div>
+            <div class="territory-summary-head">Municipio: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión: ${money.format(sum(projects, "presupuesto"))}</div>
             <div class="table-wrap">
               <table class="snip-summary-table">
-                <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
+                <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Distrito</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
                 <tbody>${projects
                   .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
                   .map(project => `<tr>
                     <td>${escapeHtml(displaySnip(project))}</td>
                     <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
+                    <td>${escapeHtml(project.distrito || "Sin asignar")}</td>
                     <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
                     <td>${money.format(Number(project.adjudicado || 0))}</td>
                     <td>${money.format(Number(project.comprometido || 0))}</td>
@@ -5299,7 +5302,7 @@
         <section class="snip-summary-block">
           <div class="table-wrap">
             <table class="snip-summary-table snip-code-summary-table">
-              <thead><tr><th>Código SNIP</th><th>Total del SNIP</th><th>Adjudicado</th><th>Pagado</th><th>Disponible por código</th><th>Total de población</th></tr></thead>
+              <thead><tr><th>Código SNIP</th><th>Total del SNIP</th><th>Adjudicado</th><th>Pagado</th><th>Disponibilidad (adjudicado - pagado)</th><th>Disponible por SNIP (total SNIP - adjudicado)</th><th>Total de población</th></tr></thead>
               <tbody>${snipSummary}</tbody>
             </table>
           </div>
@@ -7237,7 +7240,7 @@
             table { width: 100%; border-collapse: collapse; font-size: 10px; }
             th, td { border: 1px solid #cfd9de; padding: 6px; text-align: left; vertical-align: top; }
             th { background: #eef3f5; }
-            table:not(.snip-code-summary-table) th:nth-child(n+4), table:not(.snip-code-summary-table) td:nth-child(n+4),
+            table:not(.snip-code-summary-table) th:nth-child(n+5), table:not(.snip-code-summary-table) td:nth-child(n+5),
             table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; }
             .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; }
             @media print { body { margin: 0; } }
