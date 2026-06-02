@@ -1326,6 +1326,11 @@
           </div>
           <div class="snip-summary-toolbar">
             <input id="newSnipReportSearch" placeholder="Buscar código SNIP, municipio, sector o tipo de obra">
+            <div class="filters">
+              <button class="btn secondary" id="newSnipExcelBtn" type="button" data-new-snip-export title="Exportar el reporte a Excel">Excel</button>
+              <button class="btn secondary" id="newSnipPdfBtn" type="button" data-new-snip-export title="Exportar el reporte como PDF">PDF</button>
+              <button class="btn secondary" id="newSnipPrintBtn" type="button" data-new-snip-export title="Imprimir el reporte">Imprimir</button>
+            </div>
           </div>
           <div class="snip-summary-list" id="newSnipReport"></div>
           <div hidden aria-hidden="true">
@@ -1401,6 +1406,7 @@
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
       "report-snip": "Reporte por código SNIP",
+      "report-resumen-snip": "Resumen de inversión por código SNIP",
       "rrhh-resumen": "RRHH: Resumen ejecutivo",
       "rrhh-empleados": "RRHH: Empleados",
       "rrhh-reclutamiento": "RRHH: Reclutamiento",
@@ -1448,7 +1454,7 @@
       "Compras y Contrataciones": [...Object.values(purchaseModulePermissions), "compras-datos", "finanzas-pagos-compras"],
       "Almacén e inventario": ["warehouse-create", "inventory-edit"],
       "Cubicaciones y seguimiento": ["payment-create", "payment-approve", "payment-reject", "technical-log", "documents-view", "documents-manage", "notifications-admin"],
-      "Reportes": []
+      "Reportes": ["report-resumen-snip"]
     };
     const permissionPolicies = {
       "Administrador": Object.keys(permissionLabels),
@@ -2302,6 +2308,16 @@
       return allowedPurchaseViews().length > 0;
     }
 
+    function canAccessReportsModule() {
+      return can("report-resumen-snip");
+    }
+
+    function canAccessMainView(view) {
+      if (view === "solicitudes") return canAccessPurchasingModule();
+      if (view === "reportes") return canAccessReportsModule();
+      return can(view);
+    }
+
     function showPurchaseView(view) {
       const allowed = allowedPurchaseViews();
       const target = allowed.includes(view) ? view : allowed[0];
@@ -3084,8 +3100,11 @@
       document.getElementById("csvBtn").classList.toggle("hidden-by-permission", !can("export-reports"));
       document.getElementById("pdfReportBtn").classList.toggle("hidden-by-permission", !can("export-reports"));
       document.getElementById("printReportBtn").classList.toggle("hidden-by-permission", !can("export-reports"));
+      document.querySelectorAll("[data-new-snip-export]").forEach(button => {
+        button.classList.toggle("hidden-by-permission", !can("export-reports"));
+      });
       document.querySelectorAll(".nav-btn").forEach(btn => {
-        const allowed = btn.dataset.view === "solicitudes" ? canAccessPurchasingModule() : can(btn.dataset.view);
+        const allowed = canAccessMainView(btn.dataset.view);
         btn.classList.toggle("hidden-by-permission", !allowed);
       });
       document.querySelectorAll(".tab").forEach(tab => {
@@ -3110,7 +3129,7 @@
       }
       renderPurchasingAccess();
       const activeSection = document.querySelector(".section.active");
-      const activeSectionAllowed = activeSection?.id === "solicitudes" ? canAccessPurchasingModule() : can(activeSection?.id);
+      const activeSectionAllowed = canAccessMainView(activeSection?.id);
       if (activeSection && !activeSectionAllowed) {
         const firstNav = [...document.querySelectorAll(".nav-btn")].find(btn => !btn.classList.contains("hidden-by-permission"));
         if (firstNav) showView(firstNav.dataset.view);
@@ -5223,6 +5242,10 @@
     function renderNewSnipSummaryReport() {
       const target = document.getElementById("newSnipReport");
       if (!target) return;
+      if (!canAccessReportsModule()) {
+        target.innerHTML = `<div class="empty">No tiene permisos para visualizar este reporte.</div>`;
+        return;
+      }
       const search = normalizeSearch(document.getElementById("newSnipReportSearch")?.value || "");
       const rows = enrichedProjects().filter(project => {
         if (!search) return true;
@@ -5712,7 +5735,7 @@
     }
 
     function showView(view) {
-      if (view === "solicitudes" ? !canAccessPurchasingModule() : !can(view)) return;
+      if (!canAccessMainView(view)) return;
       document.querySelectorAll(".nav-btn, .section").forEach(el => el.classList.remove("active"));
       const button = document.querySelector(`.nav-btn[data-view="${view}"]`);
       if (button) button.classList.add("active");
@@ -7162,6 +7185,84 @@
     document.getElementById("pdfReportBtn").addEventListener("click", () => {
       audit("Reporte exportado", currentReportTitle());
       openReportPrintWindow("pdf");
+    });
+
+    function newSnipReportDocument() {
+      const report = document.getElementById("newSnipReport");
+      const search = document.getElementById("newSnipReportSearch")?.value.trim();
+      const printedAt = new Date().toLocaleString("es-DO");
+      const issuedBy = currentSessionEmail || activeUser()?.usuario || "Usuario";
+      return `<!doctype html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <title>Resumen de inversión por código SNIP</title>
+          <style>
+            body { font-family: "Segoe UI", Arial, sans-serif; color: #172026; margin: 24px; }
+            h1 { margin: 0 0 4px; font-size: 20px; color: #102b4a; }
+            .meta { margin-bottom: 12px; color: #65727d; font-size: 12px; }
+            .snip-summary-block { margin-bottom: 14px; border: 1px solid #cfd9de; page-break-inside: avoid; }
+            .snip-summary-head { display: grid; grid-template-columns: repeat(3, 1fr); background: #e8f0f7; }
+            .snip-summary-head div { padding: 8px; border-right: 1px solid #cfd9de; }
+            small { display: block; color: #65727d; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+            strong { display: block; margin-top: 3px; font-size: 13px; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            th, td { border: 1px solid #cfd9de; padding: 6px; text-align: left; vertical-align: top; }
+            th { background: #eef3f5; }
+            th:nth-child(n+3), td:nth-child(n+3) { text-align: right; }
+            .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; }
+            @media print { body { margin: 0; } }
+            @page { size: landscape; margin: 12mm; }
+          </style>
+        </head>
+        <body>
+          <h1>CORAAMOCA - Resumen de inversión por código SNIP</h1>
+          <div class="meta">Generado: ${printedAt} | Emitido por: ${escapeHtml(issuedBy)}${search ? ` | Búsqueda: ${escapeHtml(search)}` : ""}</div>
+          ${report.innerHTML}
+        </body>
+        </html>`;
+    }
+
+    function exportNewSnipReportExcel() {
+      if (!can("export-reports")) return;
+      audit("Reporte exportado", "Resumen de inversión por código SNIP - Excel");
+      const blob = new Blob([newSnipReportDocument()], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "reporte-resumen-inversion-snip.xls";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function openNewSnipReportPrintWindow(mode = "print") {
+      if (!can("export-reports")) return;
+      const printWindow = window.open("about:blank", "_blank", "width=1200,height=850");
+      if (!printWindow) {
+        alert("El navegador bloqueó la ventana del reporte. Permita ventanas emergentes para imprimir o exportar PDF.");
+        return;
+      }
+      printWindow.document.write(newSnipReportDocument());
+      printWindow.document.close();
+      const runPrint = () => {
+        printWindow.focus();
+        setTimeout(() => {
+          if (mode === "print") printWindow.onafterprint = () => printWindow.close();
+          printWindow.print();
+        }, 250);
+      };
+      if (printWindow.document.readyState === "complete") runPrint();
+      else printWindow.onload = runPrint;
+    }
+
+    document.getElementById("newSnipExcelBtn").addEventListener("click", exportNewSnipReportExcel);
+    document.getElementById("newSnipPrintBtn").addEventListener("click", () => {
+      audit("Reporte impreso", "Resumen de inversión por código SNIP");
+      openNewSnipReportPrintWindow("print");
+    });
+    document.getElementById("newSnipPdfBtn").addEventListener("click", () => {
+      audit("Reporte exportado", "Resumen de inversión por código SNIP - PDF");
+      openNewSnipReportPrintWindow("pdf");
     });
 
     document.getElementById("backupBtn").addEventListener("click", () => {
