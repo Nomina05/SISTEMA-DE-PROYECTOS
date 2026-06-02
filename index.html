@@ -272,9 +272,12 @@
     .snip-summary-head div:last-child { border-right: 0; }
     .snip-summary-head small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .snip-summary-head strong { display: block; margin-top: 3px; color: #102b4a; font-size: 14px; }
-    table.snip-summary-table { min-width: 1040px; }
+    .territory-summary-head { padding: 10px 12px; border-bottom: 1px solid var(--line); background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 800; text-align: center; }
+    table.snip-summary-table { min-width: 1160px; }
+    table.snip-code-summary-table { min-width: 980px; }
     table.snip-summary-table .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; font-size: 12px; }
-    table.snip-summary-table th:nth-child(n+3), table.snip-summary-table td:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+    table.snip-summary-table:not(.snip-code-summary-table) th:nth-child(n+4), table.snip-summary-table:not(.snip-code-summary-table) td:nth-child(n+4),
+    table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; font-size: 12px; }
     th { position: sticky; top: 0; background: #edf3f8; z-index: 1; white-space: nowrap; color: #405267; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
     tbody tr:nth-child(even) td { background: #fbfdff; }
@@ -1160,6 +1163,7 @@
               <label class="span-2" id="existingProjectField" hidden>Proyecto<select name="projectKey"></select></label>
               <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. Construcción de pozo tubular"></label>
               <label class="span-2 new-project-field" hidden>Municipio<input name="municipioNuevo" placeholder="Ej. Municipio de Moca"></label>
+              <label class="span-2 new-project-field" hidden>Distrito municipal<input name="distritoNuevo" placeholder="Opcional. Ej. Canca la Reina"></label>
               <label class="span-2 new-project-field" hidden>Comunidad / proyecto<input name="comunidadNuevo" placeholder="Nombre del proyecto o comunidad"></label>
               <label class="new-project-field" hidden>Población<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
               <label>Código<input name="codigo" placeholder="Ej. SNIP-0000"></label>
@@ -1325,7 +1329,7 @@
             </div>
           </div>
           <div class="snip-summary-toolbar">
-            <input id="newSnipReportSearch" placeholder="Buscar código SNIP, municipio, sector o tipo de obra">
+            <input id="newSnipReportSearch" placeholder="Buscar código SNIP, municipio, distrito, sector o tipo de obra">
             <div class="filters">
               <button class="btn secondary" id="newSnipExcelBtn" type="button" data-new-snip-export title="Exportar el reporte a Excel">Excel</button>
               <button class="btn secondary" id="newSnipPdfBtn" type="button" data-new-snip-export title="Exportar el reporte como PDF">PDF</button>
@@ -1676,6 +1680,7 @@
         tipo: project.tipo || "",
         comunidad: project.comunidad || "",
         municipio: project.municipio || "",
+        distrito: project.distrito || "",
         poblacion: Number(project.poblacion || 0),
         presupuesto: Number(project.presupuesto || 0),
         adjudicado: Number(project.adjudicado || 0),
@@ -4987,6 +4992,7 @@
         tipo: get("tipo", "obra") || "Sin tipo",
         comunidad: get("sector", "comunidad", "proyecto") || `Proyecto ${index + 1}`,
         municipio: get("municipio") || "Sin municipio",
+        distrito: get("distrito") || "",
         poblacion: readExcelNumber(get("poblacion", "habitantes")),
         presupuesto: readExcelNumber(get("presupuesto", "total por snip", "monto total")),
         adjudicado: readExcelNumber(get("adjudicado")),
@@ -5028,6 +5034,7 @@
             tipo: project.tipo,
             comunidad: project.comunidad,
             municipio: project.municipio,
+            distrito: project.distrito,
             poblacion: project.poblacion,
             presupuesto: project.presupuesto,
             adjudicado: project.adjudicado,
@@ -5249,44 +5256,55 @@
       const search = normalizeSearch(document.getElementById("newSnipReportSearch")?.value || "");
       const rows = enrichedProjects().filter(project => {
         if (!search) return true;
-        return normalizeSearch([displaySnip(project), project.tipo, project.municipio, project.comunidad].join(" ")).includes(search);
+        return normalizeSearch([displaySnip(project), project.tipo, project.municipio, project.distrito, project.comunidad].join(" ")).includes(search);
       });
       const snipGroups = groupRows(rows, displaySnip);
-      const blocks = Object.entries(snipGroups)
+      const snipSummary = Object.entries(snipGroups)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([snip, items]) => {
-          const municipalityGroups = groupRows(items, project => project.municipio || "Sin municipio");
-          const body = Object.entries(municipalityGroups)
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([municipality, projects]) => `
-              <tr class="municipality-row"><th colspan="6">Municipio: ${escapeHtml(municipality)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión: ${money.format(sum(projects, "presupuesto"))}</th></tr>
-              ${projects
-                .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
-                .map(project => `<tr>
-                  <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
-                  <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
-                  <td>${money.format(Number(project.adjudicado || 0))}</td>
-                  <td>${money.format(Number(project.comprometido || 0))}</td>
-                  <td>${money.format(Number(project.pagado || 0))}</td>
-                  <td>${number.format(projectExecutionPercent(project))}%</td>
-                </tr>`).join("")}
-            `).join("");
-          return `
-            <section class="snip-summary-block">
-              <div class="snip-summary-head">
-                <div><small>Código SNIP</small><strong>${escapeHtml(snip)}</strong></div>
-                <div><small>Total del SNIP</small><strong>${money.format(sum(items, "presupuesto"))}</strong></div>
-                <div><small>Total de población</small><strong>${number.format(sum(items, "poblacion"))}</strong></div>
-              </div>
-              <div class="table-wrap">
-                <table class="snip-summary-table">
-                  <thead><tr><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
-                  <tbody>${body}</tbody>
-                </table>
-              </div>
-            </section>`;
-        });
-      target.innerHTML = blocks.join("") || `<div class="empty">No hay proyectos que coincidan con la búsqueda.</div>`;
+          const pagado = sum(items, "pagado");
+          return `<tr>
+            <td>${escapeHtml(snip)}</td>
+            <td>${money.format(sum(items, "presupuesto"))}</td>
+            <td>${money.format(sum(items, "adjudicado"))}</td>
+            <td>${money.format(pagado)}</td>
+            <td>${money.format(Math.max(sum(items, "presupuesto") - pagado, 0))}</td>
+            <td>${number.format(sum(items, "poblacion"))}</td>
+          </tr>`;
+        }).join("");
+      const territoryGroups = groupRows(rows, project => project.distrito || project.municipio || "Sin municipio o distrito");
+      const territoryBlocks = Object.entries(territoryGroups)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([territory, projects]) => `
+          <section class="snip-summary-block">
+            <div class="territory-summary-head">Municipio o distrito: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión: ${money.format(sum(projects, "presupuesto"))}</div>
+            <div class="table-wrap">
+              <table class="snip-summary-table">
+                <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
+                <tbody>${projects
+                  .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
+                  .map(project => `<tr>
+                    <td>${escapeHtml(displaySnip(project))}</td>
+                    <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
+                    <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
+                    <td>${money.format(Number(project.adjudicado || 0))}</td>
+                    <td>${money.format(Number(project.comprometido || 0))}</td>
+                    <td>${money.format(Number(project.pagado || 0))}</td>
+                    <td>${number.format(projectExecutionPercent(project))}%</td>
+                  </tr>`).join("")}</tbody>
+              </table>
+            </div>
+          </section>`).join("");
+      target.innerHTML = rows.length ? `
+        <section class="snip-summary-block">
+          <div class="table-wrap">
+            <table class="snip-summary-table snip-code-summary-table">
+              <thead><tr><th>Código SNIP</th><th>Total del SNIP</th><th>Adjudicado</th><th>Pagado</th><th>Disponible por código</th><th>Total de población</th></tr></thead>
+              <tbody>${snipSummary}</tbody>
+            </table>
+          </div>
+        </section>
+        ${territoryBlocks}` : `<div class="empty">No hay proyectos que coincidan con la búsqueda.</div>`;
     }
 
     function groupRows(rows, keyFn) {
@@ -5972,6 +5990,7 @@
       const form = document.getElementById("projectForm");
       form.elements.tipoNuevo.value = project.tipo || "";
       form.elements.municipioNuevo.value = project.municipio || "";
+      form.elements.distritoNuevo.value = project.distrito || "";
       form.elements.comunidadNuevo.value = project.comunidad || "";
       form.elements.poblacionNuevo.value = project.poblacion || "";
       form.elements.codigo.value = project.codigo || "";
@@ -6010,6 +6029,7 @@
         tipo: data.get("tipoNuevo"),
         comunidad: data.get("comunidadNuevo"),
         municipio: String(data.get("municipioNuevo") || "").trim(),
+        distrito: String(data.get("distritoNuevo") || "").trim(),
         poblacion: Number(data.get("poblacionNuevo")) || 0,
         presupuesto,
         adjudicado,
@@ -6035,6 +6055,7 @@
         tipo: data.get("tipoNuevo"),
         comunidad: data.get("comunidadNuevo"),
         municipio: String(data.get("municipioNuevo") || "").trim(),
+        distrito: String(data.get("distritoNuevo") || "").trim(),
         poblacion: Number(data.get("poblacionNuevo")) || 0,
         presupuesto,
         adjudicado,
@@ -6079,6 +6100,7 @@
       });
       project.tipo = data.get("tipoNuevo") || project.tipo;
       project.municipio = data.get("municipioNuevo") || project.municipio;
+      project.distrito = String(data.get("distritoNuevo") || "").trim();
       project.comunidad = data.get("comunidadNuevo") || project.comunidad;
       project.poblacion = Number(data.get("poblacionNuevo")) || project.poblacion || 0;
       project.actualizadoEn = new Date().toISOString();
@@ -6094,6 +6116,11 @@
           monto_publicado: project.estatus === "Publicado" ? Number(project.presupuesto || 0) : 0,
           tipo_proceso: project.tipoProceso,
           monto_sin_adjudicar: project.montoSinAdjudicar,
+          tipo: project.tipo,
+          municipio: project.municipio,
+          distrito: project.distrito || "",
+          comunidad: project.comunidad,
+          poblacion: Number(project.poblacion || 0),
           presupuesto: Number(project.presupuesto || 0),
           adjudicado: Number(project.adjudicado || 0)
         };
@@ -7204,12 +7231,14 @@
             .snip-summary-block { margin-bottom: 14px; border: 1px solid #cfd9de; page-break-inside: avoid; }
             .snip-summary-head { display: grid; grid-template-columns: repeat(3, 1fr); background: #e8f0f7; }
             .snip-summary-head div { padding: 8px; border-right: 1px solid #cfd9de; }
+            .territory-summary-head { padding: 8px; background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 700; text-align: center; }
             small { display: block; color: #65727d; font-size: 10px; font-weight: 700; text-transform: uppercase; }
             strong { display: block; margin-top: 3px; font-size: 13px; }
             table { width: 100%; border-collapse: collapse; font-size: 10px; }
             th, td { border: 1px solid #cfd9de; padding: 6px; text-align: left; vertical-align: top; }
             th { background: #eef3f5; }
-            th:nth-child(n+3), td:nth-child(n+3) { text-align: right; }
+            table:not(.snip-code-summary-table) th:nth-child(n+4), table:not(.snip-code-summary-table) td:nth-child(n+4),
+            table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; }
             .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; }
             @media print { body { margin: 0; } }
             @page { size: landscape; margin: 12mm; }
