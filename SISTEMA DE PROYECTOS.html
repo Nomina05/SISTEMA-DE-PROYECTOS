@@ -5236,13 +5236,12 @@
           const body = Object.entries(municipalityGroups)
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([municipality, projects]) => `
-              <tr class="municipality-row"><th colspan="7">Municipio: ${escapeHtml(municipality)}</th></tr>
+              <tr class="municipality-row"><th colspan="6">Municipio: ${escapeHtml(municipality)} | Total de población: ${number.format(sum(projects, "poblacion"))}</th></tr>
               ${projects
                 .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
                 .map(project => `<tr>
                   <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
                   <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
-                  <td>${number.format(Number(project.poblacion || 0))}</td>
                   <td>${money.format(Number(project.adjudicado || 0))}</td>
                   <td>${money.format(Number(project.comprometido || 0))}</td>
                   <td>${money.format(Number(project.pagado || 0))}</td>
@@ -5258,7 +5257,7 @@
               </div>
               <div class="table-wrap">
                 <table class="snip-summary-table">
-                  <thead><tr><th>Tipo de obra</th><th>Sector</th><th>Población</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
+                  <thead><tr><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
                   <tbody>${body}</tbody>
                 </table>
               </div>
