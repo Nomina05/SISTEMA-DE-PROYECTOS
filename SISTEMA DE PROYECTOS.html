@@ -1162,8 +1162,8 @@
               </div>
               <label class="span-2" id="existingProjectField" hidden>Proyecto<select name="projectKey"></select></label>
               <label class="span-2 new-project-field" hidden>Tipo de proyecto<input name="tipoNuevo" placeholder="Ej. Construcción de pozo tubular"></label>
-              <label class="span-2 new-project-field" hidden>Municipio<input name="municipioNuevo" placeholder="Ej. Municipio de Moca"></label>
-              <label class="span-2 new-project-field" hidden>Distrito municipal<input name="distritoNuevo" placeholder="Opcional. Ej. Canca la Reina"></label>
+              <label class="span-2 new-project-field" hidden>Municipio<select name="municipioNuevo"></select></label>
+              <label class="span-2 new-project-field" hidden>Distrito municipal<select name="distritoNuevo"></select></label>
               <label class="span-2 new-project-field" hidden>Comunidad / proyecto<input name="comunidadNuevo" placeholder="Nombre del proyecto o comunidad"></label>
               <label class="new-project-field" hidden>Población<input name="poblacionNuevo" type="number" min="0" step="1" placeholder="Habitantes"></label>
               <label>Código<input name="codigo" placeholder="Ej. SNIP-0000"></label>
@@ -1362,6 +1362,13 @@
     const colors = ["#1769aa", "#198754", "#0f766e", "#c47f00", "#b42318", "#6f42c1"];
     const money = new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 2 });
     const number = new Intl.NumberFormat("es-DO");
+    const espaillatTerritoryCatalog = {
+      "Moca": ["Canca La Reina", "El Higüerito", "José Contreras", "Juan López", "La Ortega", "Las Lagunas", "Monte de la Jagua"],
+      "Cayetano Germosén": [],
+      "Gaspar Hernández": ["Joba Arriba", "Veragua", "Villa Magante"],
+      "Jamao al Norte": [],
+      "San Víctor": []
+    };
     const stateKey = "coraamoca-system-v7-base-datos-1-supabase";
     const makeId = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const permissionLabels = {
@@ -1663,6 +1670,61 @@
       return form;
     }
 
+    function canonicalTerritoryName(value) {
+      return normalizeSearch(value).replace(/\s+/g, " ").trim();
+    }
+
+    function normalizeProjectTerritory(project = {}) {
+      const rawMunicipality = String(project.municipio || "").trim();
+      const rawDistrict = String(project.distrito || "").trim();
+      const municipalityAliases = {
+        "moca": "Moca",
+        "municipio de moca": "Moca",
+        "cayetano germosen": "Cayetano Germosén",
+        "municipio de cayetano germosen": "Cayetano Germosén",
+        "gaspar hernandez": "Gaspar Hernández",
+        "municipio de gaspar hernandez": "Gaspar Hernández",
+        "jamao al norte": "Jamao al Norte",
+        "municipio de jamao al norte": "Jamao al Norte",
+        "san victor": "San Víctor",
+        "municipio de san victor": "San Víctor"
+      };
+      const districtAliases = {
+        "canca la reina": ["Moca", "Canca La Reina"],
+        "el higuerito": ["Moca", "El Higüerito"],
+        "higuerito": ["Moca", "El Higüerito"],
+        "hincha": ["Moca", "El Higüerito"],
+        "jose contreras": ["Moca", "José Contreras"],
+        "villa trina": ["Moca", "José Contreras"],
+        "juan lopez": ["Moca", "Juan López"],
+        "la ortega": ["Moca", "La Ortega"],
+        "las lagunas": ["Moca", "Las Lagunas"],
+        "monte de la jagua": ["Moca", "Monte de la Jagua"],
+        "monte la jagua": ["Moca", "Monte de la Jagua"],
+        "joba arriba": ["Gaspar Hernández", "Joba Arriba"],
+        "veragua": ["Gaspar Hernández", "Veragua"],
+        "villa magante": ["Gaspar Hernández", "Villa Magante"]
+      };
+      const districtMatch = districtAliases[canonicalTerritoryName(rawDistrict)] || districtAliases[canonicalTerritoryName(rawMunicipality)];
+      const municipality = districtMatch?.[0] || municipalityAliases[canonicalTerritoryName(rawMunicipality)] || rawMunicipality;
+      const district = districtMatch?.[1] || rawDistrict;
+      return { ...project, municipio: municipality, distrito: district };
+    }
+
+    function syncProjectTerritorySelects(municipality = "", district = "") {
+      const form = document.getElementById("projectForm");
+      if (!form) return;
+      const municipalitySelect = form.elements.municipioNuevo;
+      const districtSelect = form.elements.distritoNuevo;
+      const normalized = normalizeProjectTerritory({ municipio: municipality, distrito: district });
+      const municipalities = Object.keys(espaillatTerritoryCatalog);
+      municipalitySelect.innerHTML = `<option value="">Seleccione un municipio</option>` + municipalities.map(value => `<option>${escapeHtml(value)}</option>`).join("");
+      municipalitySelect.value = municipalities.includes(normalized.municipio) ? normalized.municipio : "";
+      const districts = espaillatTerritoryCatalog[municipalitySelect.value] || [];
+      districtSelect.innerHTML = `<option value="">Sin distrito municipal</option>` + districts.map(value => `<option>${escapeHtml(value)}</option>`).join("");
+      districtSelect.value = districts.includes(normalized.distrito) ? normalized.distrito : "";
+    }
+
     function autoBackup() {
       const today = new Date().toISOString().slice(0, 10);
       const backupKey = `${stateKey}-auto-backup`;
@@ -1673,14 +1735,15 @@
     }
 
     function mapProjectFromDb(project) {
+      const territory = normalizeProjectTerritory(project);
       return {
         key: project.id,
         dbId: project.id,
         no: project.no_excel || 0,
         tipo: project.tipo || "",
         comunidad: project.comunidad || "",
-        municipio: project.municipio || "",
-        distrito: project.distrito || "",
+        municipio: territory.municipio || "",
+        distrito: territory.distrito || "",
         poblacion: Number(project.poblacion || 0),
         presupuesto: Number(project.presupuesto || 0),
         adjudicado: Number(project.adjudicado || 0),
@@ -2699,14 +2762,14 @@
         if (projectSnip) {
           candidatesResult = await window.supabaseClient
             .from("proyectos")
-            .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+            .select("id,codigo_interno,snip,no_excel,tipo,municipio,distrito,comunidad,contratista_id,contratistas(nombre)")
             .ilike("snip", `%${projectSnip}%`)
             .limit(100);
         }
         if (!candidatesResult || candidatesResult.error || !candidatesResult.data?.length) {
           candidatesResult = await window.supabaseClient
             .from("proyectos")
-            .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+            .select("id,codigo_interno,snip,no_excel,tipo,municipio,distrito,comunidad,contratista_id,contratistas(nombre)")
             .limit(1000);
         }
         if (candidatesResult.error) throw candidatesResult.error;
@@ -2716,6 +2779,7 @@
           no: projectNo,
           tipo: normalizeMatchText(project.tipo || parsedLabel.tipo),
           municipio: normalizeMatchText(parsedLabel.municipio || project.municipio),
+          distrito: normalizeMatchText(project.distrito),
           comunidad: normalizeMatchText(project.comunidad || parsedLabel.comunidad),
           label: normalizeMatchText(parsedLabel.raw)
         };
@@ -2725,9 +2789,11 @@
           if (target.no && Number(candidate.no_excel || 0) === target.no) score += 25;
           const candidateTipo = normalizeMatchText(candidate.tipo);
           const candidateMunicipio = normalizeMatchText(candidate.municipio);
+          const candidateDistrito = normalizeMatchText(candidate.distrito);
           const candidateComunidad = normalizeMatchText(candidate.comunidad);
           if (target.tipo && candidateTipo === target.tipo) score += 20;
           if (target.municipio && candidateMunicipio === target.municipio) score += 15;
+          if (target.distrito && candidateDistrito === target.distrito) score += 15;
           if (target.comunidad && candidateComunidad === target.comunidad) score += 25;
           if (target.comunidad && (candidateComunidad.includes(target.comunidad) || target.comunidad.includes(candidateComunidad))) score += 12;
           if (target.tipo && (candidateTipo.includes(target.tipo) || target.tipo.includes(candidateTipo))) score += 10;
@@ -2748,14 +2814,14 @@
       if (!project && parsedLabel.snip) {
         let candidatesResult = await window.supabaseClient
           .from("proyectos")
-          .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+          .select("id,codigo_interno,snip,no_excel,tipo,municipio,distrito,comunidad,contratista_id,contratistas(nombre)")
           .ilike("snip", `%${parsedLabel.snip}%`)
           .limit(100);
         if (candidatesResult.error) throw candidatesResult.error;
         if (!candidatesResult.data?.length) {
           candidatesResult = await window.supabaseClient
             .from("proyectos")
-            .select("id,codigo_interno,snip,no_excel,tipo,municipio,comunidad,contratista_id,contratistas(nombre)")
+            .select("id,codigo_interno,snip,no_excel,tipo,municipio,distrito,comunidad,contratista_id,contratistas(nombre)")
             .limit(1000);
           if (candidatesResult.error) throw candidatesResult.error;
         }
@@ -2790,6 +2856,7 @@
         tipo: source.tipo || parsedLabel.tipo || "Proyecto sin tipo",
         comunidad: source.comunidad || parsedLabel.comunidad || "Sin comunidad",
         municipio: source.municipio || parsedLabel.municipio || "Sin municipio",
+        distrito: source.distrito || "",
         poblacion: Number(source.poblacion || 0),
         presupuesto: Number(source.presupuesto || 0),
         adjudicado: Number(source.adjudicado || 0),
@@ -2817,12 +2884,13 @@
 
     function enrichedProjects() {
       return state.projects.map(project => {
+        const territory = normalizeProjectTerritory(project);
         const pagado = projectPaid(project.key);
         const cubicaciones = projectCubicaciones(project.key);
         const disponibilidadPresupuestoAdjudicado = Number(project.presupuesto || 0) - Number(project.adjudicado || 0);
         const disponibilidadAdjudicado = Math.max(Number(project.adjudicado || 0) - pagado, 0);
         const disponibilidadProyecto = disponibilidadPresupuestoAdjudicado - disponibilidadAdjudicado;
-        return { ...project, pagado, cubicaciones, disponibilidadPresupuestoAdjudicado, disponibilidadAdjudicado, disponibilidadProyecto };
+        return { ...project, ...territory, pagado, cubicaciones, disponibilidadPresupuestoAdjudicado, disponibilidadAdjudicado, disponibilidadProyecto };
       });
     }
 
@@ -3066,7 +3134,7 @@
         select.innerHTML = options;
         if (selected && [...select.options].some(option => option.value === selected)) select.value = selected;
       });
-      const municipalities = [...new Set(state.projects.map(p => p.municipio))].sort();
+      const municipalities = [...new Set(enrichedProjects().map(p => p.municipio).filter(Boolean))].sort();
       document.getElementById("municipalityFilter").innerHTML = `<option value="">Todos los municipios</option>` + municipalities.map(m => `<option>${m}</option>`).join("");
       const statuses = [...new Set([...(state.catalogs?.estatus_obra || []), "20% Ejecutado", "30% Ejecutado", "60% Ejecutado", "85% Ejecutado", ...state.projects.map(p => p.estatus)])];
       document.getElementById("statusFilter").innerHTML = `<option value="">Todos los estatus</option>` + statuses.map(s => `<option>${s}</option>`).join("");
@@ -4623,6 +4691,8 @@
     }
 
     function syncCatalogOptions() {
+      const territoryForm = document.getElementById("projectForm");
+      if (territoryForm) syncProjectTerritorySelects(territoryForm.elements.municipioNuevo.value, territoryForm.elements.distritoNuevo.value);
       const statusSelect = document.querySelector('#projectForm select[name="estatus"]');
       if (statusSelect) {
         const selected = statusSelect.value;
@@ -4987,7 +5057,7 @@
         const found = Object.keys(row).find(key => names.some(name => key.toLowerCase().includes(name)));
         return found ? row[found] : "";
       };
-      return {
+      return normalizeProjectTerritory({
         no: get("no", "#") || index + 1,
         tipo: get("tipo", "obra") || "Sin tipo",
         comunidad: get("sector", "comunidad", "proyecto") || `Proyecto ${index + 1}`,
@@ -5004,7 +5074,7 @@
         codigo: String(get("snip", "codigo")).replace(/^SNIP:\s*/i, "") || "00001",
         contratista: get("proveedor", "contratista") || "Sin asignar",
         estatus: get("estatus", "estado") || "En proceso"
-      };
+      });
     }
 
     async function handleExcelUpload(event) {
@@ -5992,8 +6062,7 @@
       if (!project) return;
       const form = document.getElementById("projectForm");
       form.elements.tipoNuevo.value = project.tipo || "";
-      form.elements.municipioNuevo.value = project.municipio || "";
-      form.elements.distritoNuevo.value = project.distrito || "";
+      syncProjectTerritorySelects(project.municipio || "", project.distrito || "");
       form.elements.comunidadNuevo.value = project.comunidad || "";
       form.elements.poblacionNuevo.value = project.poblacion || "";
       form.elements.codigo.value = project.codigo || "";
@@ -6013,13 +6082,14 @@
 
     async function createProjectFromForm(form) {
       const data = new FormData(form);
+      const territory = normalizeProjectTerritory({ municipio: data.get("municipioNuevo"), distrito: data.get("distritoNuevo") });
       const presupuesto = Number(data.get("presupuesto")) || 0;
       const adjudicado = Number(data.get("adjudicado")) || presupuesto;
       validateProjectAmounts(presupuesto, adjudicado);
       const committed = 0;
       validateDuplicateProject({
         codigo: data.get("codigo") || "",
-        municipio: String(data.get("municipioNuevo") || "").trim(),
+        municipio: territory.municipio,
         comunidad: data.get("comunidadNuevo") || "",
         tipo: data.get("tipoNuevo") || ""
       });
@@ -6031,8 +6101,8 @@
         item: "Manual",
         tipo: data.get("tipoNuevo"),
         comunidad: data.get("comunidadNuevo"),
-        municipio: String(data.get("municipioNuevo") || "").trim(),
-        distrito: String(data.get("distritoNuevo") || "").trim(),
+        municipio: territory.municipio,
+        distrito: territory.distrito,
         poblacion: Number(data.get("poblacionNuevo")) || 0,
         presupuesto,
         adjudicado,
@@ -6057,8 +6127,8 @@
         no: state.projects.length + 1,
         tipo: data.get("tipoNuevo"),
         comunidad: data.get("comunidadNuevo"),
-        municipio: String(data.get("municipioNuevo") || "").trim(),
-        distrito: String(data.get("distritoNuevo") || "").trim(),
+        municipio: territory.municipio,
+        distrito: territory.distrito,
         poblacion: Number(data.get("poblacionNuevo")) || 0,
         presupuesto,
         adjudicado,
@@ -6088,6 +6158,7 @@
 
     async function updateProjectFromForm(form) {
       const data = new FormData(form);
+      const territory = normalizeProjectTerritory({ municipio: data.get("municipioNuevo"), distrito: data.get("distritoNuevo") });
       const project = state.projects.find(p => p.key === data.get("projectKey"));
       if (!project) return;
       const previousProject = { ...project };
@@ -6102,8 +6173,8 @@
         if (!Number.isNaN(value) && value > 0) project[field] = value;
       });
       project.tipo = data.get("tipoNuevo") || project.tipo;
-      project.municipio = data.get("municipioNuevo") || project.municipio;
-      project.distrito = String(data.get("distritoNuevo") || "").trim();
+      project.municipio = territory.municipio || project.municipio;
+      project.distrito = territory.distrito;
       project.comunidad = data.get("comunidadNuevo") || project.comunidad;
       project.poblacion = Number(data.get("poblacionNuevo")) || project.poblacion || 0;
       project.actualizadoEn = new Date().toISOString();
@@ -6590,6 +6661,9 @@
 
     document.querySelector('#projectForm select[name="projectKey"]').addEventListener("change", event => {
       if (projectFormMode === "edit") loadProjectIntoForm(event.target.value);
+    });
+    document.querySelector('#projectForm select[name="municipioNuevo"]').addEventListener("change", event => {
+      syncProjectTerritorySelects(event.target.value, "");
     });
 
     document.getElementById("paymentForm").addEventListener("submit", async event => {
