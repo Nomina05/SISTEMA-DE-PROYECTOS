@@ -273,6 +273,8 @@
     .snip-summary-head small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .snip-summary-head strong { display: block; margin-top: 3px; color: #102b4a; font-size: 14px; }
     .territory-summary-head { padding: 10px 12px; border-bottom: 1px solid var(--line); background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 800; text-align: center; }
+    .district-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; background: #f6f9fc; color: #102b4a; font-size: 12px; font-weight: 800; text-align: left; }
+    .district-summary-head span:last-child { color: #405267; font-weight: 800; white-space: nowrap; }
     .snip-investment-summary { margin-top: 16px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
     .snip-investment-summary h3 { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0; padding: 10px 12px; background: #a9bfdf; color: #031a33; font-size: 15px; letter-spacing: 0; text-transform: uppercase; }
     .snip-investment-summary h3 strong { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -284,8 +286,8 @@
     .snip-investment-summary .summary-total td { font-size: 14px; font-weight: 900; background: #f6f9fc; }
     table.snip-summary-table { min-width: 1380px; }
     table.snip-code-summary-table { min-width: 1320px; }
-    table.snip-summary-table .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; font-size: 12px; }
-    table.snip-summary-table:not(.snip-code-summary-table) th:nth-child(n+5), table.snip-summary-table:not(.snip-code-summary-table) td:nth-child(n+5),
+    table.snip-summary-table .district-row th { padding: 0; background: #f6f9fc; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    table.snip-summary-table:not(.snip-code-summary-table) th:nth-child(n+4), table.snip-summary-table:not(.snip-code-summary-table) td:nth-child(n+4),
     table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; font-size: 12px; }
     th { position: sticky; top: 0; background: #edf3f8; z-index: 1; white-space: nowrap; color: #405267; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
@@ -5382,27 +5384,40 @@
       const territoryGroups = groupRows(rows, project => project.municipio || "Sin municipio");
       const territoryBlocks = Object.entries(territoryGroups)
         .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([territory, projects]) => `
-          <section class="snip-summary-block">
-            <div class="territory-summary-head">Municipio: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión: ${money.format(sum(projects, "presupuesto"))}</div>
-            <div class="table-wrap">
-              <table class="snip-summary-table">
-                <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Distrito</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
-                <tbody>${projects
-                  .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")))
-                  .map(project => `<tr>
-                    <td>${escapeHtml(displaySnip(project))}</td>
-                    <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
-                    <td>${escapeHtml(project.distrito || "Sin asignar")}</td>
-                    <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
-                    <td>${money.format(Number(project.adjudicado || 0))}</td>
-                    <td>${money.format(Number(project.comprometido || 0))}</td>
-                    <td>${money.format(Number(project.pagado || 0))}</td>
-                    <td>${number.format(projectExecutionPercent(project))}%</td>
-                  </tr>`).join("")}</tbody>
-              </table>
-            </div>
-          </section>`).join("");
+        .map(([territory, projects]) => {
+          const districtRows = Object.entries(groupRows(projects, project => project.distrito || "Sin distrito municipal"))
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([district, districtProjects]) => `
+              <tr class="district-row">
+                <th colspan="7">
+                  <div class="district-summary-head">
+                    <span>Distrito: ${escapeHtml(district)}</span>
+                    <span>Total de población: ${number.format(sum(districtProjects, "poblacion"))} | Total de inversión por distrito: ${money.format(sum(districtProjects, "presupuesto"))}</span>
+                  </div>
+                </th>
+              </tr>
+              ${districtProjects
+                .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")) || displaySnip(a).localeCompare(displaySnip(b)))
+                .map(project => `<tr>
+                  <td>${escapeHtml(displaySnip(project))}</td>
+                  <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
+                  <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
+                  <td>${money.format(Number(project.adjudicado || 0))}</td>
+                  <td>${money.format(Number(project.comprometido || 0))}</td>
+                  <td>${money.format(Number(project.pagado || 0))}</td>
+                  <td>${number.format(projectExecutionPercent(project))}%</td>
+                </tr>`).join("")}`).join("");
+          return `
+            <section class="snip-summary-block">
+              <div class="territory-summary-head">Municipio: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión por municipio: ${money.format(sum(projects, "presupuesto"))}</div>
+              <div class="table-wrap">
+                <table class="snip-summary-table">
+                  <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
+                  <tbody>${districtRows}</tbody>
+                </table>
+              </div>
+            </section>`;
+        }).join("");
       const investmentSummary = renderSnipInvestmentSummary(rows);
       target.innerHTML = rows.length ? `
         <section class="snip-summary-block">
@@ -7392,6 +7407,8 @@
             .snip-summary-head { display: grid; grid-template-columns: repeat(3, 1fr); background: #e8f0f7; }
             .snip-summary-head div { padding: 8px; border-right: 1px solid #cfd9de; }
             .territory-summary-head { padding: 8px; background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 700; text-align: center; }
+            .district-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 8px; background: #f6f9fc; color: #102b4a; font-size: 11px; font-weight: 800; text-align: left; }
+            .district-summary-head span:last-child { color: #405267; white-space: nowrap; }
             .snip-investment-summary { margin-top: 14px; border: 1px solid #cfd9de; page-break-inside: avoid; }
             .snip-investment-summary h3 { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 8px; background: #a9bfdf; color: #031a33; font-size: 14px; text-transform: uppercase; }
             .snip-investment-summary h3 strong { font-size: 14px; white-space: nowrap; }
@@ -7406,9 +7423,9 @@
             table { width: 100%; border-collapse: collapse; font-size: 10px; }
             th, td { border: 1px solid #cfd9de; padding: 6px; text-align: left; vertical-align: top; }
             th { background: #eef3f5; }
-            table:not(.snip-code-summary-table) th:nth-child(n+5), table:not(.snip-code-summary-table) td:nth-child(n+5),
+            table:not(.snip-code-summary-table) th:nth-child(n+4), table:not(.snip-code-summary-table) td:nth-child(n+4),
             table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; }
-            .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; }
+            .district-row th { padding: 0; background: #f6f9fc; color: #102b4a; }
             @media print { body { margin: 0; } }
             @page { size: landscape; margin: 12mm; }
           </style>
