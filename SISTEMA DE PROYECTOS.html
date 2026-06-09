@@ -273,6 +273,15 @@
     .snip-summary-head small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .snip-summary-head strong { display: block; margin-top: 3px; color: #102b4a; font-size: 14px; }
     .territory-summary-head { padding: 10px 12px; border-bottom: 1px solid var(--line); background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 800; text-align: center; }
+    .snip-investment-summary { margin-top: 16px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .snip-investment-summary h3 { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0; padding: 10px 12px; background: #a9bfdf; color: #031a33; font-size: 15px; letter-spacing: 0; text-transform: uppercase; }
+    .snip-investment-summary h3 strong { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .snip-investment-summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .snip-investment-summary td { border-top: 1px solid var(--line); padding: 8px 12px; }
+    .snip-investment-summary td:first-child { font-weight: 800; text-transform: uppercase; }
+    .snip-investment-summary td:last-child { width: 220px; text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .snip-investment-summary .summary-gap td { height: 18px; padding: 0; background: #f8fafc; }
+    .snip-investment-summary .summary-total td { font-size: 14px; font-weight: 900; background: #f6f9fc; }
     table.snip-summary-table { min-width: 1380px; }
     table.snip-code-summary-table { min-width: 1320px; }
     table.snip-summary-table .municipality-row th { background: #f6f9fc; color: #102b4a; text-align: center; font-size: 12px; }
@@ -1749,6 +1758,7 @@
         adjudicado: Number(project.adjudicado || 0),
         comprometido: Number(project.comprometido || 0),
         pagadoBase: Number(project.pagado_base || 0),
+        totalPagadoBase: project.total_pagado_base === null || project.total_pagado_base === undefined ? undefined : Number(project.total_pagado_base || 0),
         disponibilidadAdjudicadoBase: Number(project.disponibilidad_adjudicado_base || 0),
         disponibilidadProyectoBase: Number(project.disponibilidad_proyecto_base || 0),
         item: project.item || "",
@@ -2700,7 +2710,13 @@
 
     function projectPaid(projectKey) {
       const project = state.projects.find(p => p.key === projectKey);
-      return Number(project?.comprometido || 0) + projectCubicaciones(projectKey);
+      const manualPayments = state.payments
+        .filter(p => p.projectKey === projectKey && (!p.estado || p.estado === "Aprobada"))
+        .reduce((t, p) => t + Number(p.monto || 0), 0);
+      if (project && Object.prototype.hasOwnProperty.call(project, "totalPagadoBase") && project.totalPagadoBase !== undefined) {
+        return Number(project.totalPagadoBase || 0) + manualPayments;
+      }
+      return Number(project?.comprometido || 0) + Number(project?.pagadoBase || 0) + projectCubicaciones(projectKey);
     }
 
     function projectCubicaciones(projectKey) {
@@ -5057,6 +5073,11 @@
         const found = Object.keys(row).find(key => names.some(name => key.toLowerCase().includes(name)));
         return found ? row[found] : "";
       };
+      const cubicacionesExcel = Object.keys(row)
+        .filter(key => /cubicaci[oó]n/i.test(key) && !/total/i.test(key))
+        .reduce((total, key) => total + readExcelNumber(row[key]), 0);
+      const totalCubicado = readExcelNumber(get("total cubicado")) || cubicacionesExcel;
+      const rawTotalPagado = get("total pagado");
       return normalizeProjectTerritory({
         no: get("no", "#") || index + 1,
         tipo: get("tipo", "obra") || "Sin tipo",
@@ -5068,9 +5089,16 @@
         adjudicado: readExcelNumber(get("adjudicado")),
         comprometido: readExcelNumber(get("20%", "comprometido", "avance")),
         pagadoBase: readExcelNumber(get("pagado")),
+        totalPagadoBase: rawTotalPagado === "" ? undefined : readExcelNumber(rawTotalPagado),
         procesoCompra: get("proceso"),
         tipoProceso: get("tipo de proceso"),
         montoSinAdjudicar: readExcelNumber(get("monto sin adjudicar")),
+        totalCubicadoBase: totalCubicado,
+        cuentaPresupuestaria: get("cuenta presupuestaria"),
+        anioRealizacion: readExcelNumber(get("año de realización", "ano de realizacion")),
+        lote: get("lote"),
+        avanceObra: readExcelNumber(get("avance de obra")),
+        nota: get("nota"),
         codigo: String(get("snip", "codigo")).replace(/^SNIP:\s*/i, "") || "00001",
         contratista: get("proveedor", "contratista") || "Sin asignar",
         estatus: get("estatus", "estado") || "En proceso"
@@ -5110,9 +5138,16 @@
             adjudicado: project.adjudicado,
             comprometido: project.comprometido,
             pagado_base: project.pagadoBase,
+            total_pagado_base: project.totalPagadoBase,
+            total_cubicado_base: project.totalCubicadoBase,
             proceso_compra: project.procesoCompra,
             tipo_proceso: project.tipoProceso,
             monto_sin_adjudicar: project.montoSinAdjudicar,
+            cuenta_presupuestaria: project.cuentaPresupuestaria,
+            anio_realizacion: project.anioRealizacion || null,
+            lote: project.lote,
+            avance_obra: project.avanceObra,
+            nota: project.nota,
             snip: project.codigo,
             contratista_id: contratistaId,
             estatus: project.estatus
@@ -5368,6 +5403,7 @@
               </table>
             </div>
           </section>`).join("");
+      const investmentSummary = renderSnipInvestmentSummary(rows);
       target.innerHTML = rows.length ? `
         <section class="snip-summary-block">
           <div class="table-wrap">
@@ -5377,7 +5413,54 @@
             </table>
           </div>
         </section>
-        ${territoryBlocks}` : `<div class="empty">No hay proyectos que coincidan con la búsqueda.</div>`;
+        ${territoryBlocks}
+        ${investmentSummary}` : `<div class="empty">No hay proyectos que coincidan con la búsqueda.</div>`;
+    }
+
+    function isProjectWithoutSnip(project) {
+      const code = normalizeSnip(project.codigo || displaySnip(project));
+      return !code || code === "00001";
+    }
+
+    function isPublishedProject(project) {
+      const text = normalizeSearch([project.estatus, project.tipoProceso].join(" "));
+      return text.includes("public") || text.includes("oferta") || Number(project.montoPublicado || 0) > 0;
+    }
+
+    function renderSnipInvestmentSummary(rows) {
+      const withSnip = rows.filter(project => !isProjectWithoutSnip(project));
+      const withoutSnip = rows.filter(isProjectWithoutSnip);
+      const contracted = withSnip.filter(project => Number(project.adjudicado || 0) > 0);
+      const contractedExecution = contracted.filter(project => !isPublishedProject(project));
+      const contractedPublished = contracted.filter(isPublishedProject);
+      const publishedPending = rows.filter(project => isPublishedProject(project) && Number(project.adjudicado || 0) <= 0);
+      const totalSnip = sum(withSnip, "presupuesto");
+      const totalEjecucionContratado = sum(contractedExecution, "adjudicado");
+      const totalContratadoPublicado = sum(contractedPublished, "adjudicado");
+      const montoPorContratarPublicado = publishedPending.reduce((total, project) => total + Number(project.montoSinAdjudicar || project.montoPublicado || project.presupuesto || 0), 0);
+      const montoPublicadoSinSnip = publishedPending.filter(isProjectWithoutSnip).reduce((total, project) => total + Number(project.montoSinAdjudicar || project.montoPublicado || project.presupuesto || 0), 0);
+      const sinCodigoSnip = sum(withoutSnip, "presupuesto");
+      const montoTotalRestanteSnip = Math.max(totalSnip - totalEjecucionContratado - totalContratadoPublicado - montoPorContratarPublicado, 0);
+      const rowsSummary = [
+        ["CODIGOS SNIP", totalSnip],
+        ["TOTAL EJECUCION CONTRATADO", totalEjecucionContratado],
+        ["TOTAL CONTRATADO PUBLICADO", totalContratadoPublicado],
+        ["TOTAL PAGADO", sum(rows, "pagado")],
+        ["TOTAL CUBICADO", sum(rows, "cubicaciones")],
+        ["MONTO POR CONTRATAR PUBLICADO", montoPorContratarPublicado],
+        ["MONTO PUBLICADO SIN SNIP", montoPublicadoSinSnip],
+        ["SIN CODIGO SNIP", sinCodigoSnip]
+      ];
+      return `<section class="snip-investment-summary">
+        <h3><span>Total de inversion</span><strong>${money.format(sum(rows, "presupuesto"))}</strong></h3>
+        <table>
+          <tbody>
+            ${rowsSummary.map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${money.format(value)}</td></tr>`).join("")}
+            <tr class="summary-gap"><td colspan="2"></td></tr>
+            <tr class="summary-total"><td>MONTO TOTAL RESTANTE DE LOS SNIP</td><td>${money.format(montoTotalRestanteSnip)}</td></tr>
+          </tbody>
+        </table>
+      </section>`;
     }
 
     function groupRows(rows, keyFn) {
@@ -7309,6 +7392,15 @@
             .snip-summary-head { display: grid; grid-template-columns: repeat(3, 1fr); background: #e8f0f7; }
             .snip-summary-head div { padding: 8px; border-right: 1px solid #cfd9de; }
             .territory-summary-head { padding: 8px; background: #e8f0f7; color: #102b4a; font-size: 12px; font-weight: 700; text-align: center; }
+            .snip-investment-summary { margin-top: 14px; border: 1px solid #cfd9de; page-break-inside: avoid; }
+            .snip-investment-summary h3 { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 8px; background: #a9bfdf; color: #031a33; font-size: 14px; text-transform: uppercase; }
+            .snip-investment-summary h3 strong { font-size: 14px; white-space: nowrap; }
+            .snip-investment-summary table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            .snip-investment-summary td { border-top: 1px solid #cfd9de; padding: 6px; }
+            .snip-investment-summary td:first-child { font-weight: 800; text-transform: uppercase; }
+            .snip-investment-summary td:last-child { text-align: right; font-weight: 800; }
+            .snip-investment-summary .summary-gap td { height: 14px; padding: 0; background: #f8fafc; }
+            .snip-investment-summary .summary-total td { font-weight: 900; background: #f6f9fc; }
             small { display: block; color: #65727d; font-size: 10px; font-weight: 700; text-transform: uppercase; }
             strong { display: block; margin-top: 3px; font-size: 13px; }
             table { width: 100%; border-collapse: collapse; font-size: 10px; }
