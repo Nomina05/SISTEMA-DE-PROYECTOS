@@ -1048,12 +1048,13 @@
                 <option>Seguimiento de aprendizaje</option>
                 <option>Eventos y talleres</option>
               </select></label>
-              <label class="span-2">Empleado<input name="empleado" list="trainingEmployeeOptions" placeholder="Buscar por código, nombre o cargo"></label>
+              <label class="span-2">Responsable<input name="empleado" list="trainingEmployeeOptions" placeholder="Responsable o facilitador interno"></label>
               <datalist id="trainingEmployeeOptions"></datalist>
               <label>Modalidad<select name="modalidad"><option>Presencial</option><option>Virtual</option><option>Híbrida</option><option>Autogestionada</option></select></label>
               <label>Inicio<input name="inicio" type="date"></label>
               <label>Fin<input name="fin" type="date"></label>
               <label>Horas<input name="horas" type="number" min="0" step="0.5"></label>
+              <label>Cupo máximo<input name="cupoMaximo" type="number" min="1" max="35" step="1" value="35"></label>
               <label>Estado<select name="estado"><option>Planificado</option><option>En curso</option><option>Completado</option><option>Aprobado</option><option>Reprobado</option><option>Cancelado</option></select></label>
               <label>Avance %<input name="avance" type="number" min="0" max="100" step="1" value="0"></label>
               <label>Resultado<select name="resultado"><option>Pendiente</option><option>Aprobado</option><option>Requiere seguimiento</option><option>Reprobado</option></select></label>
@@ -1073,6 +1074,20 @@
               <div class="notice-actions"><button class="mini-btn" id="generateTrainingPlanBtn" type="button">Plan de carrera</button><button class="mini-btn" id="generateTrainingEvaluationBtn" type="button">Evaluación</button></div>
             </div>
             <div class="table-wrap"><table id="trainingTable"></table></div>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <div class="panel-head">
+              <div><h2>Participantes por capacitación</h2><p class="sub">Seleccione una capacitación y agregue hasta el cupo máximo definido.</p></div>
+            </div>
+            <form id="trainingParticipantForm" class="form-grid">
+              <label class="span-2">Capacitación<select name="trainingId" id="trainingParticipantPlanSelect" required></select></label>
+              <label class="span-2">Empleado<input name="employeeLookup" id="trainingParticipantEmployee" list="trainingEmployeeOptions" placeholder="Código, nombre, cédula o cargo" required></label>
+              <label>Estado<select name="estado"><option>Inscrito</option><option>Asistió</option><option>No asistió</option><option>Aprobado</option><option>Reprobado</option><option>Certificado</option></select></label>
+              <label>Calificación<input name="calificacion" type="number" min="0" max="100" step="1"></label>
+              <label class="span-2">Observación<input name="observacion" placeholder="Nota individual o compromiso"></label>
+              <div class="actions span-4"><button class="btn" type="submit">Agregar participante</button></div>
+            </form>
+            <div class="table-wrap" style="margin-top:12px;"><table id="trainingParticipantsTable"></table></div>
           </div>
         </div>
         <div class="subsection" id="rhTab-beneficios"><div class="rh-panels" data-rh-panel="beneficios"></div></div>
@@ -1648,6 +1663,7 @@
     let passwordChangeInProgress = false;
     let sharedStateHydrated = false;
     let sharedStateSyncTimer = null;
+    let selectedTrainingRecordId = "";
     const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
     const inactivityLimitMs = 20 * 60 * 1000;
     let inactivityTimer = null;
@@ -4187,33 +4203,64 @@
       return Math.max(0, Math.min(100, Number(row.avance || 0)));
     }
 
+    function trainingParticipants(row = {}) {
+      if (!row || typeof row !== "object") return [];
+      if (!Array.isArray(row.participants)) row.participants = [];
+      return row.participants;
+    }
+
+    function trainingCapacity(row = {}) {
+      return Math.max(1, Math.min(35, Number(row.cupoMaximo || 35)));
+    }
+
     function renderTrainingPanel() {
       const records = state.trainingRecords || [];
+      if (!selectedTrainingRecordId || !records.some(row => String(row.id) === String(selectedTrainingRecordId))) {
+        selectedTrainingRecordId = records[0]?.id || "";
+      }
       const datalist = document.getElementById("trainingEmployeeOptions");
       if (datalist) datalist.innerHTML = trainingEmployeeOptions().map(option => `<option value="${escapeHtml(option)}"></option>`).join("");
       const completed = records.filter(row => row.estado === "Completado" || row.estado === "Aprobado").length;
       const hours = records.reduce((total, row) => total + Number(row.horas || 0), 0);
-      const average = records.length ? records.reduce((total, row) => total + trainingProgress(row), 0) / records.length : 0;
+      const participantsTotal = records.reduce((total, row) => total + trainingParticipants(row).length, 0);
+      const seatsAvailable = records.reduce((total, row) => total + Math.max(0, trainingCapacity(row) - trainingParticipants(row).length), 0);
       const kpis = [
-        ["Registros activos", records.filter(row => !["Completado", "Aprobado", "Cancelado"].includes(row.estado)).length, "ok"],
-        ["Completados", completed, "ok"],
+        ["Planes activos", records.filter(row => !["Completado", "Aprobado", "Cancelado"].includes(row.estado)).length, "ok"],
+        ["Participantes", participantsTotal, "ok"],
+        ["Cupos disponibles", seatsAvailable, "warn"],
         ["Horas registradas", hours, "warn"],
-        ["Avance promedio", `${average.toFixed(1)}%`, "ok"]
       ];
       const kpiBox = document.getElementById("trainingKpis");
       if (kpiBox) kpiBox.innerHTML = kpis.map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join("");
-      renderTable("trainingTable", ["Inicio", "Tipo", "Empleado", "Actividad", "Modalidad", "Horas", "Estado", "Avance", "Resultado", "Acción"], records.map(row => [
+      const planSelect = document.getElementById("trainingParticipantPlanSelect");
+      if (planSelect) {
+        planSelect.innerHTML = records.length
+          ? records.map(row => `<option value="${escapeHtml(row.id)}">${escapeHtml(row.titulo || row.tipo || "Capacitación")} (${trainingParticipants(row).length}/${trainingCapacity(row)})</option>`).join("")
+          : `<option value="">No hay capacitaciones registradas</option>`;
+        planSelect.value = selectedTrainingRecordId;
+      }
+      renderTable("trainingTable", ["Inicio", "Tipo", "Actividad", "Responsable", "Cupo", "Participantes", "Modalidad", "Horas", "Estado", "Avance", "Acción"], records.map(row => [
         row.inicio || "-",
         row.tipo || "-",
-        row.empleado || "-",
         row.titulo || "-",
+        row.empleado || "-",
+        trainingCapacity(row),
+        `${trainingParticipants(row).length}/${trainingCapacity(row)}`,
         row.modalidad || "-",
         number.format(Number(row.horas || 0)),
         alertLevelBadge(row.estado === "Cancelado" || row.estado === "Reprobado" ? "Crítico" : row.estado === "Planificado" ? "Alerta" : "Correcto"),
         `${number.format(trainingProgress(row))}%`,
-        row.resultado || "-",
         `<div class="notice-actions"><button class="mini-btn training-edit-btn" type="button" data-id="${escapeHtml(row.id)}">Editar</button><button class="mini-btn training-complete-btn" type="button" data-id="${escapeHtml(row.id)}">Completar</button><button class="mini-btn training-approve-btn" type="button" data-id="${escapeHtml(row.id)}">Aprobar</button></div>`
       ]));
+      const selected = records.find(row => String(row.id) === String(selectedTrainingRecordId));
+      const participantRows = selected ? trainingParticipants(selected).map(item => [
+        item.empleado || "-",
+        item.estado || "Inscrito",
+        item.calificacion || "-",
+        item.observacion || "-",
+        `<div class="notice-actions"><button class="mini-btn training-participant-status-btn" type="button" data-training-id="${escapeHtml(selected.id)}" data-participant-id="${escapeHtml(item.id)}" data-status="Aprobado">Aprobar</button><button class="mini-btn training-participant-status-btn" type="button" data-training-id="${escapeHtml(selected.id)}" data-participant-id="${escapeHtml(item.id)}" data-status="Certificado">Certificar</button><button class="mini-btn danger training-participant-remove-btn" type="button" data-training-id="${escapeHtml(selected.id)}" data-participant-id="${escapeHtml(item.id)}">Quitar</button></div>`
+      ]) : [];
+      renderTable("trainingParticipantsTable", ["Empleado", "Estado", "Calificación", "Observación", "Acción"], participantRows);
     }
 
     function resetTrainingForm() {
@@ -4221,6 +4268,7 @@
       if (form) {
         form.elements.editingId.value = "";
         form.elements.avance.value = "0";
+        form.elements.cupoMaximo.value = "35";
       }
     }
 
@@ -4229,7 +4277,7 @@
       const form = document.getElementById("trainingForm");
       if (!row || !form) return;
       form.elements.editingId.value = row.id;
-      ["tipo", "empleado", "modalidad", "inicio", "fin", "horas", "estado", "avance", "resultado", "titulo", "facilitador", "competencia", "observaciones"].forEach(name => {
+      ["tipo", "empleado", "modalidad", "inicio", "fin", "horas", "cupoMaximo", "estado", "avance", "resultado", "titulo", "facilitador", "competencia", "observaciones"].forEach(name => {
         if (form.elements[name]) form.elements[name].value = row[name] || "";
       });
       form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -4246,14 +4294,17 @@
         inicio: new Date().toISOString().slice(0, 10),
         fin: "",
         horas: 0,
+        cupoMaximo: 35,
         estado: "Planificado",
         avance: 0,
         resultado: "Pendiente",
         titulo: "Plan de carrera individual",
         facilitador: "Recursos Humanos",
         competencia: "Ruta de desarrollo, competencias críticas y formación requerida.",
-        observaciones: "Plan generado para revisión de RRHH y supervisor."
+        observaciones: "Plan generado para revisión de RRHH y supervisor.",
+        participants: []
       });
+      selectedTrainingRecordId = state.trainingRecords[0].id;
       audit("Plan de carrera generado", "Capacitación y desarrollo");
       saveState();
       renderTrainingPanel();
@@ -4270,14 +4321,17 @@
         inicio: new Date().toISOString().slice(0, 10),
         fin: "",
         horas: 0,
+        cupoMaximo: 35,
         estado: "En curso",
         avance: 50,
         resultado: "Pendiente",
         titulo: `Evaluación posterior${last?.titulo ? ` - ${last.titulo}` : ""}`,
         facilitador: "Recursos Humanos",
         competencia: last?.competencia || "Medición de aprendizaje y transferencia al puesto.",
-        observaciones: "Aplicar evaluación de satisfacción, conocimientos y evidencia en el puesto."
+        observaciones: "Aplicar evaluación de satisfacción, conocimientos y evidencia en el puesto.",
+        participants: last ? [...trainingParticipants(last)] : []
       });
+      selectedTrainingRecordId = state.trainingRecords[0].id;
       audit("Evaluación de capacitación generada", "Seguimiento de aprendizaje");
       saveState();
       renderTrainingPanel();
@@ -6868,6 +6922,7 @@
       const form = event.currentTarget;
       const data = Object.fromEntries(new FormData(form));
       state.trainingRecords = state.trainingRecords || [];
+      const previous = state.trainingRecords.find(item => item.id === data.editingId);
       const row = {
         id: data.editingId || makeId(),
         tipo: data.tipo,
@@ -6876,6 +6931,7 @@
         inicio: data.inicio,
         fin: data.fin,
         horas: Number(data.horas || 0),
+        cupoMaximo: Math.max(1, Math.min(35, Number(data.cupoMaximo || 35))),
         estado: data.estado,
         avance: Number(data.avance || 0),
         resultado: data.resultado,
@@ -6883,11 +6939,13 @@
         facilitador: data.facilitador,
         competencia: data.competencia,
         observaciones: data.observaciones,
+        participants: previous ? trainingParticipants(previous) : [],
         actualizadoEn: new Date().toISOString()
       };
       const index = state.trainingRecords.findIndex(item => item.id === row.id);
       if (index >= 0) state.trainingRecords[index] = row;
       else state.trainingRecords.unshift(row);
+      selectedTrainingRecordId = row.id;
       audit(data.editingId ? "Capacitación actualizada" : "Capacitación registrada", `${row.tipo} | ${row.titulo}`);
       saveState();
       resetTrainingForm();
@@ -6896,6 +6954,50 @@
     document.getElementById("newTrainingBtn").addEventListener("click", resetTrainingForm);
     document.getElementById("generateTrainingPlanBtn").addEventListener("click", generateTrainingCareerPlan);
     document.getElementById("generateTrainingEvaluationBtn").addEventListener("click", generateTrainingEvaluation);
+    document.getElementById("trainingParticipantPlanSelect").addEventListener("change", event => {
+      selectedTrainingRecordId = event.target.value;
+      renderTrainingPanel();
+    });
+    document.getElementById("trainingParticipantForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form));
+      const record = (state.trainingRecords || []).find(row => String(row.id) === String(data.trainingId));
+      if (!record) {
+        alert("Seleccione una capacitación válida.");
+        return;
+      }
+      const participants = trainingParticipants(record);
+      const capacity = trainingCapacity(record);
+      if (participants.length >= capacity) {
+        alert(`El cupo máximo de esta capacitación es ${capacity} empleados.`);
+        return;
+      }
+      const selectedEmployee = String(data.employeeLookup || "").trim();
+      if (!selectedEmployee) {
+        alert("Seleccione un empleado para agregarlo a la capacitación.");
+        return;
+      }
+      const selectedKey = normalizeSearch(selectedEmployee);
+      if (participants.some(item => normalizeSearch(item.empleado) === selectedKey)) {
+        alert("Este empleado ya está agregado en esta capacitación.");
+        return;
+      }
+      participants.push({
+        id: makeId(),
+        empleado: selectedEmployee,
+        estado: data.estado || "Inscrito",
+        calificacion: data.calificacion || "",
+        observacion: data.observacion || "",
+        agregadoEn: new Date().toISOString()
+      });
+      record.actualizadoEn = new Date().toISOString();
+      selectedTrainingRecordId = record.id;
+      audit("Participante agregado a capacitación", `${record.titulo || record.tipo} | ${selectedEmployee}`);
+      saveState();
+      form.reset();
+      renderTrainingPanel();
+    });
     document.addEventListener("click", event => {
       const editButton = event.target.closest(".training-edit-btn");
       if (editButton) editTrainingRecord(editButton.dataset.id);
@@ -6923,6 +7025,35 @@
           audit("Capacitación aprobada", `${row.tipo} | ${row.titulo}`);
           saveState();
           renderTrainingPanel();
+        }
+      }
+      const participantStatusButton = event.target.closest(".training-participant-status-btn");
+      if (participantStatusButton) {
+        const row = (state.trainingRecords || []).find(item => String(item.id) === String(participantStatusButton.dataset.trainingId));
+        const participant = trainingParticipants(row).find(item => String(item.id) === String(participantStatusButton.dataset.participantId));
+        if (row && participant) {
+          participant.estado = participantStatusButton.dataset.status;
+          participant.actualizadoEn = new Date().toISOString();
+          row.actualizadoEn = new Date().toISOString();
+          selectedTrainingRecordId = row.id;
+          audit("Participante de capacitación actualizado", `${participant.empleado} | ${participant.estado}`);
+          saveState();
+          renderTrainingPanel();
+        }
+      }
+      const participantRemoveButton = event.target.closest(".training-participant-remove-btn");
+      if (participantRemoveButton) {
+        const row = (state.trainingRecords || []).find(item => String(item.id) === String(participantRemoveButton.dataset.trainingId));
+        if (row) {
+          const before = trainingParticipants(row).length;
+          row.participants = trainingParticipants(row).filter(item => String(item.id) !== String(participantRemoveButton.dataset.participantId));
+          if (row.participants.length !== before) {
+            row.actualizadoEn = new Date().toISOString();
+            selectedTrainingRecordId = row.id;
+            audit("Participante removido de capacitación", row.titulo || row.tipo || "Capacitación");
+            saveState();
+            renderTrainingPanel();
+          }
         }
       }
     });
