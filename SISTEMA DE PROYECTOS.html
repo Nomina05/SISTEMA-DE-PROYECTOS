@@ -1027,7 +1027,54 @@
           </div>
         </div>
         <div class="subsection" id="rhTab-desempeno"><div class="rh-panels" data-rh-panel="desempeno"></div></div>
-        <div class="subsection" id="rhTab-capacitacion"><div class="rh-panels" data-rh-panel="capacitacion"></div></div>
+        <div class="subsection" id="rhTab-capacitacion">
+          <div class="page-heading">
+            <div><span class="eyebrow">Recursos Humanos</span><h1>Panel de Capacitación y Desarrollo</h1><p class="sub">Aprendizaje, certificaciones, planes de carrera y biblioteca digital.</p></div>
+          </div>
+          <div class="rh-kpis" id="trainingKpis"></div>
+          <div class="panel">
+            <h2>Nuevo registro de capacitación</h2>
+            <div class="section-rule"></div>
+            <form id="trainingForm" class="form-grid">
+              <input type="hidden" name="editingId">
+              <label>Tipo<select name="tipo" required>
+                <option>Cursos</option>
+                <option>Capacitaciones internas</option>
+                <option>Certificaciones</option>
+                <option>Planes de carrera</option>
+                <option>Evaluaciones de capacitación</option>
+                <option>LMS básico</option>
+                <option>Biblioteca digital</option>
+                <option>Seguimiento de aprendizaje</option>
+                <option>Eventos y talleres</option>
+              </select></label>
+              <label class="span-2">Empleado<input name="empleado" list="trainingEmployeeOptions" placeholder="Buscar por código, nombre o cargo"></label>
+              <datalist id="trainingEmployeeOptions"></datalist>
+              <label>Modalidad<select name="modalidad"><option>Presencial</option><option>Virtual</option><option>Híbrida</option><option>Autogestionada</option></select></label>
+              <label>Inicio<input name="inicio" type="date"></label>
+              <label>Fin<input name="fin" type="date"></label>
+              <label>Horas<input name="horas" type="number" min="0" step="0.5"></label>
+              <label>Estado<select name="estado"><option>Planificado</option><option>En curso</option><option>Completado</option><option>Aprobado</option><option>Reprobado</option><option>Cancelado</option></select></label>
+              <label>Avance %<input name="avance" type="number" min="0" max="100" step="1" value="0"></label>
+              <label>Resultado<select name="resultado"><option>Pendiente</option><option>Aprobado</option><option>Requiere seguimiento</option><option>Reprobado</option></select></label>
+              <label class="span-2">Nombre del curso, evento o recurso<input name="titulo" required placeholder="Ej. Gestión documental para RRHH"></label>
+              <label class="span-2">Proveedor / facilitador<input name="facilitador" placeholder="Institución, facilitador o enlace LMS"></label>
+              <label class="span-2">Competencia o plan de carrera<textarea name="competencia" placeholder="Competencias desarrolladas, objetivo o ruta de carrera"></textarea></label>
+              <label class="span-2">Observaciones<textarea name="observaciones" placeholder="Evaluación, compromisos, enlace a biblioteca o notas"></textarea></label>
+              <div class="actions span-4">
+                <button class="btn" type="submit">Guardar capacitación</button>
+                <button class="btn secondary" id="newTrainingBtn" type="button">Nuevo</button>
+              </div>
+            </form>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <div class="panel-head">
+              <div><h2>Registros de aprendizaje</h2><p class="sub">Control de cursos, certificaciones, biblioteca digital, talleres y avance de desarrollo.</p></div>
+              <div class="notice-actions"><button class="mini-btn" id="generateTrainingPlanBtn" type="button">Plan de carrera</button><button class="mini-btn" id="generateTrainingEvaluationBtn" type="button">Evaluación</button></div>
+            </div>
+            <div class="table-wrap"><table id="trainingTable"></table></div>
+          </div>
+        </div>
         <div class="subsection" id="rhTab-beneficios"><div class="rh-panels" data-rh-panel="beneficios"></div></div>
         <div class="subsection" id="rhTab-legal"><div class="rh-panels" data-rh-panel="legal"></div></div>
         <div class="subsection" id="rhTab-comunicacion"><div class="rh-panels" data-rh-panel="comunicacion"></div></div>
@@ -1633,7 +1680,7 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], trainingRecords: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: [],
@@ -1642,6 +1689,7 @@
         recruitmentVacancies: parsed.recruitmentVacancies || [],
         recruitmentCandidates: parsed.recruitmentCandidates || [],
         recruitmentInterviews: parsed.recruitmentInterviews || [],
+        trainingRecords: parsed.trainingRecords || [],
         aiAutomations: parsed.aiAutomations || [],
         payments: parsed.payments || [],
         warehouseRequests: parsed.warehouseRequests || [],
@@ -1671,6 +1719,7 @@
         recruitmentVacancies: state.recruitmentVacancies || [],
         recruitmentCandidates: state.recruitmentCandidates || [],
         recruitmentInterviews: state.recruitmentInterviews || [],
+        trainingRecords: state.trainingRecords || [],
         aiAutomations: state.aiAutomations || [],
         essTickets: state.essTickets || [],
         internalNotifications: state.internalNotifications || [],
@@ -1683,6 +1732,7 @@
       state.recruitmentVacancies = shared.recruitmentVacancies || [];
       state.recruitmentCandidates = shared.recruitmentCandidates || [];
       state.recruitmentInterviews = shared.recruitmentInterviews || [];
+      state.trainingRecords = shared.trainingRecords || [];
       state.aiAutomations = shared.aiAutomations || [];
       state.essTickets = shared.essTickets || [];
       state.internalNotifications = shared.internalNotifications || [];
@@ -4125,6 +4175,114 @@
       </div>`;
     }
 
+    function trainingEmployeeOptions() {
+      return visibleEmployeesForUser().map((employee, index) => {
+        const code = employeeDisplayCode(employee) || employeeCode(employee, index);
+        return `${code} - ${employeeFullName(employee)} - ${employee.cargo || employee.data?.cargo || "Sin cargo"}`;
+      });
+    }
+
+    function trainingProgress(row = {}) {
+      if (row.estado === "Completado" || row.estado === "Aprobado") return 100;
+      return Math.max(0, Math.min(100, Number(row.avance || 0)));
+    }
+
+    function renderTrainingPanel() {
+      const records = state.trainingRecords || [];
+      const datalist = document.getElementById("trainingEmployeeOptions");
+      if (datalist) datalist.innerHTML = trainingEmployeeOptions().map(option => `<option value="${escapeHtml(option)}"></option>`).join("");
+      const completed = records.filter(row => row.estado === "Completado" || row.estado === "Aprobado").length;
+      const hours = records.reduce((total, row) => total + Number(row.horas || 0), 0);
+      const average = records.length ? records.reduce((total, row) => total + trainingProgress(row), 0) / records.length : 0;
+      const kpis = [
+        ["Registros activos", records.filter(row => !["Completado", "Aprobado", "Cancelado"].includes(row.estado)).length, "ok"],
+        ["Completados", completed, "ok"],
+        ["Horas registradas", hours, "warn"],
+        ["Avance promedio", `${average.toFixed(1)}%`, "ok"]
+      ];
+      const kpiBox = document.getElementById("trainingKpis");
+      if (kpiBox) kpiBox.innerHTML = kpis.map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join("");
+      renderTable("trainingTable", ["Inicio", "Tipo", "Empleado", "Actividad", "Modalidad", "Horas", "Estado", "Avance", "Resultado", "Acción"], records.map(row => [
+        row.inicio || "-",
+        row.tipo || "-",
+        row.empleado || "-",
+        row.titulo || "-",
+        row.modalidad || "-",
+        number.format(Number(row.horas || 0)),
+        alertLevelBadge(row.estado === "Cancelado" || row.estado === "Reprobado" ? "Crítico" : row.estado === "Planificado" ? "Alerta" : "Correcto"),
+        `${number.format(trainingProgress(row))}%`,
+        row.resultado || "-",
+        `<div class="notice-actions"><button class="mini-btn training-edit-btn" type="button" data-id="${escapeHtml(row.id)}">Editar</button><button class="mini-btn training-complete-btn" type="button" data-id="${escapeHtml(row.id)}">Completar</button><button class="mini-btn training-approve-btn" type="button" data-id="${escapeHtml(row.id)}">Aprobar</button></div>`
+      ]));
+    }
+
+    function resetTrainingForm() {
+      const form = resetFormById("trainingForm");
+      if (form) {
+        form.elements.editingId.value = "";
+        form.elements.avance.value = "0";
+      }
+    }
+
+    function editTrainingRecord(id) {
+      const row = (state.trainingRecords || []).find(item => String(item.id) === String(id));
+      const form = document.getElementById("trainingForm");
+      if (!row || !form) return;
+      form.elements.editingId.value = row.id;
+      ["tipo", "empleado", "modalidad", "inicio", "fin", "horas", "estado", "avance", "resultado", "titulo", "facilitador", "competencia", "observaciones"].forEach(name => {
+        if (form.elements[name]) form.elements[name].value = row[name] || "";
+      });
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function generateTrainingCareerPlan() {
+      const employee = visibleEmployeesForUser()[0];
+      state.trainingRecords = state.trainingRecords || [];
+      state.trainingRecords.unshift({
+        id: makeId(),
+        tipo: "Planes de carrera",
+        empleado: employee ? `${employeeDisplayCode(employee)} - ${employeeFullName(employee)} - ${employee.cargo || employee.data?.cargo || "Sin cargo"}` : "Empleado pendiente",
+        modalidad: "Híbrida",
+        inicio: new Date().toISOString().slice(0, 10),
+        fin: "",
+        horas: 0,
+        estado: "Planificado",
+        avance: 0,
+        resultado: "Pendiente",
+        titulo: "Plan de carrera individual",
+        facilitador: "Recursos Humanos",
+        competencia: "Ruta de desarrollo, competencias críticas y formación requerida.",
+        observaciones: "Plan generado para revisión de RRHH y supervisor."
+      });
+      audit("Plan de carrera generado", "Capacitación y desarrollo");
+      saveState();
+      renderTrainingPanel();
+    }
+
+    function generateTrainingEvaluation() {
+      const last = (state.trainingRecords || [])[0];
+      state.trainingRecords = state.trainingRecords || [];
+      state.trainingRecords.unshift({
+        id: makeId(),
+        tipo: "Evaluaciones de capacitación",
+        empleado: last?.empleado || "Empleado pendiente",
+        modalidad: "Autogestionada",
+        inicio: new Date().toISOString().slice(0, 10),
+        fin: "",
+        horas: 0,
+        estado: "En curso",
+        avance: 50,
+        resultado: "Pendiente",
+        titulo: `Evaluación posterior${last?.titulo ? ` - ${last.titulo}` : ""}`,
+        facilitador: "Recursos Humanos",
+        competencia: last?.competencia || "Medición de aprendizaje y transferencia al puesto.",
+        observaciones: "Aplicar evaluación de satisfacción, conocimientos y evidencia en el puesto."
+      });
+      audit("Evaluación de capacitación generada", "Seguimiento de aprendizaje");
+      saveState();
+      renderTrainingPanel();
+    }
+
     function aiPeopleOptions() {
       const employees = visibleEmployeesForUser().map((employee, index) => {
         const code = employeeDisplayCode(employee) || employeeCode(employee, index);
@@ -4438,6 +4596,7 @@
       });
       renderPayrollBudget();
       renderRecruitment();
+      renderTrainingPanel();
       renderEmployeeSelfService();
       renderLeavePanel();
       renderSupervisorPanel();
@@ -6703,6 +6862,69 @@
     document.addEventListener("click", event => {
       const jumpButton = event.target.closest("[data-rh-jump]");
       if (jumpButton) showRhTab(jumpButton.dataset.rhJump);
+    });
+    document.getElementById("trainingForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form));
+      state.trainingRecords = state.trainingRecords || [];
+      const row = {
+        id: data.editingId || makeId(),
+        tipo: data.tipo,
+        empleado: data.empleado,
+        modalidad: data.modalidad,
+        inicio: data.inicio,
+        fin: data.fin,
+        horas: Number(data.horas || 0),
+        estado: data.estado,
+        avance: Number(data.avance || 0),
+        resultado: data.resultado,
+        titulo: data.titulo,
+        facilitador: data.facilitador,
+        competencia: data.competencia,
+        observaciones: data.observaciones,
+        actualizadoEn: new Date().toISOString()
+      };
+      const index = state.trainingRecords.findIndex(item => item.id === row.id);
+      if (index >= 0) state.trainingRecords[index] = row;
+      else state.trainingRecords.unshift(row);
+      audit(data.editingId ? "Capacitación actualizada" : "Capacitación registrada", `${row.tipo} | ${row.titulo}`);
+      saveState();
+      resetTrainingForm();
+      renderTrainingPanel();
+    });
+    document.getElementById("newTrainingBtn").addEventListener("click", resetTrainingForm);
+    document.getElementById("generateTrainingPlanBtn").addEventListener("click", generateTrainingCareerPlan);
+    document.getElementById("generateTrainingEvaluationBtn").addEventListener("click", generateTrainingEvaluation);
+    document.addEventListener("click", event => {
+      const editButton = event.target.closest(".training-edit-btn");
+      if (editButton) editTrainingRecord(editButton.dataset.id);
+      const completeButton = event.target.closest(".training-complete-btn");
+      if (completeButton) {
+        const row = (state.trainingRecords || []).find(item => item.id === completeButton.dataset.id);
+        if (row) {
+          row.estado = "Completado";
+          row.avance = 100;
+          row.resultado = row.resultado === "Pendiente" ? "Aprobado" : row.resultado;
+          row.actualizadoEn = new Date().toISOString();
+          audit("Capacitación completada", `${row.tipo} | ${row.titulo}`);
+          saveState();
+          renderTrainingPanel();
+        }
+      }
+      const approveButton = event.target.closest(".training-approve-btn");
+      if (approveButton) {
+        const row = (state.trainingRecords || []).find(item => item.id === approveButton.dataset.id);
+        if (row) {
+          row.estado = "Aprobado";
+          row.avance = 100;
+          row.resultado = "Aprobado";
+          row.actualizadoEn = new Date().toISOString();
+          audit("Capacitación aprobada", `${row.tipo} | ${row.titulo}`);
+          saveState();
+          renderTrainingPanel();
+        }
+      }
     });
     document.getElementById("aiAutomationForm").addEventListener("submit", event => {
       event.preventDefault();
