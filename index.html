@@ -1048,20 +1048,17 @@
                 <option>Seguimiento de aprendizaje</option>
                 <option>Eventos y talleres</option>
               </select></label>
-              <label class="span-2">Responsable<input name="empleado" list="trainingEmployeeOptions" placeholder="Responsable o facilitador interno"></label>
               <datalist id="trainingEmployeeOptions"></datalist>
+              <label class="span-2">Expositor<input name="expositor" required placeholder="Nombre del expositor"></label>
               <label>Modalidad<select name="modalidad"><option>Presencial</option><option>Virtual</option><option>Híbrida</option><option>Autogestionada</option></select></label>
               <label>Inicio<input name="inicio" type="date"></label>
               <label>Fin<input name="fin" type="date"></label>
               <label>Horas<input name="horas" type="number" min="0" step="0.5"></label>
               <label>Cupo máximo<input name="cupoMaximo" type="number" min="1" max="35" step="1" value="35"></label>
-              <label>Estado<select name="estado"><option>Planificado</option><option>En curso</option><option>Completado</option><option>Aprobado</option><option>Reprobado</option><option>Cancelado</option></select></label>
+              <label>Estado<select name="estado"><option>Programado</option><option>Iniciado</option><option>Terminado</option></select></label>
               <label>Avance %<input name="avance" type="number" min="0" max="100" step="1" value="0"></label>
-              <label>Resultado<select name="resultado"><option>Pendiente</option><option>Aprobado</option><option>Requiere seguimiento</option><option>Reprobado</option></select></label>
-              <label class="span-2">Nombre del curso, evento o recurso<input name="titulo" required placeholder="Ej. Gestión documental para RRHH"></label>
-              <label class="span-2">Proveedor / facilitador<input name="facilitador" placeholder="Institución, facilitador o enlace LMS"></label>
+              <label class="span-2">Nombre del curso, evento o registro<input name="titulo" required placeholder="Ej. Gestión documental para RRHH"></label>
               <label class="span-2">Competencia o plan de carrera<textarea name="competencia" placeholder="Competencias desarrolladas, objetivo o ruta de carrera"></textarea></label>
-              <label class="span-2">Observaciones<textarea name="observaciones" placeholder="Evaluación, compromisos, enlace a biblioteca o notas"></textarea></label>
               <div class="actions span-4">
                 <button class="btn" type="submit">Guardar capacitación</button>
                 <button class="btn secondary" id="newTrainingBtn" type="button">Nuevo</button>
@@ -4199,8 +4196,23 @@
     }
 
     function trainingProgress(row = {}) {
-      if (row.estado === "Completado" || row.estado === "Aprobado") return 100;
+      if (trainingStatus(row) === "Terminado") return 100;
       return Math.max(0, Math.min(100, Number(row.avance || 0)));
+    }
+
+    function trainingStatus(row = {}) {
+      const status = String(row.estado || "Programado").trim();
+      const aliases = {
+        "Planificado": "Programado",
+        "En curso": "Iniciado",
+        "Completado": "Terminado",
+        "Aprobado": "Terminado"
+      };
+      return aliases[status] || status || "Programado";
+    }
+
+    function trainingPresenter(row = {}) {
+      return row.expositor || row.facilitador || row.empleado || "-";
     }
 
     function trainingParticipants(row = {}) {
@@ -4220,15 +4232,14 @@
       }
       const datalist = document.getElementById("trainingEmployeeOptions");
       if (datalist) datalist.innerHTML = trainingEmployeeOptions().map(option => `<option value="${escapeHtml(option)}"></option>`).join("");
-      const completed = records.filter(row => row.estado === "Completado" || row.estado === "Aprobado").length;
       const hours = records.reduce((total, row) => total + Number(row.horas || 0), 0);
       const participantsTotal = records.reduce((total, row) => total + trainingParticipants(row).length, 0);
       const seatsAvailable = records.reduce((total, row) => total + Math.max(0, trainingCapacity(row) - trainingParticipants(row).length), 0);
       const kpis = [
-        ["Planes activos", records.filter(row => !["Completado", "Aprobado", "Cancelado"].includes(row.estado)).length, "ok"],
+        ["Programadas", records.filter(row => trainingStatus(row) === "Programado").length, "ok"],
+        ["Iniciadas", records.filter(row => trainingStatus(row) === "Iniciado").length, "warn"],
+        ["Terminadas", records.filter(row => trainingStatus(row) === "Terminado").length, "ok"],
         ["Participantes", participantsTotal, "ok"],
-        ["Cupos disponibles", seatsAvailable, "warn"],
-        ["Horas registradas", hours, "warn"],
       ];
       const kpiBox = document.getElementById("trainingKpis");
       if (kpiBox) kpiBox.innerHTML = kpis.map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join("");
@@ -4239,18 +4250,19 @@
           : `<option value="">No hay capacitaciones registradas</option>`;
         planSelect.value = selectedTrainingRecordId;
       }
-      renderTable("trainingTable", ["Inicio", "Tipo", "Actividad", "Responsable", "Cupo", "Participantes", "Modalidad", "Horas", "Estado", "Avance", "Acción"], records.map(row => [
+      renderTable("trainingTable", ["Inicio", "Fin", "Tipo", "Curso / evento", "Expositor", "Cupo", "Participantes", "Modalidad", "Horas", "Estado", "Avance", "Acción"], records.map(row => [
         row.inicio || "-",
+        row.fin || "-",
         row.tipo || "-",
         row.titulo || "-",
-        row.empleado || "-",
+        trainingPresenter(row),
         trainingCapacity(row),
         `${trainingParticipants(row).length}/${trainingCapacity(row)}`,
         row.modalidad || "-",
         number.format(Number(row.horas || 0)),
-        alertLevelBadge(row.estado === "Cancelado" || row.estado === "Reprobado" ? "Crítico" : row.estado === "Planificado" ? "Alerta" : "Correcto"),
+        alertLevelBadge(trainingStatus(row) === "Terminado" ? "Correcto" : trainingStatus(row) === "Iniciado" ? "Alerta" : "Informativo"),
         `${number.format(trainingProgress(row))}%`,
-        `<div class="notice-actions"><button class="mini-btn training-edit-btn" type="button" data-id="${escapeHtml(row.id)}">Editar</button><button class="mini-btn training-complete-btn" type="button" data-id="${escapeHtml(row.id)}">Completar</button><button class="mini-btn training-approve-btn" type="button" data-id="${escapeHtml(row.id)}">Aprobar</button></div>`
+        `<div class="notice-actions"><button class="mini-btn training-edit-btn" type="button" data-id="${escapeHtml(row.id)}">Editar</button><button class="mini-btn training-start-btn" type="button" data-id="${escapeHtml(row.id)}">Iniciar</button><button class="mini-btn training-finish-btn" type="button" data-id="${escapeHtml(row.id)}">Terminar</button></div>`
       ]));
       const selected = records.find(row => String(row.id) === String(selectedTrainingRecordId));
       const participantRows = selected ? trainingParticipants(selected).map(item => [
@@ -4269,6 +4281,7 @@
         form.elements.editingId.value = "";
         form.elements.avance.value = "0";
         form.elements.cupoMaximo.value = "35";
+        form.elements.estado.value = "Programado";
       }
     }
 
@@ -4277,7 +4290,9 @@
       const form = document.getElementById("trainingForm");
       if (!row || !form) return;
       form.elements.editingId.value = row.id;
-      ["tipo", "empleado", "modalidad", "inicio", "fin", "horas", "cupoMaximo", "estado", "avance", "resultado", "titulo", "facilitador", "competencia", "observaciones"].forEach(name => {
+      row.expositor = row.expositor || row.facilitador || row.empleado || "";
+      row.estado = trainingStatus(row);
+      ["tipo", "expositor", "modalidad", "inicio", "fin", "horas", "cupoMaximo", "estado", "avance", "titulo", "competencia"].forEach(name => {
         if (form.elements[name]) form.elements[name].value = row[name] || "";
       });
       form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -4289,19 +4304,16 @@
       state.trainingRecords.unshift({
         id: makeId(),
         tipo: "Planes de carrera",
-        empleado: employee ? `${employeeDisplayCode(employee)} - ${employeeFullName(employee)} - ${employee.cargo || employee.data?.cargo || "Sin cargo"}` : "Empleado pendiente",
+        expositor: "Recursos Humanos",
         modalidad: "Híbrida",
         inicio: new Date().toISOString().slice(0, 10),
         fin: "",
         horas: 0,
         cupoMaximo: 35,
-        estado: "Planificado",
+        estado: "Programado",
         avance: 0,
-        resultado: "Pendiente",
         titulo: "Plan de carrera individual",
-        facilitador: "Recursos Humanos",
-        competencia: "Ruta de desarrollo, competencias críticas y formación requerida.",
-        observaciones: "Plan generado para revisión de RRHH y supervisor.",
+        competencia: employee ? `Ruta de desarrollo para ${employeeFullName(employee)}.` : "Ruta de desarrollo, competencias críticas y formación requerida.",
         participants: []
       });
       selectedTrainingRecordId = state.trainingRecords[0].id;
@@ -4316,19 +4328,16 @@
       state.trainingRecords.unshift({
         id: makeId(),
         tipo: "Evaluaciones de capacitación",
-        empleado: last?.empleado || "Empleado pendiente",
+        expositor: last?.expositor || trainingPresenter(last) || "Recursos Humanos",
         modalidad: "Autogestionada",
         inicio: new Date().toISOString().slice(0, 10),
         fin: "",
         horas: 0,
         cupoMaximo: 35,
-        estado: "En curso",
-        avance: 50,
-        resultado: "Pendiente",
+        estado: "Programado",
+        avance: 0,
         titulo: `Evaluación posterior${last?.titulo ? ` - ${last.titulo}` : ""}`,
-        facilitador: "Recursos Humanos",
         competencia: last?.competencia || "Medición de aprendizaje y transferencia al puesto.",
-        observaciones: "Aplicar evaluación de satisfacción, conocimientos y evidencia en el puesto.",
         participants: last ? [...trainingParticipants(last)] : []
       });
       selectedTrainingRecordId = state.trainingRecords[0].id;
@@ -6926,19 +6935,16 @@
       const row = {
         id: data.editingId || makeId(),
         tipo: data.tipo,
-        empleado: data.empleado,
+        expositor: data.expositor,
         modalidad: data.modalidad,
         inicio: data.inicio,
         fin: data.fin,
         horas: Number(data.horas || 0),
         cupoMaximo: Math.max(1, Math.min(35, Number(data.cupoMaximo || 35))),
-        estado: data.estado,
+        estado: data.editingId ? (data.estado || "Programado") : "Programado",
         avance: Number(data.avance || 0),
-        resultado: data.resultado,
         titulo: data.titulo,
-        facilitador: data.facilitador,
         competencia: data.competencia,
-        observaciones: data.observaciones,
         participants: previous ? trainingParticipants(previous) : [],
         actualizadoEn: new Date().toISOString()
       };
@@ -7001,28 +7007,27 @@
     document.addEventListener("click", event => {
       const editButton = event.target.closest(".training-edit-btn");
       if (editButton) editTrainingRecord(editButton.dataset.id);
-      const completeButton = event.target.closest(".training-complete-btn");
-      if (completeButton) {
-        const row = (state.trainingRecords || []).find(item => item.id === completeButton.dataset.id);
+      const startButton = event.target.closest(".training-start-btn");
+      if (startButton) {
+        const row = (state.trainingRecords || []).find(item => item.id === startButton.dataset.id);
         if (row) {
-          row.estado = "Completado";
-          row.avance = 100;
-          row.resultado = row.resultado === "Pendiente" ? "Aprobado" : row.resultado;
+          row.estado = "Iniciado";
+          row.avance = Math.max(Number(row.avance || 0), 1);
           row.actualizadoEn = new Date().toISOString();
-          audit("Capacitación completada", `${row.tipo} | ${row.titulo}`);
+          audit("Capacitación iniciada", `${row.tipo} | ${row.titulo}`);
           saveState();
           renderTrainingPanel();
         }
       }
-      const approveButton = event.target.closest(".training-approve-btn");
-      if (approveButton) {
-        const row = (state.trainingRecords || []).find(item => item.id === approveButton.dataset.id);
+      const finishButton = event.target.closest(".training-finish-btn");
+      if (finishButton) {
+        const row = (state.trainingRecords || []).find(item => item.id === finishButton.dataset.id);
         if (row) {
-          row.estado = "Aprobado";
+          row.estado = "Terminado";
           row.avance = 100;
-          row.resultado = "Aprobado";
+          row.fin = row.fin || new Date().toISOString().slice(0, 10);
           row.actualizadoEn = new Date().toISOString();
-          audit("Capacitación aprobada", `${row.tipo} | ${row.titulo}`);
+          audit("Capacitación terminada", `${row.tipo} | ${row.titulo}`);
           saveState();
           renderTrainingPanel();
         }
