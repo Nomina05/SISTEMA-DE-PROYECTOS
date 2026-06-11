@@ -185,6 +185,12 @@
     .rh-action small { display: block; margin-top: 4px; color: var(--muted); font-weight: 700; }
     #rhTab-empleados > .panel > .page-heading, #rhTab-empleados > .panel > .subtabs { display: none; }
     .employee-register-panel { padding: 14px; background: #fff; }
+    .employee-list-panel.is-hidden, .employee-register-panel.is-hidden { display: none; }
+    .employee-list-panel { min-height: calc(100vh - 150px); padding: 30px; }
+    .employee-list-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 18px 0 28px; }
+    .employee-list-toolbar input { width: min(330px, 100%); min-height: 42px; }
+    .employee-list-toolbar .btn { min-height: 46px; padding-inline: 16px; }
+    .employee-list-title { margin: 0 0 28px; font-size: clamp(24px, 2vw, 30px); color: #061b39; }
     .employee-register-panel .rh-module-list { display: none; }
     .employee-register-panel .panel-head { display: none; }
     .employee-register-panel .panel-head h2 { font-size: clamp(21px, 1.6vw, 26px); color: #0d3159; }
@@ -847,7 +853,20 @@
           </div>
         </div>
         <div class="subsection" id="rhTab-empleados">
-        <div class="panel employee-register-panel">
+        <div class="panel employee-list-panel" id="employeeListPanel">
+          <div class="page-heading">
+            <div><h1>Lista de Empleados</h1></div>
+          </div>
+          <div class="employee-list-toolbar">
+            <input id="employeeListSearch" placeholder="Buscar por nombre, cédula o código">
+            <button class="btn secondary" id="employeeListSearchBtn" type="button">Buscar</button>
+            <button class="btn secondary" id="employeeListAllBtn" type="button">Todos</button>
+            <button class="btn" id="employeeListNewBtn" type="button">Nuevo empleado</button>
+          </div>
+          <h2 class="employee-list-title">Lista de Empleados</h2>
+          <div class="table-wrap" id="employeesTableWrap"><table id="employeesTable"></table></div>
+        </div>
+        <div class="panel employee-register-panel is-hidden" id="employeeRegisterPanel">
           <div class="page-heading">
             <div>
               <span class="eyebrow">Gestión interna</span>
@@ -951,7 +970,6 @@
               <button class="btn secondary" id="viewEmployeesBtn" type="button">Ver empleados</button>
             </div>
           </form>
-          <div class="table-wrap" id="employeesTableWrap" style="margin-top:14px;"><table id="employeesTable"></table></div>
         </div>
         </div>
         <div class="subsection" id="rhTab-reclutamiento">
@@ -1708,6 +1726,7 @@
     let sharedStateHydrated = false;
     let sharedStateSyncTimer = null;
     let selectedTrainingRecordId = "";
+    let employeeListQuery = "";
     const adminEmails = ["registroycontroldenomina@coraamoca.gob.do"];
     const inactivityLimitMs = 20 * 60 * 1000;
     let inactivityTimer = null;
@@ -3967,6 +3986,16 @@
       populateEmployeeDependentSelects();
     }
 
+    function showEmployeePanelMode(mode = "list") {
+      const listPanel = document.getElementById("employeeListPanel");
+      const registerPanel = document.getElementById("employeeRegisterPanel");
+      const showForm = mode === "register";
+      if (listPanel) listPanel.classList.toggle("is-hidden", showForm);
+      if (registerPanel) registerPanel.classList.toggle("is-hidden", !showForm);
+      const target = showForm ? registerPanel : listPanel;
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     function editEmployee(id) {
       const employee = (state.employees || []).find(item => String(item.id) === String(id));
       if (!employee) return;
@@ -3983,7 +4012,7 @@
       populateOccupationalGroups(data.grupoOcupacional || "", data.cargo || "");
       populateEmployeeDependentSelects(data);
       calculateEmployeeIncrease();
-      document.getElementById("recursos-humanos").scrollIntoView({ behavior: "smooth", block: "start" });
+      showEmployeePanelMode("register");
     }
 
     function downloadEmployeeTemplate() {
@@ -4007,16 +4036,30 @@
     }
 
     function renderEmployees() {
-      renderTable("employeesTable", ["Nombre", "Apellido", "Cédula", "Cargo", "Salario", "Fecha ingreso", "Estructura", "Centro", "Activo", "Acción"], visibleEmployeesForUser().map(employee => [
+      const query = normalizeSearch(employeeListQuery);
+      const rows = visibleEmployeesForUser().filter((employee, index) => {
+        if (!query) return true;
+        const text = normalizeSearch([
+          employeeDisplayCode(employee) || employeeCode(employee, index),
+          employeeFullName(employee),
+          employee.nombre,
+          employee.apellido,
+          employee.cedula,
+          employee.cargo || employee.data?.cargo
+        ].join(" "));
+        return text.includes(query);
+      });
+      renderTable("employeesTable", ["Código", "Nombre", "Apellido", "Cédula", "Grupo", "Cargo", "Estado", "Fecha salida", "Sustituye a", "Nota", "Acción"], rows.map((employee, index) => [
+        escapeHtml(employeeDisplayCode(employee) || employeeCode(employee, index)),
         escapeHtml(employee.nombre || "-"),
         escapeHtml(employee.apellido || "-"),
         escapeHtml(employee.cedula || "-"),
+        escapeHtml(employee.grupoOcupacional || employee.data?.grupoOcupacional || "-"),
         escapeHtml(employee.cargo || employee.data?.cargo || "-"),
-        money.format(Number(employee.salario || employee.data?.salario || 0)),
-        escapeHtml(employee.fechaIngreso || employee.data?.fechaIngreso || "-"),
-        escapeHtml(employee.estructura || employee.data?.estructura || "-"),
-        escapeHtml(employee.centroServicio || employee.data?.centroServicio || "-"),
-        employee.activo === false ? alertLevelBadge("Crítico") : alertLevelBadge("Correcto"),
+        employee.activo === false ? `<span class="badge bad">Inactivo</span>` : `<span class="badge ok">Activo</span>`,
+        escapeHtml(employee.fechaSalida || employee.data?.fechaSalida || "-"),
+        escapeHtml(employee.sustituyeA || employee.vacanteEmpleadoId || employee.data?.sustituyeA || employee.data?.vacanteEmpleadoId || "-"),
+        escapeHtml(employee.nota || employee.data?.nota || "-"),
         `<button class="btn secondary edit-employee-btn" type="button" data-id="${escapeHtml(employee.id)}">Modificar</button>`
       ]));
     }
@@ -4229,6 +4272,7 @@
       document.querySelectorAll("[data-rh-tab]").forEach(button => button.classList.toggle("active", button.dataset.rhTab === tab));
       document.querySelectorAll('[id^="rhTab-"]').forEach(section => section.classList.remove("active"));
       document.getElementById(`rhTab-${tab}`)?.classList.add("active");
+      if (tab === "empleados") showEmployeePanelMode("list");
       if (tab === "vacaciones" || tab === "autoservicio" || tab === "supervisor") refreshLeaveRequestsFromSupabase();
     }
 
@@ -7669,14 +7713,32 @@
       saveState();
       resetEmployeeForm();
       renderEmployees();
+      showEmployeePanelMode("list");
     });
 
     document.getElementById("newEmployeeBtn").addEventListener("click", resetEmployeeForm);
+    document.getElementById("employeeListNewBtn").addEventListener("click", () => {
+      resetEmployeeForm();
+      showEmployeePanelMode("register");
+    });
+    document.getElementById("employeeListSearchBtn").addEventListener("click", () => {
+      employeeListQuery = document.getElementById("employeeListSearch").value || "";
+      renderEmployees();
+    });
+    document.getElementById("employeeListSearch").addEventListener("input", event => {
+      employeeListQuery = event.target.value || "";
+      renderEmployees();
+    });
+    document.getElementById("employeeListAllBtn").addEventListener("click", () => {
+      employeeListQuery = "";
+      document.getElementById("employeeListSearch").value = "";
+      renderEmployees();
+    });
     document.getElementById("employeeGroupSelect").addEventListener("change", event => {
       populateOccupationalGroups(event.target.value, "");
     });
     document.getElementById("viewEmployeesBtn").addEventListener("click", () => {
-      document.getElementById("employeesTableWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+      showEmployeePanelMode("list");
     });
     document.getElementById("employeeImportBtn").addEventListener("click", () => {
       document.getElementById("employeeImportInput").click();
