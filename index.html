@@ -1118,7 +1118,46 @@
         </div>
         <div class="subsection" id="rhTab-analitica"><div class="rh-panels" data-rh-panel="analitica"></div></div>
         <div class="subsection" id="rhTab-configuracion"><div class="rh-panels" data-rh-panel="configuracion"></div></div>
-        <div class="subsection" id="rhTab-ia"><div class="rh-panels" data-rh-panel="ia"></div></div>
+        <div class="subsection" id="rhTab-ia">
+          <div class="page-heading">
+            <div><span class="eyebrow">Recursos Humanos</span><h1>Panel de IA y Automatización</h1><p class="sub">Automatización avanzada para análisis, selección y reportes.</p></div>
+          </div>
+          <div class="rh-kpis" id="aiKpis"></div>
+          <div class="panel">
+            <h2>Nuevo proceso inteligente</h2>
+            <div class="section-rule"></div>
+            <form id="aiAutomationForm" class="form-grid">
+              <input type="hidden" name="editingId">
+              <label>Tipo de módulo<select name="tipo" required>
+                <option>Predicción de rotación</option>
+                <option>Asistente virtual RRHH</option>
+                <option>Automatización de entrevistas</option>
+                <option>Análisis de clima laboral</option>
+                <option>Recomendación de candidatos</option>
+                <option>Generación automática de reportes</option>
+                <option>IA para evaluación de CV</option>
+              </select></label>
+              <label class="span-2">Empleado o candidato<input name="persona" list="aiPeopleOptions" placeholder="Buscar empleado o candidato"></label>
+              <datalist id="aiPeopleOptions"></datalist>
+              <label>Prioridad<select name="prioridad"><option>Normal</option><option>Alta</option><option>Urgente</option></select></label>
+              <label>Estado<select name="estado"><option>Pendiente</option><option>En análisis</option><option>Aprobado</option><option>Rechazado</option><option>Completado</option></select></label>
+              <label class="span-2">Objetivo<input name="objetivo" required placeholder="Ej. Evaluar riesgo de rotación del área comercial"></label>
+              <label class="span-2">Datos de entrada<textarea name="entrada" placeholder="Resumen, CV, indicadores, notas o instrucciones"></textarea></label>
+              <label class="span-4">Resultado / recomendación<textarea name="resultado" placeholder="Resultado generado, decisión o recomendación"></textarea></label>
+              <div class="actions span-4">
+                <button class="btn" type="submit">Guardar proceso</button>
+                <button class="btn secondary" id="newAiAutomationBtn" type="button">Nuevo</button>
+              </div>
+            </form>
+          </div>
+          <div class="panel" style="margin-top:14px;">
+            <div class="panel-head">
+              <div><h2>Procesos de IA registrados</h2><p class="sub">Seguimiento operativo de análisis, entrevistas, CV, clima laboral y reportes automáticos.</p></div>
+              <div class="notice-actions"><button class="mini-btn" id="generateAiHrReportBtn" type="button">Generar reporte RRHH</button><button class="mini-btn" id="evaluateAiCvBtn" type="button">Evaluar CV</button></div>
+            </div>
+            <div class="table-wrap"><table id="aiAutomationTable"></table></div>
+          </div>
+        </div>
       </section>
 
       <section class="section" id="estructura">
@@ -1594,7 +1633,7 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: [],
@@ -1603,6 +1642,7 @@
         recruitmentVacancies: parsed.recruitmentVacancies || [],
         recruitmentCandidates: parsed.recruitmentCandidates || [],
         recruitmentInterviews: parsed.recruitmentInterviews || [],
+        aiAutomations: parsed.aiAutomations || [],
         payments: parsed.payments || [],
         warehouseRequests: parsed.warehouseRequests || [],
         warehouseArticles: parsed.warehouseArticles || [],
@@ -1631,6 +1671,7 @@
         recruitmentVacancies: state.recruitmentVacancies || [],
         recruitmentCandidates: state.recruitmentCandidates || [],
         recruitmentInterviews: state.recruitmentInterviews || [],
+        aiAutomations: state.aiAutomations || [],
         essTickets: state.essTickets || [],
         internalNotifications: state.internalNotifications || [],
         workflowConfig: state.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }
@@ -1642,6 +1683,7 @@
       state.recruitmentVacancies = shared.recruitmentVacancies || [];
       state.recruitmentCandidates = shared.recruitmentCandidates || [];
       state.recruitmentInterviews = shared.recruitmentInterviews || [];
+      state.aiAutomations = shared.aiAutomations || [];
       state.essTickets = shared.essTickets || [];
       state.internalNotifications = shared.internalNotifications || [];
       state.workflowConfig = shared.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] };
@@ -4083,6 +4125,116 @@
       </div>`;
     }
 
+    function aiPeopleOptions() {
+      const employees = visibleEmployeesForUser().map((employee, index) => {
+        const code = employeeDisplayCode(employee) || employeeCode(employee, index);
+        return `${code} - ${employeeFullName(employee)} - ${employee.cargo || employee.data?.cargo || "Sin cargo"}`;
+      });
+      const candidates = (state.recruitmentCandidates || []).map(candidate =>
+        `${candidate.nombre || "Candidato"} - ${candidate.vacante || candidate.cargo || "Banco de candidatos"}`
+      );
+      return [...new Set([...employees, ...candidates])].filter(Boolean);
+    }
+
+    function aiAutomationScore(row = {}) {
+      const text = normalizeSearch([row.tipo, row.objetivo, row.entrada, row.resultado, row.prioridad].join(" "));
+      let score = 50;
+      if (text.includes("renuncia") || text.includes("rotacion") || text.includes("ausencia") || text.includes("tardanza")) score += 20;
+      if (text.includes("urgente") || row.prioridad === "Urgente") score += 15;
+      if (text.includes("alto riesgo") || text.includes("critico")) score += 10;
+      if (row.estado === "Aprobado" || row.estado === "Completado") score -= 15;
+      return Math.max(0, Math.min(100, score));
+    }
+
+    function aiAutomationRecommendation(row = {}) {
+      const score = aiAutomationScore(row);
+      if (row.tipo === "IA para evaluación de CV") return score >= 75 ? "Candidato recomendado para entrevista técnica." : "Revisar requisitos antes de avanzar.";
+      if (row.tipo === "Predicción de rotación") return score >= 75 ? "Alto riesgo: activar plan de retención y entrevista de seguimiento." : "Riesgo controlado: mantener monitoreo mensual.";
+      if (row.tipo === "Análisis de clima laboral") return score >= 75 ? "Requiere intervención del área y encuesta focalizada." : "Clima estable: documentar hallazgos.";
+      if (row.tipo === "Generación automática de reportes") return "Reporte listo para revisión y exportación por RRHH.";
+      return score >= 75 ? "Priorizar revisión por Recursos Humanos." : "Continuar flujo normal.";
+    }
+
+    function renderAiAutomationPanel() {
+      const rows = state.aiAutomations || [];
+      const datalist = document.getElementById("aiPeopleOptions");
+      if (datalist) datalist.innerHTML = aiPeopleOptions().map(option => `<option value="${escapeHtml(option)}"></option>`).join("");
+      const kpis = [
+        ["Procesos activos", rows.filter(row => !["Completado", "Rechazado"].includes(row.estado)).length, "ok"],
+        ["En análisis", rows.filter(row => row.estado === "En análisis").length, "warn"],
+        ["Aprobados", rows.filter(row => row.estado === "Aprobado" || row.estado === "Completado").length, "ok"],
+        ["Riesgo promedio", rows.length ? (rows.reduce((total, row) => total + aiAutomationScore(row), 0) / rows.length).toFixed(1) : "0.0", "ok"]
+      ];
+      const kpiBox = document.getElementById("aiKpis");
+      if (kpiBox) kpiBox.innerHTML = kpis.map(([label, value, cls]) => `<div class="rh-kpi ${cls}"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join("");
+      renderTable("aiAutomationTable", ["Fecha", "Módulo", "Persona", "Prioridad", "Estado", "Score", "Recomendación", "Acción"], rows.map(row => [
+        row.fecha || "-",
+        row.tipo || "-",
+        row.persona || "-",
+        row.prioridad || "Normal",
+        alertLevelBadge(row.estado === "Rechazado" ? "Crítico" : row.estado === "Pendiente" ? "Alerta" : "Correcto"),
+        `${number.format(aiAutomationScore(row))}%`,
+        row.resultado || aiAutomationRecommendation(row),
+        `<div class="notice-actions"><button class="mini-btn ai-edit-btn" type="button" data-id="${escapeHtml(row.id)}">Editar</button><button class="mini-btn ai-complete-btn" type="button" data-id="${escapeHtml(row.id)}">Completar</button></div>`
+      ]));
+    }
+
+    function resetAiAutomationForm() {
+      const form = resetFormById("aiAutomationForm");
+      if (form) form.elements.editingId.value = "";
+    }
+
+    function editAiAutomation(id) {
+      const row = (state.aiAutomations || []).find(item => String(item.id) === String(id));
+      const form = document.getElementById("aiAutomationForm");
+      if (!row || !form) return;
+      form.elements.editingId.value = row.id;
+      ["tipo", "persona", "prioridad", "estado", "objetivo", "entrada", "resultado"].forEach(name => {
+        if (form.elements[name]) form.elements[name].value = row[name] || "";
+      });
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function generateAiHrReport() {
+      const active = visibleEmployeesForUser().filter(employee => employee.activo !== false);
+      const leaves = (state.essLeaveRequests || []).filter(row => row.estado === "Pendiente").length;
+      const tickets = (state.essTickets || []).filter(row => row.estado !== "Cerrado").length;
+      state.aiAutomations = state.aiAutomations || [];
+      state.aiAutomations.unshift({
+        id: makeId(),
+        fecha: new Date().toLocaleDateString("es-DO"),
+        tipo: "Generación automática de reportes",
+        persona: "Recursos Humanos",
+        prioridad: leaves || tickets ? "Alta" : "Normal",
+        estado: "Completado",
+        objetivo: "Resumen automático de indicadores de RRHH",
+        entrada: `Empleados activos: ${active.length}. Solicitudes pendientes: ${leaves}. Tickets abiertos: ${tickets}.`,
+        resultado: `Reporte generado: ${active.length} empleados activos, ${leaves} solicitudes pendientes y ${tickets} tickets abiertos.`
+      });
+      audit("IA RRHH reporte generado", "Indicadores automáticos de RRHH");
+      saveState();
+      renderAiAutomationPanel();
+    }
+
+    function evaluateAiCv() {
+      const candidate = (state.recruitmentCandidates || [])[0];
+      state.aiAutomations = state.aiAutomations || [];
+      state.aiAutomations.unshift({
+        id: makeId(),
+        fecha: new Date().toLocaleDateString("es-DO"),
+        tipo: "IA para evaluación de CV",
+        persona: candidate ? `${candidate.nombre || "Candidato"} - ${candidate.vacante || candidate.cargo || "Vacante"}` : "Candidato pendiente",
+        prioridad: "Normal",
+        estado: "En análisis",
+        objetivo: "Evaluar ajuste del CV frente a la vacante",
+        entrada: candidate ? `${candidate.nombre || ""} ${candidate.cargo || ""} ${candidate.experiencia || ""}` : "Registrar datos del candidato para evaluación completa.",
+        resultado: candidate ? "Evaluación inicial creada. Validar experiencia, formación y requisitos críticos." : "No hay candidatos cargados; registrar candidato antes de emitir recomendación final."
+      });
+      audit("IA evaluación CV creada", "Evaluación automática de CV");
+      saveState();
+      renderAiAutomationPanel();
+    }
+
     const payrollBudget2026 = [
       { grupo: "Sueldos fijos", fondo: "30", programa: "Programa 1", actividad: "Actividad 1", concepto: "Sueldo", monto: 857250 },
       { grupo: "Sueldos fijos", fondo: "30", programa: "Programa 1", actividad: "Actividad 2", concepto: "Sueldo", monto: 4336105 },
@@ -4289,6 +4441,7 @@
       renderEmployeeSelfService();
       renderLeavePanel();
       renderSupervisorPanel();
+      renderAiAutomationPanel();
     }
 
     function employeeCode(employee, index = 0) {
@@ -6550,6 +6703,49 @@
     document.addEventListener("click", event => {
       const jumpButton = event.target.closest("[data-rh-jump]");
       if (jumpButton) showRhTab(jumpButton.dataset.rhJump);
+    });
+    document.getElementById("aiAutomationForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form));
+      state.aiAutomations = state.aiAutomations || [];
+      const row = {
+        id: data.editingId || makeId(),
+        fecha: data.editingId ? ((state.aiAutomations || []).find(item => item.id === data.editingId)?.fecha || new Date().toLocaleDateString("es-DO")) : new Date().toLocaleDateString("es-DO"),
+        tipo: data.tipo,
+        persona: data.persona,
+        prioridad: data.prioridad,
+        estado: data.estado,
+        objetivo: data.objetivo,
+        entrada: data.entrada,
+        resultado: data.resultado || aiAutomationRecommendation(data),
+        usuario: activeUser()?.nombre || currentSessionEmail || "RRHH"
+      };
+      const index = state.aiAutomations.findIndex(item => item.id === row.id);
+      if (index >= 0) state.aiAutomations[index] = row;
+      else state.aiAutomations.unshift(row);
+      audit(data.editingId ? "IA proceso actualizado" : "IA proceso registrado", `${row.tipo} | ${row.persona || "Sin persona"}`);
+      saveState();
+      resetAiAutomationForm();
+      renderAiAutomationPanel();
+    });
+    document.getElementById("newAiAutomationBtn").addEventListener("click", resetAiAutomationForm);
+    document.getElementById("generateAiHrReportBtn").addEventListener("click", generateAiHrReport);
+    document.getElementById("evaluateAiCvBtn").addEventListener("click", evaluateAiCv);
+    document.addEventListener("click", event => {
+      const editButton = event.target.closest(".ai-edit-btn");
+      if (editButton) editAiAutomation(editButton.dataset.id);
+      const completeButton = event.target.closest(".ai-complete-btn");
+      if (completeButton) {
+        const row = (state.aiAutomations || []).find(item => item.id === completeButton.dataset.id);
+        if (row) {
+          row.estado = "Completado";
+          row.resultado = row.resultado || aiAutomationRecommendation(row);
+          audit("IA proceso completado", `${row.tipo} | ${row.persona || "Sin persona"}`);
+          saveState();
+          renderAiAutomationPanel();
+        }
+      }
     });
     document.getElementById("newUnitBtn").addEventListener("click", resetUnitForm);
     document.addEventListener("click", event => {
