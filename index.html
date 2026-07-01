@@ -318,6 +318,17 @@
     table.snip-summary-table .district-row th { padding: 0; background: #f6f9fc; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     table.snip-summary-table:not(.snip-code-summary-table) th:nth-child(n+4), table.snip-summary-table:not(.snip-code-summary-table) td:nth-child(n+4),
     table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+    table.director-report-table { min-width: 1520px; }
+    table.director-report-table th:nth-child(1), table.director-report-table td:nth-child(1) { min-width: 115px; }
+    table.director-report-table th:nth-child(2), table.director-report-table td:nth-child(2),
+    table.director-report-table th:nth-child(3), table.director-report-table td:nth-child(3),
+    table.director-report-table th:nth-child(6), table.director-report-table td:nth-child(6),
+    table.director-report-table th:nth-child(9), table.director-report-table td:nth-child(9) { min-width: 150px; text-align: left; white-space: normal; }
+    table.director-report-table th:nth-child(4), table.director-report-table td:nth-child(4),
+    table.director-report-table th:nth-child(5), table.director-report-table td:nth-child(5),
+    table.director-report-table th:nth-child(7), table.director-report-table td:nth-child(7),
+    table.director-report-table th:nth-child(8), table.director-report-table td:nth-child(8),
+    table.director-report-table th:nth-child(10), table.director-report-table td:nth-child(10) { min-width: 120px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; font-size: 12px; }
     th { position: sticky; top: 0; background: #edf3f8; z-index: 1; white-space: nowrap; color: #405267; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
     tbody tr:nth-child(even) td { background: #fbfdff; }
@@ -1499,11 +1510,11 @@
           <div class="panel-head">
             <div>
               <span class="eyebrow">Reportes</span>
-              <h2>Resumen de inversión por código SNIP</h2>
+              <h2>REPORTE DIRECTOR GENERAL</h2>
             </div>
           </div>
           <div class="snip-summary-toolbar">
-            <input id="newSnipReportSearch" placeholder="Buscar código SNIP, municipio, distrito, sector o tipo de obra">
+            <input id="newSnipReportSearch" placeholder="Buscar código SNIP, municipio, sector, estatus o tipo de obra">
             <div class="filters">
               <button class="btn secondary" id="newSnipExcelBtn" type="button" data-new-snip-export title="Exportar el reporte a Excel">Excel</button>
               <button class="btn secondary" id="newSnipPdfBtn" type="button" data-new-snip-export title="Exportar el reporte como PDF">PDF</button>
@@ -1591,7 +1602,7 @@
       "report-pagos": "Reporte pagos realizados",
       "report-estatus": "Reporte estatus de obras",
       "report-snip": "Reporte por código SNIP",
-      "report-resumen-snip": "Resumen de inversión por código SNIP",
+      "report-resumen-snip": "REPORTE DIRECTOR GENERAL",
       "rrhh-resumen": "RRHH: Resumen ejecutivo",
       "rrhh-empleados": "RRHH: Empleados",
       "rrhh-reclutamiento": "RRHH: Reclutamiento",
@@ -1956,6 +1967,9 @@
         disponibilidadProyectoBase: Number(project.disponibilidad_proyecto_base || 0),
         item: project.item || "",
         totalCubicadoBase: Number(project.total_cubicado_base || 0),
+        estatusCubicacion: project.estatus_cubicacion || project.datos?.estatus3 || "",
+        metrosLineales: Number(project.metros_lineales || project.datos?.metros_lineales || project.datos?.ml || 0),
+        datos: project.datos || {},
         montoPublicado: Number(project.monto_publicado ?? (project.estatus === "Publicado" ? project.presupuesto : 0) ?? 0),
         procesoCompra: project.proceso_compra || "",
         tipoProceso: project.tipo_proceso || "",
@@ -5907,73 +5921,55 @@
       const search = normalizeSearch(document.getElementById("newSnipReportSearch")?.value || "");
       const rows = enrichedProjects().filter(project => {
         if (!search) return true;
-        return normalizeSearch([displaySnip(project), project.tipo, project.municipio, project.distrito, project.comunidad].join(" ")).includes(search);
+        return normalizeSearch([
+          displaySnip(project),
+          project.codigo,
+          project.tipo,
+          project.municipio,
+          project.distrito,
+          project.comunidad,
+          project.estatus,
+          project.estatusCubicacion
+        ].join(" ")).includes(search);
       });
-      const snipGroups = groupRows(rows, displaySnip);
-      const snipSummary = Object.entries(snipGroups)
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([snip, items]) => {
-          const adjudicado = sum(items, "adjudicado");
-          const pagado = sum(items, "pagado");
-          return `<tr>
-            <td>${escapeHtml(snip)}</td>
-            <td>${money.format(sum(items, "presupuesto"))}</td>
-            <td>${money.format(adjudicado)}</td>
-            <td>${money.format(pagado)}</td>
-            <td>${money.format(Math.max(adjudicado - pagado, 0))}</td>
-            <td>${money.format(Math.max(sum(items, "presupuesto") - adjudicado, 0))}</td>
-            <td>${number.format(sum(items, "poblacion"))}</td>
-          </tr>`;
-        }).join("");
       const territoryGroups = groupRows(rows, project => project.municipio || "Sin municipio");
       const territoryBlocks = Object.entries(territoryGroups)
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([territory, projects]) => {
-          const districtRows = Object.entries(groupRows(projects, project => project.distrito || "Sin distrito municipal"))
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([district, districtProjects]) => `
-              <tr class="district-row">
-                <th colspan="7">
-                  <div class="district-summary-head">
-                    <span>Distrito: ${escapeHtml(district)}</span>
-                    <span>Total de población: ${number.format(sum(districtProjects, "poblacion"))} | Total de inversión por distrito: ${money.format(sum(districtProjects, "presupuesto"))}</span>
-                  </div>
-                </th>
-              </tr>
-              ${districtProjects
-                .sort((a, b) => String(a.tipo || "").localeCompare(String(b.tipo || "")) || String(a.comunidad || "").localeCompare(String(b.comunidad || "")) || displaySnip(a).localeCompare(displaySnip(b)))
-                .map(project => `<tr>
-                  <td>${escapeHtml(displaySnip(project))}</td>
-                  <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
-                  <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
-                  <td>${money.format(Number(project.adjudicado || 0))}</td>
-                  <td>${money.format(Number(project.comprometido || 0))}</td>
-                  <td>${money.format(Number(project.pagado || 0))}</td>
-                  <td>${number.format(projectExecutionPercent(project))}%</td>
-                </tr>`).join("")}`).join("");
+          const meters = sum(projects, "metrosLineales");
+          const projectRows = projects
+            .sort((a, b) =>
+              displaySnip(a).localeCompare(displaySnip(b)) ||
+              String(a.tipo || "").localeCompare(String(b.tipo || "")) ||
+              String(a.comunidad || "").localeCompare(String(b.comunidad || ""))
+            )
+            .map(project => {
+              const snipCode = String(project.codigo || displaySnip(project)).replace(/^SNIP:\s*/i, "");
+              return `<tr>
+                <td>${escapeHtml(snipCode || "Sin SNIP")}</td>
+                <td>${escapeHtml(project.tipo || "Sin asignar")}</td>
+                <td>${escapeHtml(project.comunidad || "Sin asignar")}</td>
+                <td>${money.format(Number(project.adjudicado || 0))}</td>
+                <td>${money.format(Number(project.comprometido || 0))}</td>
+                <td>${escapeHtml(project.estatusCubicacion || "")}</td>
+                <td>${money.format(Number(project.cubicaciones || project.totalCubicadoBase || 0))}</td>
+                <td>${money.format(Number(project.pagado || 0))}</td>
+                <td>${escapeHtml(project.estatus || "Sin estatus")}</td>
+                <td>${number.format(projectExecutionPercent(project))}%</td>
+              </tr>`;
+            }).join("");
           return `
             <section class="snip-summary-block">
-              <div class="territory-summary-head">Municipio: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión por municipio: ${money.format(sum(projects, "presupuesto"))}</div>
+              <div class="territory-summary-head">Municipio: ${escapeHtml(territory)} | Total de población: ${number.format(sum(projects, "poblacion"))} | Total de inversión: ${money.format(sum(projects, "presupuesto"))}${meters > 0 ? ` | ${number.format(meters)} ML` : ""}</div>
               <div class="table-wrap">
-                <table class="snip-summary-table">
-                  <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>20% pagado</th><th>Total pagado</th><th>% de la obra</th></tr></thead>
-                  <tbody>${districtRows}</tbody>
+                <table class="snip-summary-table director-report-table">
+                  <thead><tr><th>Código SNIP</th><th>Tipo de obra</th><th>Sector</th><th>Monto adjudicado</th><th>Avance 20%</th><th>Estatus de Cubicación</th><th>Cubicado</th><th>Total pagado</th><th>Estatus</th><th>% de la obra</th></tr></thead>
+                  <tbody>${projectRows}</tbody>
                 </table>
               </div>
             </section>`;
         }).join("");
-      const investmentSummary = renderSnipInvestmentSummary(rows);
-      target.innerHTML = rows.length ? `
-        <section class="snip-summary-block">
-          <div class="table-wrap">
-            <table class="snip-summary-table snip-code-summary-table">
-              <thead><tr><th>Código SNIP</th><th>Total del SNIP</th><th>Adjudicado</th><th>Pagado</th><th>Disponibilidad (adjudicado - pagado)</th><th>Disponible por SNIP (total SNIP - adjudicado)</th><th>Total de población</th></tr></thead>
-              <tbody>${snipSummary}</tbody>
-            </table>
-          </div>
-        </section>
-        ${territoryBlocks}
-        ${investmentSummary}` : `<div class="empty">No hay proyectos que coincidan con la búsqueda.</div>`;
+      target.innerHTML = rows.length ? territoryBlocks : `<div class="empty">No hay proyectos que coincidan con la búsqueda.</div>`;
     }
 
     function isProjectWithoutSnip(project) {
@@ -8161,7 +8157,7 @@
         <html lang="es">
         <head>
           <meta charset="utf-8">
-          <title>Resumen de inversión por código SNIP</title>
+          <title>REPORTE DIRECTOR GENERAL</title>
           <style>
             body { font-family: "Segoe UI", Arial, sans-serif; color: #172026; margin: 24px; }
             h1 { margin: 0 0 4px; font-size: 20px; color: #102b4a; }
@@ -8188,13 +8184,22 @@
             th { background: #eef3f5; }
             table:not(.snip-code-summary-table) th:nth-child(n+4), table:not(.snip-code-summary-table) td:nth-child(n+4),
             table.snip-code-summary-table th:nth-child(n+2), table.snip-code-summary-table td:nth-child(n+2) { text-align: right; }
+            table.director-report-table th:nth-child(2), table.director-report-table td:nth-child(2),
+            table.director-report-table th:nth-child(3), table.director-report-table td:nth-child(3),
+            table.director-report-table th:nth-child(6), table.director-report-table td:nth-child(6),
+            table.director-report-table th:nth-child(9), table.director-report-table td:nth-child(9) { text-align: left; }
+            table.director-report-table th:nth-child(4), table.director-report-table td:nth-child(4),
+            table.director-report-table th:nth-child(5), table.director-report-table td:nth-child(5),
+            table.director-report-table th:nth-child(7), table.director-report-table td:nth-child(7),
+            table.director-report-table th:nth-child(8), table.director-report-table td:nth-child(8),
+            table.director-report-table th:nth-child(10), table.director-report-table td:nth-child(10) { text-align: right; white-space: nowrap; }
             .district-row th { padding: 0; background: #f6f9fc; color: #102b4a; }
             @media print { body { margin: 0; } }
             @page { size: landscape; margin: 12mm; }
           </style>
         </head>
         <body>
-          <h1>CORAAMOCA - Resumen de inversión por código SNIP</h1>
+          <h1>CORAAMOCA - REPORTE DIRECTOR GENERAL</h1>
           <div class="meta">Generado: ${printedAt} | Emitido por: ${escapeHtml(issuedBy)}${search ? ` | Búsqueda: ${escapeHtml(search)}` : ""}</div>
           ${report.innerHTML}
         </body>
@@ -8203,12 +8208,12 @@
 
     function exportNewSnipReportExcel() {
       if (!can("export-reports")) return;
-      audit("Reporte exportado", "Resumen de inversión por código SNIP - Excel");
+      audit("Reporte exportado", "REPORTE DIRECTOR GENERAL - Excel");
       const blob = new Blob([newSnipReportDocument()], { type: "application/vnd.ms-excel;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "reporte-resumen-inversion-snip.xls";
+      link.download = "reporte-director-general.xls";
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -8235,11 +8240,11 @@
 
     document.getElementById("newSnipExcelBtn").addEventListener("click", exportNewSnipReportExcel);
     document.getElementById("newSnipPrintBtn").addEventListener("click", () => {
-      audit("Reporte impreso", "Resumen de inversión por código SNIP");
+      audit("Reporte impreso", "REPORTE DIRECTOR GENERAL");
       openNewSnipReportPrintWindow("print");
     });
     document.getElementById("newSnipPdfBtn").addEventListener("click", () => {
-      audit("Reporte exportado", "Resumen de inversión por código SNIP - PDF");
+      audit("Reporte exportado", "REPORTE DIRECTOR GENERAL - PDF");
       openNewSnipReportPrintWindow("pdf");
     });
 
