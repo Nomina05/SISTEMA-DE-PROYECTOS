@@ -2049,6 +2049,37 @@
       };
     }
 
+    function mapEmployeeFromDb(row) {
+      const data = row.datos || {};
+      return {
+        ...data,
+        id: row.id,
+        codigo: row.codigo || data.codigo || (row.fila_excel ? `EMP${String(Number(row.fila_excel) - 1).padStart(3, "0")}` : ""),
+        nombre: row.nombre || data.nombre || "",
+        apellido: row.apellido || data.apellido || "",
+        cedula: row.cedula || data.cedula || "",
+        cargo: row.cargo || data.cargo || "",
+        salario: Number(row.salario ?? data.salario ?? data.totalSalario ?? 0),
+        fechaIngreso: row.fecha_ingreso || data.fechaIngreso || "",
+        fechaSalida: row.fecha_salida || data.fechaSalida || "",
+        estructura: row.estructura || data.estructura || "",
+        centroServicio: row.centro_servicio || data.centroServicio || "",
+        grupoOcupacional: row.grupo_ocupacional || data.grupoOcupacional || "",
+        activo: row.activo !== false,
+        data
+      };
+    }
+
+    async function loadEmployeesFromSupabaseFallback() {
+      if (!window.supabaseClient) return [];
+      const fallback = await window.supabaseClient
+        .from("rrhh_empleados")
+        .select("id,codigo,fila_excel,nombre,apellido,cedula,cargo,salario,fecha_ingreso,fecha_salida,estructura,centro_servicio,activo,datos")
+        .limit(5000);
+      if (fallback.error) throw new Error(supabaseLoadErrorMessage(fallback.error, "rrhh_empleados"));
+      return (fallback.data || []).map(mapEmployeeFromDb).sort((a, b) => String(a.apellido || "").localeCompare(String(b.apellido || "")) || String(a.nombre || "").localeCompare(String(b.nombre || "")));
+    }
+
     async function loadUserPermissionMap() {
       const permissionMap = {};
       if (!window.supabaseClient) return permissionMap;
@@ -2105,7 +2136,7 @@
       if (alertConfigResult.error && !isMissingSupabaseRelation(alertConfigResult.error)) throw alertConfigResult.error;
       if (catalogsResult.error && !isMissingSupabaseRelation(catalogsResult.error)) throw catalogsResult.error;
       if (orgUnitsResult.error && !isMissingSupabaseRelation(orgUnitsResult.error)) throw orgUnitsResult.error;
-      if (employeesResult.error && !isMissingSupabaseRelation(employeesResult.error)) throw new Error(supabaseLoadErrorMessage(employeesResult.error, "rrhh_empleados"));
+      if (employeesResult.error && !isMissingSupabaseRelation(employeesResult.error)) console.warn(supabaseLoadErrorMessage(employeesResult.error, "rrhh_empleados"));
       if (leaveRequestsResult.error && !isMissingSupabaseRelation(leaveRequestsResult.error)) throw new Error(supabaseLoadErrorMessage(leaveRequestsResult.error, "rrhh_solicitudes_autoservicio"));
       if (sharedStateResult.error && !isMissingSupabaseRelation(sharedStateResult.error)) throw new Error(supabaseLoadErrorMessage(sharedStateResult.error, "sistema_estado_compartido"));
       const permissionMap = await loadUserPermissionMap();
@@ -2139,24 +2170,9 @@
         }));
       }
       if (!employeesResult.error) {
-        state.employees = (employeesResult.data || []).map(row => {
-          const data = row.datos || {};
-          return {
-            ...data,
-            id: row.id,
-            codigo: row.codigo || data.codigo || (row.fila_excel ? `EMP${String(Number(row.fila_excel) - 1).padStart(3, "0")}` : ""),
-            nombre: row.nombre || data.nombre || "",
-            apellido: row.apellido || data.apellido || "",
-            cedula: row.cedula || data.cedula || "",
-            cargo: row.cargo || data.cargo || "",
-            salario: Number(row.salario ?? data.salario ?? data.totalSalario ?? 0),
-            fechaIngreso: row.fecha_ingreso || data.fechaIngreso || "",
-            estructura: row.estructura || data.estructura || "",
-            centroServicio: row.centro_servicio || data.centroServicio || "",
-            activo: row.activo !== false,
-            data
-          };
-        });
+        state.employees = (employeesResult.data || []).map(mapEmployeeFromDb);
+      } else if (!isMissingSupabaseRelation(employeesResult.error)) {
+        state.employees = await loadEmployeesFromSupabaseFallback();
       }
       if (!leaveRequestsResult.error) {
         const sharedLeaveRequests = (leaveRequestsResult.data || []).map(mapLeaveRequestFromDb);
