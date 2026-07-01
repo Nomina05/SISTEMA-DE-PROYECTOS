@@ -1695,7 +1695,21 @@
 
     function isMissingSupabaseRelation(error) {
       const message = String(error?.message || "").toLowerCase();
-      return message.includes("relation") || message.includes("schema cache") || message.includes("could not find the table");
+      const code = String(error?.code || "").toUpperCase();
+      return code === "PGRST205" || message.includes("relation") || message.includes("schema cache") || message.includes("could not find the table");
+    }
+
+    function supabaseProjectLabel() {
+      const config = window.CORAAMOCA_SUPABASE_CONFIG || {};
+      return config.ref || config.url || "proyecto Supabase configurado";
+    }
+
+    function supabaseLoadErrorMessage(error, tableName) {
+      const baseMessage = error?.message || "Error desconocido de Supabase.";
+      if (isMissingSupabaseRelation(error)) {
+        return `La conexión con Supabase existe, pero el proyecto "${supabaseProjectLabel()}" no tiene la tabla "${tableName}" o no tiene el esquema del sistema cargado. Verifique que app.js apunte al proyecto Supabase correcto o ejecute las migraciones SQL del sistema en ese proyecto.`;
+      }
+      return `No se pudo leer la tabla "${tableName}" desde Supabase: ${baseMessage}`;
     }
     const reportPermissions = {
       municipio: "report-municipio",
@@ -2071,15 +2085,15 @@
         window.supabaseClient.from("sistema_estado_compartido").select("datos").eq("id", "principal").maybeSingle()
       ]);
       if (projectsResult.error && !isMissingSupabaseRelation(projectsResult.error)) throw projectsResult.error;
-      if (usersResult.error) throw usersResult.error;
+      if (usersResult.error) throw new Error(supabaseLoadErrorMessage(usersResult.error, "usuarios"));
       if (warehouseResult.error && !isMissingSupabaseRelation(warehouseResult.error)) throw warehouseResult.error;
       if (warehouseArticlesResult.error && !isMissingSupabaseRelation(warehouseArticlesResult.error)) throw warehouseArticlesResult.error;
       if (alertConfigResult.error && !isMissingSupabaseRelation(alertConfigResult.error)) throw alertConfigResult.error;
       if (catalogsResult.error && !isMissingSupabaseRelation(catalogsResult.error)) throw catalogsResult.error;
       if (orgUnitsResult.error && !isMissingSupabaseRelation(orgUnitsResult.error)) throw orgUnitsResult.error;
-      if (employeesResult.error && !isMissingSupabaseRelation(employeesResult.error)) throw employeesResult.error;
-      if (leaveRequestsResult.error && !isMissingSupabaseRelation(leaveRequestsResult.error)) throw leaveRequestsResult.error;
-      if (sharedStateResult.error && !isMissingSupabaseRelation(sharedStateResult.error)) throw sharedStateResult.error;
+      if (employeesResult.error && !isMissingSupabaseRelation(employeesResult.error)) throw new Error(supabaseLoadErrorMessage(employeesResult.error, "rrhh_empleados"));
+      if (leaveRequestsResult.error && !isMissingSupabaseRelation(leaveRequestsResult.error)) throw new Error(supabaseLoadErrorMessage(leaveRequestsResult.error, "rrhh_solicitudes_autoservicio"));
+      if (sharedStateResult.error && !isMissingSupabaseRelation(sharedStateResult.error)) throw new Error(supabaseLoadErrorMessage(sharedStateResult.error, "sistema_estado_compartido"));
       const permissionMap = await loadUserPermissionMap();
       state.projects = projectsResult.error ? [] : (projectsResult.data || []).map(mapProjectFromDb);
       state.users = (usersResult.data || []).map(user => mapUserFromDb(user, permissionMap));
@@ -6506,7 +6520,7 @@
         document.getElementById("authError").textContent = error.message || "No se pudo validar la sesión.";
         document.body.classList.add("auth-locked");
         document.body.classList.remove("auth-ready");
-        await window.supabaseClient.auth.signOut();
+        if (window.supabaseClient) await window.supabaseClient.auth.signOut();
       }
     }
 
@@ -6638,7 +6652,7 @@
 
     async function initAuth() {
       if (!window.supabaseClient) {
-        document.getElementById("authError").textContent = "No se pudo cargar Supabase. Verifique la conexión antes de iniciar sesión.";
+        document.getElementById("authError").textContent = window.CORAAMOCA_SUPABASE_BOOT_ERROR || "No se pudo cargar Supabase. Verifique que app.js exista, que el SDK de Supabase cargue correctamente y que la conexión a internet esté disponible.";
         document.body.classList.add("auth-locked");
         document.body.classList.remove("auth-ready");
         return;
