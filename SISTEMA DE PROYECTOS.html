@@ -662,9 +662,8 @@
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
           <h2>Configuración de flujo</h2>
           <form id="workflowConfigForm" class="form-grid">
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente técnica">Aprobación técnica</label>
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente presupuesto">Aprobación de presupuesto</label>
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente finanzas">Aprobación de finanzas</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente validación técnica">Validación Dirección Técnica</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente aprobación financiera">Aprobación Administrativo y Financiero</label>
             <button class="btn" type="submit">Guardar flujo</button>
           </form>
         </div>
@@ -1477,7 +1476,8 @@
           </form>
         </div>
         <div class="panel" style="margin-top:14px;">
-          <h2>Pagos registrados</h2>
+          <h2>Auditoría de cubicaciones</h2>
+          <p class="sub">La cubicación solo afecta el pago cuando Administrativo y Financiero la aprueba. Antes de ese estado permanece visible para validación.</p>
           <div class="table-wrap"><table id="paymentsTable"></table></div>
         </div>
         <div class="panel" style="margin-top:14px;" data-permission="technical-log">
@@ -1784,7 +1784,7 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], trainingRecords: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], trainingRecords: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: [],
@@ -1806,7 +1806,7 @@
         organizationUnits: initialOrgUnits(),
         notificationSettings: [],
         internalNotifications: [],
-        workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] },
+        workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] },
         alertConfig: { ...defaultAlertConfig(), ...(parsed.alertConfig || {}) },
         catalogs: { ...defaultCatalogs(), ...(parsed.catalogs || {}) },
         rhPayrollCap2026: parsed.rhPayrollCap2026 || 0,
@@ -1831,7 +1831,7 @@
         internalNotifications: state.internalNotifications || [],
         rhPayrollCap2026: state.rhPayrollCap2026 || 0,
         rhPayrollHistory: state.rhPayrollHistory || [],
-        workflowConfig: state.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] }
+        workflowConfig: state.workflowConfig || { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] }
       };
     }
 
@@ -1846,7 +1846,7 @@
       state.internalNotifications = Array.isArray(shared.internalNotifications) ? shared.internalNotifications : [];
       state.rhPayrollCap2026 = Number(shared.rhPayrollCap2026 || 0);
       state.rhPayrollHistory = Array.isArray(shared.rhPayrollHistory) ? shared.rhPayrollHistory : [];
-      state.workflowConfig = shared.workflowConfig || { approvalStages: ["Pendiente técnica", "Pendiente presupuesto", "Pendiente finanzas"] };
+      state.workflowConfig = shared.workflowConfig || { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] };
     }
 
     async function syncSharedStateToSupabase() {
@@ -2177,6 +2177,9 @@
         numero: payment.numero || "",
         observacion: payment.observacion || "",
         estado: payment.estado || "Aprobada",
+        creadoPor: payment.creado_por || "",
+        creadoPorNombre: payment.creado_por_nombre || "",
+        creadoEn: payment.creado_en || "",
         aprobacionTecnicaPor: payment.aprobacion_tecnica_por || "",
         aprobacionTecnicaEn: payment.aprobacion_tecnica_en || "",
         aprobacionPresupuestoPor: payment.aprobacion_presupuesto_por || "",
@@ -2626,9 +2629,8 @@
     }
 
     const defaultPaymentApprovalFlow = [
-      { estado: "Pendiente técnica", area: "Dirección Técnica", label: "Aprobar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
-      { estado: "Pendiente presupuesto", area: "Presupuesto", label: "Aprobar presupuesto", actorKey: "aprobacionPresupuestoPor", dateKey: "aprobacionPresupuestoEn", dbActor: "aprobacion_presupuesto_por", dbDate: "aprobacion_presupuesto_en" },
-      { estado: "Pendiente finanzas", area: "Finanzas", label: "Aprobar finanzas", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en" }
+      { estado: "Pendiente validación técnica", area: "Dirección Técnica", label: "Validar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
+      { estado: "Pendiente aprobación financiera", area: "Dirección Administrativo y Financiero", label: "Aprobar pago", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en" }
     ];
 
     function normalizedArea(value) {
@@ -2637,19 +2639,37 @@
 
     function paymentApprovalFlow() {
       const enabled = new Set(state.workflowConfig?.approvalStages || defaultPaymentApprovalFlow.map(step => step.estado));
+      if (enabled.has("Pendiente técnica")) enabled.add("Pendiente validación técnica");
+      if (enabled.has("Pendiente presupuesto") || enabled.has("Pendiente finanzas")) enabled.add("Pendiente aprobación financiera");
       return defaultPaymentApprovalFlow.filter(step => enabled.has(step.estado));
     }
 
+    function normalizePaymentStatus(status) {
+      const value = String(status || "").trim();
+      if (!value || value === "Pendiente") return "Pendiente validación técnica";
+      if (value === "Pendiente técnica") return "Pendiente validación técnica";
+      if (value === "Pendiente presupuesto" || value === "Pendiente finanzas") return "Pendiente aprobación financiera";
+      return value;
+    }
+
     function currentApprovalStep(payment) {
-      const estado = payment.estado === "Pendiente" ? "Pendiente técnica" : payment.estado;
+      const estado = normalizePaymentStatus(payment.estado);
       return paymentApprovalFlow().find(step => step.estado === estado) || null;
+    }
+
+    function canApprovePaymentStepArea(step, user = activeUser()) {
+      if (!step || !user) return false;
+      if (user.rol === "Administrador") return true;
+      const text = normalizeSearch([user.area, user.rol, user.cargo].join(" "));
+      if (step.area === "Dirección Técnica") return text.includes("tecnica") || text.includes("tecnico") || text.includes("director");
+      if (step.area === "Dirección Administrativo y Financiero") return text.includes("financier") || text.includes("administrativo") || text.includes("adm") || text.includes("finanzas") || text.includes("financiera");
+      return normalizedArea(user.area || user.rol) === normalizedArea(step.area);
     }
 
     function canApproveCurrentStep(payment) {
       const step = currentApprovalStep(payment);
       if (!step || !can("payment-approve")) return false;
-      if (activeUser()?.rol === "Administrador") return true;
-      return normalizedArea(activeUser()?.area || activeUser()?.rol) === normalizedArea(step.area);
+      return canApprovePaymentStepArea(step);
     }
 
     function policyBadges(role) {
@@ -3195,7 +3215,7 @@
       const inv = investmentTotals(rows);
       const alerts = projectAlerts(rows);
       const unawarded = rows.filter(project => String(project.tipoProceso || "").trim().toLowerCase() === "sin adjudicar" || Number(project.adjudicado || 0) <= 0).length;
-      const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
+      const pendingPayments = state.payments.filter(payment => currentApprovalStep(payment)).length;
       const lowStock = (state.warehouseArticles || []).filter(article => Number(article.existencia || 0) <= Number(article.existenciaMinima || 0)).length;
       const documentsCount = (state.documents || []).length;
       const cards = [
@@ -3503,17 +3523,30 @@
 
     function renderPayments() {
       const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
-      renderTable("paymentsTable", ["Fecha", "Proyecto", "Cubicación", "Monto", "Estado", "Observación", "Acción"], state.payments.map(p => [
-        p.fecha,
-        projects[p.projectKey]?.comunidad || p.projectKey,
-        p.numero || "-",
-        money.format(p.monto),
-        p.estado || "Aprobada",
-        p.estado === "Rechazada" ? `${p.observacion || "-"}<br><small>Motivo: ${escapeHtml(p.motivoRechazo || "-")}</small>` : p.observacion || "-",
-        currentApprovalStep(p) && canApproveCurrentStep(p)
-          ? `<button class="btn secondary approve-payment-btn" type="button" data-id="${escapeHtml(p.id)}">${escapeHtml(currentApprovalStep(p).label)}</button> <button class="btn secondary reject-payment-btn" type="button" data-id="${escapeHtml(p.id)}">Rechazar</button>`
-          : "-"
-      ]));
+      renderTable("paymentsTable", ["Fecha", "Proyecto", "Cubicación", "Monto", "Estado", "Creada por", "Validación técnica", "Aprobación financiera", "Observación", "Acción"], state.payments.map(p => {
+        const step = currentApprovalStep(p);
+        const status = normalizePaymentStatus(p.estado || "Aprobada");
+        return [
+          p.fecha,
+          projects[p.projectKey]?.comunidad || p.projectKey,
+          p.numero || "-",
+          money.format(p.monto),
+          status,
+          paymentAuditCell(p.creadoPorNombre || p.creadoPor, p.creadoEn),
+          paymentAuditCell(p.aprobacionTecnicaPor, p.aprobacionTecnicaEn),
+          paymentAuditCell(p.aprobadoPor, p.aprobadoEn),
+          p.estado === "Rechazada" ? `${p.observacion || "-"}<br><small>Motivo: ${escapeHtml(p.motivoRechazo || "-")}</small>` : p.observacion || "-",
+          step && canApproveCurrentStep(p)
+            ? `<button class="btn secondary approve-payment-btn" type="button" data-id="${escapeHtml(p.id)}">${escapeHtml(step.label)}</button> <button class="btn secondary reject-payment-btn" type="button" data-id="${escapeHtml(p.id)}">Rechazar</button>`
+            : "-"
+        ];
+      }));
+    }
+
+    function paymentAuditCell(user, date) {
+      const actor = user ? escapeHtml(user) : "-";
+      const when = date ? `<br><small>${escapeHtml(new Date(date).toLocaleString("es-DO"))}</small>` : "";
+      return `${actor}${when}`;
     }
 
     function renderWarehouseRequests() {
@@ -5302,6 +5335,8 @@
 
     function renderWorkflowConfig() {
       const enabled = new Set(state.workflowConfig?.approvalStages || []);
+      if (enabled.has("Pendiente técnica")) enabled.add("Pendiente validación técnica");
+      if (enabled.has("Pendiente presupuesto") || enabled.has("Pendiente finanzas")) enabled.add("Pendiente aprobación financiera");
       document.querySelectorAll('#workflowConfigForm input[name="approvalStages"]').forEach(input => {
         input.checked = enabled.has(input.value);
       });
@@ -5441,7 +5476,7 @@
       state.payments.forEach(payment => {
         const numberKey = String(payment.numero || "").trim().toLowerCase();
         const project = rows.find(item => item.key === payment.projectKey);
-        if (currentApprovalStep(payment)) push("Alerta", "Cubicación pendiente de aprobación", project, `La cubicación ${payment.numero || "sin número"} está en ${payment.estado || "flujo de aprobación"} y todavía no impacta el total pagado.`, "Completar el siguiente nivel de aprobación.");
+        if (currentApprovalStep(payment)) push("Alerta", "Cubicación pendiente de aprobación", project, `La cubicación ${payment.numero || "sin número"} está en ${normalizePaymentStatus(payment.estado) || "flujo de aprobación"} y todavía no impacta el total pagado.`, "Completar el siguiente nivel de aprobación.");
         if (!numberKey) return;
         const key = `${payment.projectKey}|${numberKey}`;
         if (seen.has(key)) push("Crítico", "Cubicación duplicada", project, `La cubicación ${payment.numero} está repetida para el mismo proyecto.`, "Unificar o corregir el número de cubicación.");
@@ -5497,7 +5532,7 @@
       const project = enrichedProjects().find(item => item.key === select.value);
       const paymentRows = state.payments
         .filter(payment => payment.projectKey === select.value)
-        .map(payment => [payment.fecha || "-", "Cubicación", `${payment.numero || "Sin número"} | ${money.format(payment.monto || 0)} | ${payment.estado || "Aprobada"}`]);
+        .map(payment => [payment.fecha || "-", "Cubicación", `${payment.numero || "Sin número"} | ${money.format(payment.monto || 0)} | ${normalizePaymentStatus(payment.estado || "Aprobada")}`]);
       const auditRows = (state.audit || [])
         .filter(row => String(row.detalle || "").includes(project?.comunidad || project?.tipo || select.value))
         .map(row => [row.fecha, row.accion, row.detalle]);
@@ -5538,7 +5573,7 @@
       payment.estado = nextEstado;
       payment[step.actorKey] = currentSessionEmail || activeUser().usuario || "";
       payment[step.dateKey] = approvedAt;
-      audit(nextEstado === "Aprobada" ? "Cubicación aprobada" : "Cubicación enviada al siguiente nivel", `${payment.numero || "sin número"} | ${step.area} | ${money.format(payment.monto || 0)}`);
+      audit(nextEstado === "Aprobada" ? "Cubicación aprobada por Administrativo y Financiero" : "Cubicación validada por Dirección Técnica", `${payment.numero || "sin número"} | ${step.area} | ${money.format(payment.monto || 0)}`);
       saveState();
       renderAll();
     }
@@ -5883,7 +5918,7 @@
           .map(p => ["", p.comunidad, p.municipio, p.contratista, "", money.format(p.pagadoBase)]);
         const manualPayments = state.payments.map(p => {
           const project = projects[p.projectKey] || {};
-          return [p.fecha, project.comunidad || p.projectKey, project.municipio || "-", project.contratista || "-", p.numero || "-", p.estado || "Aprobada", money.format(p.monto)];
+          return [p.fecha, project.comunidad || p.projectKey, project.municipio || "-", project.contratista || "-", p.numero || "-", normalizePaymentStatus(p.estado || "Aprobada"), money.format(p.monto)];
         });
         const totalPagos = enrichedProjects().reduce((total, p) => total + Number(p.pagadoBase || 0), 0) + state.payments.filter(p => !p.estado || p.estado === "Aprobada").reduce((total, p) => total + Number(p.monto || 0), 0);
         renderTable("reportTable", ["Fecha", "Proyecto", "Municipio", "Contratista", "Cubicación", "Estado", "Monto"], [...excelPayments.map(row => [...row.slice(0, 5), "", row[5]]), ...manualPayments], ["TOTAL", "", "", "", "", "", money.format(totalPagos)]);
@@ -6171,7 +6206,7 @@
       const alerts = projectAlerts(rows);
       const critical = alerts.filter(alert => alert.level === "Crítico").length;
       const warning = alerts.filter(alert => alert.level === "Alerta").length;
-      const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
+      const pendingPayments = state.payments.filter(payment => currentApprovalStep(payment)).length;
       const deadlineCount = projectDeadlineRows().filter(row => row.status === "Vencido").length;
       renderTable("reportTable", ["Indicador", "Resultado", "Observación"], [
         ["Total de obras", number.format(rows.length), "Cantidad de registros activos"],
@@ -6195,7 +6230,7 @@
         groups[month].cubicaciones += 1;
         if (!payment.estado || payment.estado === "Aprobada") groups[month].pagos += Number(payment.monto || 0);
         const provider = projects[payment.projectKey]?.contratista || "Sin proveedor";
-        groups[month].proveedores[provider] = (groups[month].proveedores[provider] || 0) + Number(payment.monto || 0);
+        if (!payment.estado || payment.estado === "Aprobada") groups[month].proveedores[provider] = (groups[month].proveedores[provider] || 0) + Number(payment.monto || 0);
       });
       const tableRows = Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([month, data]) => {
         const topProvider = Object.entries(data.proveedores).sort((a, b) => b[1] - a[1])[0] || ["-", 0];
@@ -6211,7 +6246,7 @@
       const alerts = projectAlerts(rows);
       const critical = alerts.filter(alert => alert.level === "Crítico").length;
       const vencidas = projectDeadlineRows().filter(row => row.status === "Vencido").length;
-      const pendingPayments = state.payments.filter(payment => payment.estado === "Pendiente").length;
+      const pendingPayments = state.payments.filter(payment => currentApprovalStep(payment)).length;
       renderTable("reportTable", ["Indicador ejecutivo", "Valor", "Estado"], [
         ["Total Código SNIP", money.format(inv.totalSnip), "Base presupuestaria"],
         ["Monto adjudicado", money.format(inv.adjudicado), inv.adjudicado > 0 ? "Con adjudicaciones" : "Sin adjudicar"],
@@ -6432,7 +6467,7 @@
         <div class="panel" style="margin-top:14px; box-shadow:none;">
           <h2>Cubicaciones</h2>
           <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Número</th><th>Monto</th><th>Estado</th><th>Observación</th></tr></thead><tbody>
-            ${payments.length ? payments.map(payment => `<tr><td>${payment.fecha || "-"}</td><td>${escapeHtml(payment.numero || "-")}</td><td>${money.format(payment.monto || 0)}</td><td>${escapeHtml(payment.estado || "Aprobada")}</td><td>${escapeHtml(payment.observacion || "-")}</td></tr>`).join("") : `<tr><td colspan="5" class="empty">Sin cubicaciones registradas.</td></tr>`}
+            ${payments.length ? payments.map(payment => `<tr><td>${payment.fecha || "-"}</td><td>${escapeHtml(payment.numero || "-")}</td><td>${money.format(payment.monto || 0)}</td><td>${escapeHtml(normalizePaymentStatus(payment.estado || "Aprobada"))}</td><td>${escapeHtml(payment.observacion || "-")}</td></tr>`).join("") : `<tr><td colspan="5" class="empty">Sin cubicaciones registradas.</td></tr>`}
           </tbody></table></div>
         </div>
         <div class="panel" style="margin-top:14px; box-shadow:none;">
@@ -7513,6 +7548,9 @@
       const project = validatePaymentControl(data);
       const selectedProjectOption = event.currentTarget.elements.projectKey.options[event.currentTarget.elements.projectKey.selectedIndex];
       const selectedProjectLabel = selectedProjectOption?.textContent || "";
+      const createdAt = new Date().toISOString();
+      const createdBy = currentSessionEmail || activeUser()?.usuario || "";
+      const createdByName = activeUser()?.nombre || createdBy || "Sistema";
       if (window.supabaseClient) {
         const resolvedProjectId = await resolveProjectDbId(data.projectKey, selectedProjectLabel);
         const payload = {
@@ -7521,20 +7559,34 @@
           fecha: data.fecha,
           monto: Number(data.monto),
           observacion: data.observacion || "",
-          estado: "Pendiente técnica"
+          estado: "Pendiente validación técnica",
+          creado_por: createdBy,
+          creado_por_nombre: createdByName,
+          creado_en: createdAt
         };
         let inserted = await window.supabaseClient.from("cubicaciones").insert(payload).select("*").single();
-        if (inserted.error && String(inserted.error.message || "").includes("estado")) {
-          const { estado, ...fallbackPayload } = payload;
+        if (inserted.error && String(inserted.error.message || "").toLowerCase().includes("column")) {
+          const { creado_por, creado_por_nombre, ...fallbackPayload } = payload;
           inserted = await window.supabaseClient.from("cubicaciones").insert(fallbackPayload).select("*").single();
         }
         if (inserted.error) throw inserted.error;
-        state.payments.push({ projectKey: data.projectKey, fecha: inserted.data.fecha, monto: Number(inserted.data.monto), numero: inserted.data.numero || "", observacion: inserted.data.observacion || "", estado: inserted.data.estado || "Pendiente técnica", id: inserted.data.id });
+        state.payments.push({
+          projectKey: data.projectKey,
+          fecha: inserted.data.fecha,
+          monto: Number(inserted.data.monto),
+          numero: inserted.data.numero || "",
+          observacion: inserted.data.observacion || "",
+          estado: inserted.data.estado || "Pendiente validación técnica",
+          creadoPor: inserted.data.creado_por || createdBy,
+          creadoPorNombre: inserted.data.creado_por_nombre || createdByName,
+          creadoEn: inserted.data.creado_en || createdAt,
+          id: inserted.data.id
+        });
       } else {
-        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente técnica", id: makeId() });
+        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente validación técnica", creadoPor: createdBy, creadoPorNombre: createdByName, creadoEn: createdAt, id: makeId() });
       }
       saveState();
-      audit("Cubicación registrada", `${project.comunidad || project.tipo} | ${data.numero || "sin número"} | ${money.format(Number(data.monto || 0))}`);
+      audit("Cubicación registrada por Dirección Técnica", `${project.comunidad || project.tipo} | ${data.numero || "sin número"} | ${money.format(Number(data.monto || 0))}`);
       event.currentTarget.reset();
       renderAll();
       } catch (error) {
