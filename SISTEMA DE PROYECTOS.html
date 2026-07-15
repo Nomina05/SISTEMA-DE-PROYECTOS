@@ -1705,8 +1705,8 @@
         <div class="panel" style="margin-top:14px;" data-permission="users-admin">
           <h2>Configuración de flujo</h2>
           <form id="workflowConfigForm" class="form-grid">
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente validación técnica">Validación Dirección Técnica</label>
-            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Pendiente aprobación financiera">Aprobación Administrativo y Financiero</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Cubicada">Revisión técnica</label>
+            <label class="permission-check"><input type="checkbox" name="approvalStages" value="Revisada">Aprobación Administrativo y Financiero</label>
             <button class="btn" type="submit">Guardar flujo</button>
           </form>
         </div>
@@ -2827,7 +2827,7 @@
 
     function loadState() {
       const saved = localStorage.getItem(stateKey);
-      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], trainingRecords: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
+      if (!saved) return { projects: [], users: [], employees: [], recruitmentVacancies: [], recruitmentCandidates: [], recruitmentInterviews: [], trainingRecords: [], aiAutomations: [], payments: [], warehouseRequests: [], warehouseArticles: [], essLeaveRequests: [], essTickets: [], audit: [], technicalLogs: [], documents: [], organizationUnits: initialOrgUnits(), notificationSettings: [], internalNotifications: [], workflowConfig: { approvalStages: ["Cubicada", "Revisada", "Aprobada"] }, alertConfig: defaultAlertConfig(), catalogs: defaultCatalogs(), favorites: [], activeUser: "" };
       const parsed = JSON.parse(saved);
       return {
         projects: [],
@@ -2849,7 +2849,7 @@
         organizationUnits: initialOrgUnits(),
         notificationSettings: [],
         internalNotifications: [],
-        workflowConfig: parsed.workflowConfig || { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] },
+        workflowConfig: parsed.workflowConfig || { approvalStages: ["Cubicada", "Revisada", "Aprobada"] },
         alertConfig: { ...defaultAlertConfig(), ...(parsed.alertConfig || {}) },
         catalogs: { ...defaultCatalogs(), ...(parsed.catalogs || {}) },
         rhPayrollCap2026: parsed.rhPayrollCap2026 || 0,
@@ -2874,7 +2874,7 @@
         internalNotifications: state.internalNotifications || [],
         rhPayrollCap2026: state.rhPayrollCap2026 || 0,
         rhPayrollHistory: state.rhPayrollHistory || [],
-        workflowConfig: state.workflowConfig || { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] }
+        workflowConfig: state.workflowConfig || { approvalStages: ["Cubicada", "Revisada", "Aprobada"] }
       };
     }
 
@@ -2889,7 +2889,7 @@
       state.internalNotifications = Array.isArray(shared.internalNotifications) ? shared.internalNotifications : [];
       state.rhPayrollCap2026 = Number(shared.rhPayrollCap2026 || 0);
       state.rhPayrollHistory = Array.isArray(shared.rhPayrollHistory) ? shared.rhPayrollHistory : [];
-      state.workflowConfig = shared.workflowConfig || { approvalStages: ["Pendiente validación técnica", "Pendiente aprobación financiera"] };
+      state.workflowConfig = shared.workflowConfig || { approvalStages: ["Cubicada", "Revisada", "Aprobada"] };
     }
 
     async function syncSharedStateToSupabase() {
@@ -3688,8 +3688,9 @@
     }
 
     const defaultPaymentApprovalFlow = [
-      { estado: "Pendiente validación técnica", area: "Dirección Técnica", label: "Validar técnica", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en" },
-      { estado: "Pendiente aprobación financiera", area: "Dirección Administrativo y Financiero", label: "Aprobar pago", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en" }
+      { estado: "Cubicada", nextEstado: "Revisada", area: "Dirección Técnica", label: "Marcar revisada", actorKey: "aprobacionTecnicaPor", dateKey: "aprobacionTecnicaEn", dbActor: "aprobacion_tecnica_por", dbDate: "aprobacion_tecnica_en", audit: "Cubicación revisada por Dirección Técnica" },
+      { estado: "Revisada", nextEstado: "Aprobada", area: "Dirección Administrativo y Financiero", label: "Aprobar cubicación", actorKey: "aprobadoPor", dateKey: "aprobadoEn", dbActor: "aprobado_por", dbDate: "aprobado_en", audit: "Cubicación aprobada por Administrativo y Financiero" },
+      { estado: "Aprobada", nextEstado: "Pagada", area: "Dirección Administrativo y Financiero", label: "Marcar pagada", actorKey: "pagadoPor", dateKey: "pagadoEn", dbActor: "pagado_por", dbDate: "pagado_en", audit: "Cubicación pagada por Administrativo y Financiero" }
     ];
 
     function normalizedArea(value) {
@@ -3698,17 +3699,26 @@
 
     function paymentApprovalFlow() {
       const enabled = new Set(state.workflowConfig?.approvalStages || defaultPaymentApprovalFlow.map(step => step.estado));
-      if (enabled.has("Pendiente técnica")) enabled.add("Pendiente validación técnica");
-      if (enabled.has("Pendiente presupuesto") || enabled.has("Pendiente finanzas")) enabled.add("Pendiente aprobación financiera");
+      if (enabled.has("Pendiente") || enabled.has("Pendiente técnica") || enabled.has("Pendiente validación técnica")) enabled.add("Cubicada");
+      if (enabled.has("Pendiente presupuesto") || enabled.has("Pendiente finanzas") || enabled.has("Pendiente aprobación financiera")) enabled.add("Revisada");
+      enabled.add("Aprobada");
       return defaultPaymentApprovalFlow.filter(step => enabled.has(step.estado));
     }
 
     function normalizePaymentStatus(status) {
       const value = String(status || "").trim();
-      if (!value || value === "Pendiente") return "Pendiente validación técnica";
-      if (value === "Pendiente técnica") return "Pendiente validación técnica";
-      if (value === "Pendiente presupuesto" || value === "Pendiente finanzas") return "Pendiente aprobación financiera";
+      if (!value || value === "Pendiente" || value === "Pendiente técnica" || value === "Pendiente validación técnica") return "Cubicada";
+      if (value === "Pendiente presupuesto" || value === "Pendiente finanzas" || value === "Pendiente aprobación financiera") return "Revisada";
       return value;
+    }
+
+    function isPaymentStatusPaid(status) {
+      return normalizePaymentStatus(status) === "Pagada";
+    }
+
+    function isPaymentStatusCubicado(status) {
+      const value = normalizePaymentStatus(status);
+      return value && value !== "Rechazada";
     }
 
     function currentApprovalStep(payment) {
@@ -3998,19 +4008,19 @@
     function projectPaid(projectKey) {
       const project = state.projects.find(p => p.key === projectKey);
       const manualPayments = state.payments
-        .filter(p => p.projectKey === projectKey && (!p.estado || p.estado === "Aprobada"))
+        .filter(p => p.projectKey === projectKey && isPaymentStatusPaid(p.estado))
         .reduce((t, p) => t + Number(p.monto || 0), 0);
       if (project && Object.prototype.hasOwnProperty.call(project, "totalPagadoBase") && project.totalPagadoBase !== undefined) {
         return Number(project.totalPagadoBase || 0) + manualPayments;
       }
-      return Number(project?.comprometido || 0) + Number(project?.pagadoBase || 0) + projectCubicaciones(projectKey);
+      return Number(project?.comprometido || 0) + Number(project?.pagadoBase || 0) + manualPayments;
     }
 
     function projectCubicaciones(projectKey) {
       const project = state.projects.find(p => p.key === projectKey);
       const cubicadoBase = Number(project?.totalCubicadoBase || 0);
       const cubicadoManual = state.payments
-        .filter(p => p.projectKey === projectKey && (!p.estado || p.estado === "Aprobada"))
+        .filter(p => p.projectKey === projectKey && isPaymentStatusCubicado(p.estado))
         .reduce((t, p) => t + Number(p.monto || 0), 0);
       return cubicadoBase + cubicadoManual;
     }
@@ -4582,7 +4592,7 @@
 
     function renderPayments() {
       const projects = Object.fromEntries(enrichedProjects().map(p => [p.key, p]));
-      renderTable("paymentsTable", ["Fecha", "Proyecto", "Cubicación", "Monto", "Estado", "Creada por", "Validación técnica", "Aprobación financiera", "Observación", "Acción"], state.payments.map(p => {
+      renderTable("paymentsTable", ["Fecha", "Proyecto", "Cubicación", "Monto", "Etapa", "Creada por", "Revisada", "Aprobada", "Pagada", "Observación", "Acción"], state.payments.map(p => {
         const step = currentApprovalStep(p);
         const status = normalizePaymentStatus(p.estado || "Aprobada");
         return [
@@ -4594,6 +4604,7 @@
           paymentAuditCell(p.creadoPorNombre || p.creadoPor, p.creadoEn),
           paymentAuditCell(p.aprobacionTecnicaPor, p.aprobacionTecnicaEn),
           paymentAuditCell(p.aprobadoPor, p.aprobadoEn),
+          paymentAuditCell(p.pagadoPor, p.pagadoEn),
           p.estado === "Rechazada" ? `${p.observacion || "-"}<br><small>Motivo: ${escapeHtml(p.motivoRechazo || "-")}</small>` : p.observacion || "-",
           step && canApproveCurrentStep(p)
             ? `<button class="btn secondary approve-payment-btn" type="button" data-id="${escapeHtml(p.id)}">${escapeHtml(step.label)}</button> <button class="btn secondary reject-payment-btn" type="button" data-id="${escapeHtml(p.id)}">Rechazar</button>`
@@ -6394,8 +6405,8 @@
 
     function renderWorkflowConfig() {
       const enabled = new Set(state.workflowConfig?.approvalStages || []);
-      if (enabled.has("Pendiente técnica")) enabled.add("Pendiente validación técnica");
-      if (enabled.has("Pendiente presupuesto") || enabled.has("Pendiente finanzas")) enabled.add("Pendiente aprobación financiera");
+      if (enabled.has("Pendiente") || enabled.has("Pendiente técnica") || enabled.has("Pendiente validación técnica")) enabled.add("Cubicada");
+      if (enabled.has("Pendiente presupuesto") || enabled.has("Pendiente finanzas") || enabled.has("Pendiente aprobación financiera")) enabled.add("Revisada");
       document.querySelectorAll('#workflowConfigForm input[name="approvalStages"]').forEach(input => {
         input.checked = enabled.has(input.value);
       });
@@ -6616,10 +6627,7 @@
       if (!step) return;
       if (!canApproveCurrentStep(payment)) return alert(`La siguiente aprobación corresponde a ${step.area}.`);
       const approvedAt = new Date().toISOString();
-      const flow = paymentApprovalFlow();
-      const currentIndex = flow.findIndex(item => item.estado === step.estado);
-      const nextStep = flow[currentIndex + 1];
-      const nextEstado = nextStep ? nextStep.estado : "Aprobada";
+      const nextEstado = step.nextEstado || "Pagada";
       const updatePayload = {
         estado: nextEstado,
         [step.dbActor]: currentSessionEmail || activeUser().usuario || "",
@@ -6632,7 +6640,7 @@
       payment.estado = nextEstado;
       payment[step.actorKey] = currentSessionEmail || activeUser().usuario || "";
       payment[step.dateKey] = approvedAt;
-      audit(nextEstado === "Aprobada" ? "Cubicación aprobada por Administrativo y Financiero" : "Cubicación validada por Dirección Técnica", `${payment.numero || "sin número"} | ${step.area} | ${money.format(payment.monto || 0)}`);
+      audit(step.audit || `Cubicación actualizada a ${nextEstado}`, `${payment.numero || "sin número"} | ${step.area} | ${money.format(payment.monto || 0)}`);
       saveState();
       renderAll();
     }
@@ -8618,14 +8626,14 @@
           fecha: data.fecha,
           monto: Number(data.monto),
           observacion: data.observacion || "",
-          estado: "Pendiente validación técnica",
+          estado: "Cubicada",
           creado_por: createdBy,
           creado_por_nombre: createdByName,
           creado_en: createdAt
         };
         let inserted = await window.supabaseClient.from("cubicaciones").insert(payload).select("*").single();
         if (inserted.error && String(inserted.error.message || "").toLowerCase().includes("column")) {
-          const { creado_por, creado_por_nombre, ...fallbackPayload } = payload;
+          const { creado_por, creado_por_nombre, pagado_por, pagado_en, ...fallbackPayload } = payload;
           inserted = await window.supabaseClient.from("cubicaciones").insert(fallbackPayload).select("*").single();
         }
         if (inserted.error) throw inserted.error;
@@ -8635,14 +8643,14 @@
           monto: Number(inserted.data.monto),
           numero: inserted.data.numero || "",
           observacion: inserted.data.observacion || "",
-          estado: inserted.data.estado || "Pendiente validación técnica",
+          estado: inserted.data.estado || "Cubicada",
           creadoPor: inserted.data.creado_por || createdBy,
           creadoPorNombre: inserted.data.creado_por_nombre || createdByName,
           creadoEn: inserted.data.creado_en || createdAt,
           id: inserted.data.id
         });
       } else {
-        state.payments.push({ ...data, monto: Number(data.monto), estado: "Pendiente validación técnica", creadoPor: createdBy, creadoPorNombre: createdByName, creadoEn: createdAt, id: makeId() });
+        state.payments.push({ ...data, monto: Number(data.monto), estado: "Cubicada", creadoPor: createdBy, creadoPorNombre: createdByName, creadoEn: createdAt, id: makeId() });
       }
       saveState();
       audit("Cubicación registrada por Dirección Técnica", `${project.comunidad || project.tipo} | ${data.numero || "sin número"} | ${money.format(Number(data.monto || 0))}`);
@@ -9408,6 +9416,12 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
