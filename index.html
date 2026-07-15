@@ -1128,6 +1128,73 @@
       box-shadow: 0 18px 40px rgba(16, 24, 40, .18);
     }
 
+    /* Navegación profesional por módulos */
+    nav[aria-label="Módulos principales"] {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: visible;
+    }
+    .nav-group-title {
+      display: block;
+      margin: 9px 8px 3px;
+      color: #8aa0b7;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .nav-group-title:first-child {
+      margin-top: 2px;
+    }
+    .module-launcher {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+      gap: 12px;
+      margin: 0 0 14px;
+    }
+    .module-launcher button {
+      display: grid;
+      gap: 6px;
+      min-height: 108px;
+      padding: 15px 16px;
+      border: 1px solid #d8e0ea;
+      border-radius: 14px;
+      background: #fff;
+      color: #101828;
+      text-align: left;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 10px 22px rgba(16, 24, 40, .045);
+      transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+    }
+    .module-launcher button:hover {
+      transform: translateY(-2px);
+      border-color: #93b4d7;
+      box-shadow: 0 14px 30px rgba(37, 99, 235, .11);
+    }
+    .module-launcher small {
+      color: #667085;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .module-launcher strong {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+    .module-launcher span {
+      color: #667085;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .module-launcher button:nth-child(6) {
+      border-left: 5px solid #2563eb;
+    }
+    .module-launcher button:nth-child(8) {
+      border-left: 5px solid #16815f;
+    }
     @media (max-width: 1180px) {
       aside { width: 220px; }
       main { margin-left: 220px; padding: 16px; }
@@ -1234,15 +1301,19 @@
   <div class="shell">
     <aside>
       <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
-      <nav>
+      <nav aria-label="Módulos principales">
+        <span class="nav-group-title">Sistema</span>
         <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Inicio</button>
+        <span class="nav-group-title">Gestión interna</span>
         <button class="nav-btn" data-view="recursos-humanos" onclick="showView('recursos-humanos')">Recursos Humanos</button>
         <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Compras y Contrataciones</button>
         <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Almacén</button>
         <button class="nav-btn" data-view="inventario" onclick="showView('inventario')">Inventario</button>
+        <span class="nav-group-title">Operación</span>
         <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
         <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
         <button class="nav-btn" data-view="documentos" onclick="showView('documentos')">Documentos</button>
+        <span class="nav-group-title">Control</span>
         <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
         <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuarios</button>
         <button class="nav-btn" data-view="controles" onclick="showView('controles')">Configuración</button>
@@ -1335,6 +1406,18 @@
             <h1>Dashboard ejecutivo</h1>
             <p class="sub">Seguimiento presupuestario, alertas operativas y distribución de inversión.</p>
           </div>
+        </div>
+        <div class="module-launcher" aria-label="Accesos principales del sistema">
+          <button type="button" onclick="showView('recursos-humanos')"><small>Gestión interna</small><strong>Recursos Humanos</strong><span>Empleados, nómina, vacaciones y capacitación</span></button>
+          <button type="button" onclick="showView('solicitudes')"><small>Procesos</small><strong>Compras y Contrataciones</strong><span>Solicitudes, procesos y seguimiento</span></button>
+          <button type="button" onclick="showView('almacen')"><small>Suministros</small><strong>Almacén</strong><span>Solicitudes, aprobación y despacho</span></button>
+          <button type="button" onclick="showView('inventario')"><small>Control</small><strong>Inventario</strong><span>Artículos, entradas, salidas y existencias</span></button>
+          <button type="button" onclick="showView('registro')"><small>Operación</small><strong>Proyectos</strong><span>Registro, seguimiento y documentación</span></button>
+          <button type="button" onclick="showView('cubicaciones')"><small>Pagos</small><strong>Cubicaciones</strong><span>Registro, validación, aprobación y auditoría</span></button>
+          <button type="button" onclick="showView('documentos')"><small>Archivo</small><strong>Documentos</strong><span>Gestión documental del sistema</span></button>
+          <button type="button" onclick="showView('reportes')"><small>Dirección</small><strong>Reportes</strong><span>Informes habilitados por permisos</span></button>
+          <button type="button" onclick="showView('usuarios')"><small>Seguridad</small><strong>Usuarios</strong><span>Permisos y vinculación de empleados</span></button>
+          <button type="button" onclick="showView('controles')"><small>Parámetros</small><strong>Configuración</strong><span>Alertas, flujos y controles del sistema</span></button>
         </div>
         <div class="grid metrics" id="metrics"></div>
         <div class="executive-grid">
@@ -9115,6 +9198,7 @@
   </script>
 </body>
 </html>
+
 
 
 
