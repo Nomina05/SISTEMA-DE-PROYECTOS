@@ -1195,9 +1195,212 @@
     .module-launcher button:nth-child(8) {
       border-left: 5px solid #16815f;
     }
+    /* UI profesional unificada */
+    aside {
+      width: 224px;
+      padding: 12px 10px;
+    }
+    main {
+      margin-left: 224px;
+      padding: 18px 20px 26px;
+    }
+    .brand {
+      min-height: 58px;
+      padding: 11px 10px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      box-shadow: none;
+      font-size: 18px;
+    }
+    .brand span {
+      margin-top: 5px;
+      color: #9fb3c8;
+      font-size: 9px;
+    }
+    .nav-group-title {
+      margin: 11px 9px 4px;
+      color: #7f94aa;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+    .nav-btn {
+      min-height: 34px;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: 9px;
+      color: #d5dde8;
+      background: transparent;
+      box-shadow: none;
+    }
+    .nav-btn::before {
+      content: attr(data-icon);
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: rgba(255,255,255,.08);
+      color: #b9c6d5;
+      font-size: 9px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+    .nav-btn span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nav-btn.active {
+      background: #182c46;
+      border-color: rgba(255,255,255,.08);
+      color: #fff;
+      box-shadow: none;
+    }
+    .nav-btn.active::before {
+      background: #2563eb;
+      color: #fff;
+      box-shadow: none;
+    }
+    .sidebar-session {
+      padding: 10px;
+      border: 0;
+      border-top: 1px solid rgba(255,255,255,.1);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .sidebar-session button {
+      min-height: 32px;
+      background: #f3f4f6;
+      color: #111827;
+      border-radius: 8px;
+    }
+    .page-heading,
+    .panel,
+    .table-wrap,
+    .employee-section,
+    .user-form-section,
+    .ess-form {
+      border-radius: 10px;
+    }
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: auto;
+      padding: 0 0 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #dde5ee;
+    }
+    .page-heading h1 {
+      font-size: clamp(24px, 1.75vw, 30px);
+    }
+    .page-heading h1::after {
+      width: 48px;
+      height: 3px;
+      margin-top: 8px;
+      background: #2563eb;
+    }
+    .home-shell {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .home-primary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .home-primary button {
+      display: grid;
+      gap: 7px;
+      min-height: 112px;
+      padding: 16px;
+      border: 1px solid #d8e0ea;
+      border-radius: 12px;
+      background: #fff;
+      color: #101828;
+      text-align: left;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+    }
+    .home-primary button:hover {
+      border-color: #9ab7d4;
+      box-shadow: 0 12px 24px rgba(37,99,235,.1);
+      transform: translateY(-1px);
+    }
+    .home-primary small {
+      color: #667085;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .home-primary strong {
+      color: #101828;
+      font-size: 17px;
+      font-weight: 900;
+    }
+    .home-primary span {
+      color: #667085;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .home-recent {
+      padding: 13px;
+      box-shadow: none;
+    }
+    .home-action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .home-action-row button {
+      min-height: 32px;
+      padding: 6px 10px;
+      border: 1px solid #d5dde8;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #1f2937;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .metric,
+    .rh-kpi,
+    .executive-card,
+    .rh-admin-kpi,
+    .ess-kpi {
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+    }
+    .btn,
+    .mini-btn,
+    .tab,
+    .subtab,
+    .badge,
+    input,
+    select,
+    textarea {
+      border-radius: 8px;
+    }
+    th,
+    td {
+      padding: 7px 8px;
+      font-size: 11px;
+    }
+    th {
+      background: #f6f8fb;
+      color: #344054;
+      font-size: 10px;
+    }
+    .module-launcher {
+      display: none !important;
+    }
     @media (max-width: 1180px) {
-      aside { width: 220px; }
-      main { margin-left: 220px; padding: 16px; }
+      aside { width: 210px; }
+      main { margin-left: 210px; padding: 16px; }
       .dashboard-layout { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
       .executive-grid { grid-template-columns: 1fr; }
       .rh-admin-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1303,20 +1506,20 @@
       <div class="brand">CORAAMOCA<span>Proyectos 2025-2027</span></div>
       <nav aria-label="Módulos principales">
         <span class="nav-group-title">Sistema</span>
-        <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')">Inicio</button>
+        <button class="nav-btn active" data-icon="IN" data-view="dashboard" onclick="showView('dashboard')"><span>Inicio</span></button>
         <span class="nav-group-title">Gestión interna</span>
-        <button class="nav-btn" data-view="recursos-humanos" onclick="showView('recursos-humanos')">Recursos Humanos</button>
-        <button class="nav-btn" data-view="solicitudes" onclick="showView('solicitudes')">Compras y Contrataciones</button>
-        <button class="nav-btn" data-view="almacen" onclick="showView('almacen')">Almacén</button>
-        <button class="nav-btn" data-view="inventario" onclick="showView('inventario')">Inventario</button>
+        <button class="nav-btn" data-icon="RH" data-view="recursos-humanos" onclick="showView('recursos-humanos')"><span>Recursos Humanos</span></button>
+        <button class="nav-btn" data-icon="CC" data-view="solicitudes" onclick="showView('solicitudes')"><span>Compras y Contrataciones</span></button>
+        <button class="nav-btn" data-icon="AL" data-view="almacen" onclick="showView('almacen')"><span>Almacén</span></button>
+        <button class="nav-btn" data-icon="IV" data-view="inventario" onclick="showView('inventario')"><span>Inventario</span></button>
         <span class="nav-group-title">Operación</span>
-        <button class="nav-btn" data-view="registro" onclick="showView('registro')">Proyectos</button>
-        <button class="nav-btn" data-view="cubicaciones" onclick="showView('cubicaciones')">Cubicaciones</button>
-        <button class="nav-btn" data-view="documentos" onclick="showView('documentos')">Documentos</button>
+        <button class="nav-btn" data-icon="PR" data-view="registro" onclick="showView('registro')"><span>Proyectos</span></button>
+        <button class="nav-btn" data-icon="CU" data-view="cubicaciones" onclick="showView('cubicaciones')"><span>Cubicaciones</span></button>
+        <button class="nav-btn" data-icon="DC" data-view="documentos" onclick="showView('documentos')"><span>Documentos</span></button>
         <span class="nav-group-title">Control</span>
-        <button class="nav-btn" data-view="reportes" onclick="showView('reportes')">Reportes</button>
-        <button class="nav-btn" data-view="usuarios" onclick="showView('usuarios')">Usuarios</button>
-        <button class="nav-btn" data-view="controles" onclick="showView('controles')">Configuración</button>
+        <button class="nav-btn" data-icon="RP" data-view="reportes" onclick="showView('reportes')"><span>Reportes</span></button>
+        <button class="nav-btn" data-icon="US" data-view="usuarios" onclick="showView('usuarios')"><span>Usuarios</span></button>
+        <button class="nav-btn" data-icon="CF" data-view="controles" onclick="showView('controles')"><span>Configuración</span></button>
       </nav>
       <div class="sidebar-session" id="sidebarSession">
         <small>Usuario activo</small>
@@ -1407,17 +1610,24 @@
             <p class="sub">Seguimiento presupuestario, alertas operativas y distribución de inversión.</p>
           </div>
         </div>
-        <div class="module-launcher" aria-label="Accesos principales del sistema">
-          <button type="button" onclick="showView('recursos-humanos')"><small>Gestión interna</small><strong>Recursos Humanos</strong><span>Empleados, nómina, vacaciones y capacitación</span></button>
-          <button type="button" onclick="showView('solicitudes')"><small>Procesos</small><strong>Compras y Contrataciones</strong><span>Solicitudes, procesos y seguimiento</span></button>
-          <button type="button" onclick="showView('almacen')"><small>Suministros</small><strong>Almacén</strong><span>Solicitudes, aprobación y despacho</span></button>
-          <button type="button" onclick="showView('inventario')"><small>Control</small><strong>Inventario</strong><span>Artículos, entradas, salidas y existencias</span></button>
-          <button type="button" onclick="showView('registro')"><small>Operación</small><strong>Proyectos</strong><span>Registro, seguimiento y documentación</span></button>
-          <button type="button" onclick="showView('cubicaciones')"><small>Pagos</small><strong>Cubicaciones</strong><span>Registro, validación, aprobación y auditoría</span></button>
-          <button type="button" onclick="showView('documentos')"><small>Archivo</small><strong>Documentos</strong><span>Gestión documental del sistema</span></button>
-          <button type="button" onclick="showView('reportes')"><small>Dirección</small><strong>Reportes</strong><span>Informes habilitados por permisos</span></button>
-          <button type="button" onclick="showView('usuarios')"><small>Seguridad</small><strong>Usuarios</strong><span>Permisos y vinculación de empleados</span></button>
-          <button type="button" onclick="showView('controles')"><small>Parámetros</small><strong>Configuración</strong><span>Alertas, flujos y controles del sistema</span></button>
+        <div class="home-shell">
+          <div class="home-primary" aria-label="Accesos principales del sistema">
+            <button type="button" onclick="showView('recursos-humanos')"><small>Gestión interna</small><strong>Recursos Humanos</strong><span>Empleados, nómina, vacaciones y capacitación</span></button>
+            <button type="button" onclick="showView('solicitudes')"><small>Procesos</small><strong>Compras y Contrataciones</strong><span>Solicitudes, procesos y seguimiento</span></button>
+            <button type="button" onclick="showView('cubicaciones')"><small>Pagos</small><strong>Cubicaciones</strong><span>Registro, validación, aprobación y auditoría</span></button>
+            <button type="button" onclick="showView('reportes')"><small>Dirección</small><strong>Reportes</strong><span>Informes habilitados por permisos</span></button>
+          </div>
+          <div class="home-recent panel">
+            <div class="panel-head"><h2>Operación reciente</h2><span class="badge">Accesos rápidos</span></div>
+            <div class="home-action-row">
+              <button type="button" onclick="showView('registro')">Proyectos</button>
+              <button type="button" onclick="showView('almacen')">Almacén</button>
+              <button type="button" onclick="showView('inventario')">Inventario</button>
+              <button type="button" onclick="showView('documentos')">Documentos</button>
+              <button type="button" onclick="showView('usuarios')">Usuarios</button>
+              <button type="button" onclick="showView('controles')">Configuración</button>
+            </div>
+          </div>
         </div>
         <div class="grid metrics" id="metrics"></div>
         <div class="executive-grid">
@@ -9198,6 +9408,7 @@
   </script>
 </body>
 </html>
+
 
 
 
